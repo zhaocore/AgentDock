@@ -1,0 +1,113 @@
+// 命名空间 users：用户管理页词条。en 为键结构真源，
+// zh/ja/ko 用 Shape<typeof en> 声明，缺键/多键在编译期报错。
+import type { Shape } from '../dict-shape';
+
+const en = {
+  title: 'Users',
+  failedToLoad: 'Failed to load users.',
+  updateFailed: 'Failed to update user.',
+  createFailed: 'Failed to create user.',
+  generateKeyFailed: 'Failed to generate API key.',
+  adminRequired: 'Admin role required to manage users.',
+  subtitle: 'Manage user accounts and API keys.',
+  addUser: 'Add User',
+  emptyTitle: 'No users found',
+  emptyDescription: 'Create a user account to get started.',
+  createTitle: 'Create User',
+  createDescription:
+    'Add a new user account. They can log in with the provided credentials.',
+  namePlaceholder: 'Alice',
+  passwordPlaceholder: 'Min 8 characters',
+  creating: 'Creating...',
+  create: 'Create',
+  keyGeneratedTitle: 'API Key Generated',
+  keyGeneratedDescription: 'Copy this key now — it will not be shown again.',
+  key: 'Key',
+  enable: 'Enable',
+  disable: 'Disable',
+  active: 'Active',
+  lastLogin: 'Last Login',
+};
+
+const zh: Shape<typeof en> = {
+  title: '用户',
+  failedToLoad: '加载用户失败',
+  updateFailed: '更新用户失败',
+  createFailed: '创建用户失败',
+  generateKeyFailed: '生成 API Key 失败',
+  adminRequired: '管理用户需要管理员角色',
+  subtitle: '管理用户账号与 API Key',
+  addUser: '添加用户',
+  emptyTitle: '暂无用户',
+  emptyDescription: '创建一个用户账号即可开始使用。',
+  createTitle: '创建用户',
+  createDescription: '添加一个新的用户账号。对方可使用提供的凭据登录。',
+  namePlaceholder: '爱丽丝',
+  passwordPlaceholder: '至少 8 个字符',
+  creating: '创建中...',
+  create: '创建',
+  keyGeneratedTitle: 'API Key 已生成',
+  keyGeneratedDescription: '请立即复制此 Key —— 之后将不再显示。',
+  key: 'Key',
+  enable: '启用',
+  disable: '禁用',
+  active: '活跃',
+  lastLogin: '最近登录',
+};
+
+const ja: Shape<typeof en> = {
+  title: 'ユーザー',
+  failedToLoad: 'ユーザーの読み込みに失敗しました',
+  updateFailed: 'ユーザーの更新に失敗しました',
+  createFailed: 'ユーザーの作成に失敗しました',
+  generateKeyFailed: 'API キーの生成に失敗しました',
+  adminRequired: 'ユーザー管理には管理者ロールが必要です',
+  subtitle: 'ユーザーアカウントと API キーを管理します',
+  addUser: 'ユーザーを追加',
+  emptyTitle: 'ユーザーがありません',
+  emptyDescription: 'ユーザーアカウントを作成して開始してください。',
+  createTitle: 'ユーザーを作成',
+  createDescription:
+    '新しいユーザーアカウントを追加します。提供された認証情報でログインできます。',
+  namePlaceholder: 'アリス',
+  passwordPlaceholder: '8文字以上',
+  creating: '作成中...',
+  create: '作成',
+  keyGeneratedTitle: 'API キーを生成しました',
+  keyGeneratedDescription:
+    '今すぐコピーしてください。再表示されることはありません。',
+  key: 'キー',
+  enable: '有効にする',
+  disable: '無効にする',
+  active: 'アクティブ',
+  lastLogin: '最終ログイン',
+};
+
+const ko: Shape<typeof en> = {
+  title: '사용자',
+  failedToLoad: '사용자 로드 실패',
+  updateFailed: '사용자 업데이트 실패',
+  createFailed: '사용자 생성 실패',
+  generateKeyFailed: 'API 키 생성 실패',
+  adminRequired: '사용자 관리를 위해서는 관리자 역할이 필요합니다',
+  subtitle: '사용자 계정 및 API 키를 관리합니다',
+  addUser: '사용자 추가',
+  emptyTitle: '사용자가 없습니다',
+  emptyDescription: '사용자 계정을 만들어 시작하세요.',
+  createTitle: '사용자 생성',
+  createDescription:
+    '새 사용자 계정을 추가합니다. 제공된 자격 증명으로 로그인할 수 있습니다.',
+  namePlaceholder: '앨리스',
+  passwordPlaceholder: '8자 이상',
+  creating: '생성 중...',
+  create: '생성',
+  keyGeneratedTitle: 'API 키가 생성되었습니다',
+  keyGeneratedDescription: '지금 복사하세요. 다시 표시되지 않습니다.',
+  key: '키',
+  enable: '활성화',
+  disable: '비활성화',
+  active: '활성',
+  lastLogin: '최근 로그인',
+};
+
+export const users = { en, zh, ja, ko } as const;

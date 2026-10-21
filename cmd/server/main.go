@@ -1,0 +1,139 @@
+// dutybotGo — 多用户 Go Agent 管理平台。
+//
+// 基于 langchaingo 的 Agent 服务：仓库管理（git clone + codegraph 初始化）、
+// Agent 定义（系统提示词 / skills / MCP / subagent）、实例与会话。
+//
+// 存储只依赖 MySQL + Redis（Asynq）。
+//
+//	@title          dutybotGo API
+//	@version        0.1.0
+//	@description    Agent 管理与仓库托管服务
+//	@contact.name   dutybotGo Team
+//	@host           localhost:8080
+//	@basePath       /v1
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+
+	"github.com/redis/go-redis/v9"
+
+	"github.com/zhaocore/dutybotgo/internal/agent"
+	"github.com/zhaocore/dutybotgo/internal/api"
+	"github.com/zhaocore/dutybotgo/internal/config"
+	"github.com/zhaocore/dutybotgo/internal/store/mysql"
+	"github.com/zhaocore/dutybotgo/internal/worker"
+)
+
+func main() {
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("load config: %v", err)
+	}
+
+	// 启动时校验关键配置
+	if err := cfg.Validate(); err != nil {
+		log.Fatalf("invalid config: %v", err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// MySQL
+	db, err := mysql.New(ctx, cfg.Database.URL,
+		cfg.Database.MaxOpenConns, cfg.Database.MaxIdleConns, cfg.Database.ConnMaxLifetime)
+	if err != nil {
+		log.Fatalf("connect mysql: %v", err)
+	}
+	defer db.Close()
+
+	if err := db.RunMigrations("migrations"); err != nil {
+		log.Fatalf("run migrations: %v", err)
+	}
+
+	// 同步入口串行读取完整配置，校验通过后才事务更新公共预设。
+	var presetMu sync.Mutex
+	syncAgents := func(ctx context.Context) error {
+		presetMu.Lock()
+		defer presetMu.Unlock()
+		presets, err := agent.LoadPresets(cfg.Agent.RootDir, cfg.LLM.Model)
+		if err != nil {
+			return err
+		}
+		return mysql.SyncPresets(ctx, db.DB, presets)
+	}
+	if err := syncAgents(ctx); err != nil {
+		log.Fatalf("sync public agents: %v", err)
+	}
+
+	// 服务重启后遗留 running 实例置为 stopped（会话历史已持久化）
+	if err := mysql.MarkRunningInstancesStopped(ctx, db.DB); err != nil {
+		log.Fatalf("reset instance states: %v", err)
+	}
+
+	// Asynq 入队客户端
+	asynqClient := worker.NewClient(cfg.Redis.Addr, cfg.Redis.Password)
+	defer asynqClient.Close()
+
+	// Agent 运行时与实例管理器
+	runtime := agent.NewLangChainRuntime(cfg.LLM.APIKey, cfg.LLM.BaseURL)
+	instances := agent.NewManager(db.DB, runtime)
+
+	// API Handler
+	h := &api.Handler{
+		Config:      cfg,
+		DB:          db.DB,
+		AsynqClient: asynqClient,
+		Instances:   instances,
+		Runtime:     runtime,
+		SyncAgents:  syncAgents,
+		// Redis 健康探测：Asynq 客户端未暴露 ping，这里直接建临时连接校验
+		RedisHealth: func(ctx context.Context) error {
+			rdb := redis.NewClient(&redis.Options{Addr: cfg.Redis.Addr, Password: cfg.Redis.Password})
+			defer rdb.Close()
+			return rdb.Ping(ctx).Err()
+		},
+	}
+
+	// Asynq Worker（仓库克隆 / 同步 / 删除）
+	workerSrv := worker.NewServer(cfg.Redis.Addr, cfg.Redis.Password, db.DB, cfg.Repo.RootDir)
+
+	errCh := make(chan error, 2)
+	go func() {
+		log.Println("asynq worker starting...")
+		if err := workerSrv.Start(); err != nil {
+			errCh <- fmt.Errorf("asynq worker stopped: %w", err)
+		}
+	}()
+
+	// HTTP 服务
+	router := api.NewRouter(h)
+
+	go func() {
+		addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
+		log.Printf("dutybotGo HTTP server starting on %s", addr)
+		if err := router.Run(addr); err != nil {
+			errCh <- err
+		}
+	}()
+
+	// 优雅关闭
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case err := <-errCh:
+		log.Fatalf("server error: %v", err)
+	case sig := <-quit:
+		log.Printf("received signal %v, shutting down", sig)
+		cancel()
+		instances.ShutdownAll()
+		workerSrv.Shutdown()
+	}
+}

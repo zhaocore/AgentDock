@@ -1,0 +1,6 @@
+{
+  "cookies": [
+    { "domain": "docs.example.com", "cookie": "session=replace-me; token=replace-me" },
+    { "domain": ".example.org", "cookie": "session=replace-me" }
+  ]
+}

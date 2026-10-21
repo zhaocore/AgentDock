@@ -1,0 +1,922 @@
+{
+  "status": "FAIL",
+  "corpus": "testdata/eval/questions.json",
+  "query_count": 30,
+  "recall_at_10": 0.8928571428571429,
+  "ndcg_at_10": 0.8618189197704093,
+  "citations_traceable": 1.0,
+  "latency_p50_ms": 1206.1,
+  "latency_p95_ms": 2092.5,
+  "delete_removes_vector_sources": true,
+  "token_usage": null,
+  "model_call_count": null,
+  "results": [
+    {
+      "id": "q01",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 5,
+      "citations_traceable": true,
+      "latency_ms": 1320.2,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...北极星服务的发布窗口是每周二 09:30 UTC。发布负责人是林岚。发布前先检查 Atlas 仪表盘，再运行灰度批次 B7。批次 B7 只覆盖 5% 的租户。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演..."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "123ffc82-6390-5611-b9d4-0d0545aca06d",
+          "excerpt": "...溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。\n\n第八章：查询\n\n查询层使用代号 Hazel-18。查询先做向量召回，再扩展图关系，最后由模型生成回答。无证据时必须说明无法从资料确认。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "...续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "b9db50c6-3c54-5cf4-a00a-51b2e44a145e",
+          "excerpt": "...以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "daaa3368-a66f-5f00-b52e-aff8b56dfc3d",
+          "excerpt": "...L 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。"
+        }
+      ]
+    },
+    {
+      "id": "q02",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 5,
+      "citations_traceable": true,
+      "latency_ms": 1127.9,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...布负责人是林岚。发布前先检查 Atlas 仪表盘，再运行灰度批次 B7。批次 B7 只覆盖 5% 的租户。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。\n\n依赖\n\n北极星服务从 P..."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "...续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "123ffc82-6390-5611-b9d4-0d0545aca06d",
+          "excerpt": "...溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。\n\n第八章：查询\n\n查询层使用代号 Hazel-18。查询先做向量召回，再扩展图关系，最后由模型生成回答。无证据时必须说明无法从资料确认。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "b9db50c6-3c54-5cf4-a00a-51b2e44a145e",
+          "excerpt": "...以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "daaa3368-a66f-5f00-b52e-aff8b56dfc3d",
+          "excerpt": "...L 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。"
+        }
+      ]
+    },
+    {
+      "id": "q03",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 5,
+      "citations_traceable": true,
+      "latency_ms": 1200.6,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...发布前先检查 Atlas 仪表盘，再运行灰度批次 B7。批次 B7 只覆盖 5% 的租户。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。\n\n依赖\n\n北极星服务从 PostgreSQ..."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "123ffc82-6390-5611-b9d4-0d0545aca06d",
+          "excerpt": "...溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。\n\n第八章：查询\n\n查询层使用代号 Hazel-18。查询先做向量召回，再扩展图关系，最后由模型生成回答。无证据时必须说明无法从资料确认。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "...续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "b9db50c6-3c54-5cf4-a00a-51b2e44a145e",
+          "excerpt": "...以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "daaa3368-a66f-5f00-b52e-aff8b56dfc3d",
+          "excerpt": "...L 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。"
+        }
+      ]
+    },
+    {
+      "id": "q04",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 2,
+      "citations_traceable": true,
+      "latency_ms": 1475.5,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...灰度批次 B7。批次 B7 只覆盖 5% 的租户。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。\n\n依赖\n\n北极星服务从 PostgreSQL 读取订单，从 Redis 读取短期会..."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "...租户鉴权，然后进入导入调度器。接入层不负责向量生成。\n\n第二章：解析\n\n解析层使用代号 Birch-52。Markdown 标题保留为章节路径，HTML 段落转换成文本元素。解析结果用于后续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 153..."
+        }
+      ]
+    },
+    {
+      "id": "q05",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 2,
+      "citations_traceable": true,
+      "latency_ms": 1210.0,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。\n\n依赖\n\n北极星服务从 PostgreSQL 读取订单，从 Redis 读取短期会话。Neo4j 保存实体关系，不保存订单主记录。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "123ffc82-6390-5611-b9d4-0d0545aca06d",
+          "excerpt": "...溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。\n\n第八章：查询\n\n查询层使用代号 Hazel-18。查询先做向量召回，再扩展图关系，最后由模型生成回答。无证据时必须说明无法从资料确认。"
+        }
+      ]
+    },
+    {
+      "id": "q06",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1316.3,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。\n\n依赖\n\n北极星服务从 PostgreSQL 读取订单，从 Redis 读取短期会话。Neo4j 保存实体关系，不保存订单主记录。"
+        }
+      ]
+    },
+    {
+      "id": "q07",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1302.7,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。\n\n依赖\n\n北极星服务从 PostgreSQL 读取订单，从 Redis 读取短期会话。Neo4j 保存实体关系，不保存订单主记录。"
+        }
+      ]
+    },
+    {
+      "id": "q08",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 3,
+      "citations_traceable": true,
+      "latency_ms": 1150.5,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。\n\n依赖\n\n北极星服务从 PostgreSQL 读取订单，从 Redis 读取短期会话。Neo4j 保存实体关系，不保存订单主记录。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "...保留为章节路径，HTML 段落转换成文本元素。解析结果用于后续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草..."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "b9db50c6-3c54-5cf4-a00a-51b2e44a145e",
+          "excerpt": "...保留为章节路径，HTML 段落转换成文本元素。解析结果用于后续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草..."
+        }
+      ]
+    },
+    {
+      "id": "q09",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 3,
+      "citations_traceable": true,
+      "latency_ms": 1212.9,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。\n\n依赖\n\n北极星服务从 PostgreSQL 读取订单，从 Redis 读取短期会话。Neo4j 保存实体关系，不保存订单主记录。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "...保留为章节路径，HTML 段落转换成文本元素。解析结果用于后续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草..."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "b9db50c6-3c54-5cf4-a00a-51b2e44a145e",
+          "excerpt": "...保留为章节路径，HTML 段落转换成文本元素。解析结果用于后续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草..."
+        }
+      ]
+    },
+    {
+      "id": "q10",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 5,
+      "citations_traceable": true,
+      "latency_ms": 1202.2,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。\n\n依赖\n\n北极星服务从 PostgreSQL 读取订单，从 Redis 读取短期会话。Neo4j 保存实体关系，不保存订单主记录。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "123ffc82-6390-5611-b9d4-0d0545aca06d",
+          "excerpt": "...PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文..."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "...续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "b9db50c6-3c54-5cf4-a00a-51b2e44a145e",
+          "excerpt": "...以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "daaa3368-a66f-5f00-b52e-aff8b56dfc3d",
+          "excerpt": "...PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文..."
+        }
+      ]
+    },
+    {
+      "id": "q11",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 4,
+      "citations_traceable": true,
+      "latency_ms": 1373.0,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。\n\n依赖\n\n北极星服务从 PostgreSQL 读取订单，从 Redis 读取短期会话。Neo4j 保存实体关系，不保存订单主记录。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "...续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "b9db50c6-3c54-5cf4-a00a-51b2e44a145e",
+          "excerpt": "...记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导..."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "daaa3368-a66f-5f00-b52e-aff8b56dfc3d",
+          "excerpt": "...记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导..."
+        }
+      ]
+    },
+    {
+      "id": "q12",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 2,
+      "citations_traceable": true,
+      "latency_ms": 1371.5,
+      "sources": [
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "2713e6ee-a8c6-5fed-bc8f-dc16fcff21b7",
+          "excerpt": "...Harbor pipeline runs Parse, Chunk, Embed, Extract, Resolve, Write, and Publish in that order.\n\nParse accepts Markdown and HTML. Embed produces 1536-dimensional vectors. Publish runs after graph writin..."
+        },
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "7e2b2009-462a-5756-82a4-6b62c5073028",
+          "excerpt": "...Harbor pipeline runs Parse, Chunk, Embed, Extract, Resolve, Write, and Publish in that order.\n\nParse accepts Markdown and HTML. Embed produces 1536-dimensional vectors. Publish runs after graph writin..."
+        }
+      ]
+    },
+    {
+      "id": "q13",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 3,
+      "citations_traceable": true,
+      "latency_ms": 1052.4,
+      "sources": [
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "2713e6ee-a8c6-5fed-bc8f-dc16fcff21b7",
+          "excerpt": "...ine runs Parse, Chunk, Embed, Extract, Resolve, Write, and Publish in that order.\n\nParse accepts Markdown and HTML. Embed produces 1536-dimensional vectors. Publish runs after graph writing completes."
+        },
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "7e2b2009-462a-5756-82a4-6b62c5073028",
+          "excerpt": "...Parse accepts Markdown and HTML. Embed produces 1536-dimensional vectors. Publish runs after graph writing completes.\n\nEvidence\n\nEach answer citation records a document name, page number, chunk ID, an..."
+        },
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。\n\n依赖\n\n北极星服务从 PostgreSQL 读取订单，从 Redis 读取短期会话。Neo4j 保存实体关系，不保存订单主记录。"
+        }
+      ]
+    },
+    {
+      "id": "q14",
+      "status": "PASS",
+      "rank": 3,
+      "source_count": 6,
+      "citations_traceable": true,
+      "latency_ms": 1063.2,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "123ffc82-6390-5611-b9d4-0d0545aca06d",
+          "excerpt": "...溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。\n\n第八章：查询\n\n查询层使用代号 Hazel-18。查询先做向量召回，再扩展图关系，最后由模型生成回答。无证据时必须说明无法从资料确认。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "...生成。\n\n第二章：解析\n\n解析层使用代号 Birch-52。Markdown 标题保留为章节路径，HTML 段落转换成文本元素。解析结果用于后续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgv..."
+        },
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "2713e6ee-a8c6-5fed-bc8f-dc16fcff21b7",
+          "excerpt": "...ine runs Parse, Chunk, Embed, Extract, Resolve, Write, and Publish in that order.\n\nParse accepts Markdown and HTML. Embed produces 1536-dimensional vectors. Publish runs after graph writing completes."
+        },
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "7e2b2009-462a-5756-82a4-6b62c5073028",
+          "excerpt": "...Embed produces 1536-dimensional vectors. Publish runs after graph writing completes.\n\nEvidence\n\nEach answer citation records a document name, page number, chunk ID, and excerpt. The citation marker mu..."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "b9db50c6-3c54-5cf4-a00a-51b2e44a145e",
+          "excerpt": "...以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "daaa3368-a66f-5f00-b52e-aff8b56dfc3d",
+          "excerpt": "...向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体..."
+        }
+      ]
+    },
+    {
+      "id": "q15",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 3,
+      "citations_traceable": true,
+      "latency_ms": 936.8,
+      "sources": [
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "2713e6ee-a8c6-5fed-bc8f-dc16fcff21b7",
+          "excerpt": "...ine runs Parse, Chunk, Embed, Extract, Resolve, Write, and Publish in that order.\n\nParse accepts Markdown and HTML. Embed produces 1536-dimensional vectors. Publish runs after graph writing completes."
+        },
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "7e2b2009-462a-5756-82a4-6b62c5073028",
+          "excerpt": "...s. Publish runs after graph writing completes.\n\nEvidence\n\nEach answer citation records a document name, page number, chunk ID, and excerpt. The citation marker must point to a selected evidence chunk."
+        },
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...运行灰度批次 B7。批次 B7 只覆盖 5% 的租户。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。\n\n依赖\n\n北极星服务从 PostgreSQL 读取订单，从 Redis 读取短..."
+        }
+      ]
+    },
+    {
+      "id": "q16",
+      "status": "FAIL",
+      "rank": null,
+      "source_count": 4,
+      "citations_traceable": true,
+      "latency_ms": 2092.5,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "...续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "b9db50c6-3c54-5cf4-a00a-51b2e44a145e",
+          "excerpt": "...记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导..."
+        },
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。\n\n依赖\n\n北极星服务从 PostgreSQL 读取订单，从 Redis 读取短期会话。Neo4j 保存实体关系，不保存订单主记录。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "daaa3368-a66f-5f00-b52e-aff8b56dfc3d",
+          "excerpt": "...记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导..."
+        }
+      ]
+    },
+    {
+      "id": "q17",
+      "status": "FAIL",
+      "rank": null,
+      "source_count": 2,
+      "citations_traceable": true,
+      "latency_ms": 1193.4,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "123ffc82-6390-5611-b9d4-0d0545aca06d",
+          "excerpt": "...溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。\n\n第八章：查询\n\n查询层使用代号 Hazel-18。查询先做向量召回，再扩展图关系，最后由模型生成回答。无证据时必须说明无法从资料确认。"
+        },
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。\n\n依赖\n\n北极星服务从 PostgreSQL 读取订单，从 Redis 读取短期会话。Neo4j 保存实体关系，不保存订单主记录。"
+        }
+      ]
+    },
+    {
+      "id": "q18",
+      "status": "PASS",
+      "rank": 2,
+      "source_count": 6,
+      "citations_traceable": true,
+      "latency_ms": 1072.0,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "123ffc82-6390-5611-b9d4-0d0545aca06d",
+          "excerpt": "...溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。\n\n第八章：查询\n\n查询层使用代号 Hazel-18。查询先做向量召回，再扩展图关系，最后由模型生成回答。无证据时必须说明无法从资料确认。"
+        },
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "220659c7-3a38-5948-b46a-d26993c089bf",
+          "excerpt": "...l immediately. A failed publication must never be reported as successful.\n\nOwnership\n\nMira owns the ingestion pipeline. Theo owns retrieval. Mira asks Theo to verify citations before the release gate."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "...续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "b9db50c6-3c54-5cf4-a00a-51b2e44a145e",
+          "excerpt": "...以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。"
+        },
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...发布前先检查 Atlas 仪表盘，再运行灰度批次 B7。批次 B7 只覆盖 5% 的租户。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。\n\n依赖\n\n北极星服务从 PostgreSQ..."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "daaa3368-a66f-5f00-b52e-aff8b56dfc3d",
+          "excerpt": "...L 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。"
+        }
+      ]
+    },
+    {
+      "id": "q19",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 4,
+      "citations_traceable": true,
+      "latency_ms": 1303.0,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "长文索引样本\n\n第一章：接入\n\n接入层使用代号 Amber-41。请求先通过租户鉴权，然后进入导入调度器。接入层不负责向量生成。\n\n第二章：解析\n\n解析层使用代号 Birch-52。Markdown 标题保留为章节路径，HTML 段落转换成文本元素。解析结果用于后续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chun..."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "123ffc82-6390-5611-b9d4-0d0545aca06d",
+          "excerpt": "...溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。\n\n第八章：查询\n\n查询层使用代号 Hazel-18。查询先做向量召回，再扩展图关系，最后由模型生成回答。无证据时必须说明无法从资料确认。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "b9db50c6-3c54-5cf4-a00a-51b2e44a145e",
+          "excerpt": "...以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "daaa3368-a66f-5f00-b52e-aff8b56dfc3d",
+          "excerpt": "...L 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。"
+        }
+      ]
+    },
+    {
+      "id": "q20",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 4,
+      "citations_traceable": true,
+      "latency_ms": 1347.5,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "长文索引样本\n\n第一章：接入\n\n接入层使用代号 Amber-41。请求先通过租户鉴权，然后进入导入调度器。接入层不负责向量生成。\n\n第二章：解析\n\n解析层使用代号 Birch-52。Markdown 标题保留为章节路径，HTML 段落转换成文本元素。解析结果用于后续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chun..."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "b9db50c6-3c54-5cf4-a00a-51b2e44a145e",
+          "excerpt": "...析层使用代号 Birch-52。Markdown 标题保留为章节路径，HTML 段落转换成文本元素。解析结果用于后续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：..."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "123ffc82-6390-5611-b9d4-0d0545aca06d",
+          "excerpt": "...溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。\n\n第八章：查询\n\n查询层使用代号 Hazel-18。查询先做向量召回，再扩展图关系，最后由模型生成回答。无证据时必须说明无法从资料确认。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "daaa3368-a66f-5f00-b52e-aff8b56dfc3d",
+          "excerpt": "...L 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。"
+        }
+      ]
+    },
+    {
+      "id": "q21",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 8,
+      "citations_traceable": true,
+      "latency_ms": 1055.3,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "...续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "b9db50c6-3c54-5cf4-a00a-51b2e44a145e",
+          "excerpt": "...每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与..."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "daaa3368-a66f-5f00-b52e-aff8b56dfc3d",
+          "excerpt": "...每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与..."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "123ffc82-6390-5611-b9d4-0d0545aca06d",
+          "excerpt": "...溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。\n\n第八章：查询\n\n查询层使用代号 Hazel-18。查询先做向量召回，再扩展图关系，最后由模型生成回答。无证据时必须说明无法从资料确认。"
+        },
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "2713e6ee-a8c6-5fed-bc8f-dc16fcff21b7",
+          "excerpt": "...ine runs Parse, Chunk, Embed, Extract, Resolve, Write, and Publish in that order.\n\nParse accepts Markdown and HTML. Embed produces 1536-dimensional vectors. Publish runs after graph writing completes."
+        },
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "7e2b2009-462a-5756-82a4-6b62c5073028",
+          "excerpt": "...s. Publish runs after graph writing completes.\n\nEvidence\n\nEach answer citation records a document name, page number, chunk ID, and excerpt. The citation marker must point to a selected evidence chunk."
+        },
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。\n\n依赖\n\n北极星服务从 PostgreSQL 读取订单，从 Redis 读取短期会话。Neo4j 保存实体关系，不保存订单主记录。"
+        },
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "da259fed-31b2-5489-b3dd-a2234e101041",
+          "excerpt": "...a selected evidence chunk.\n\nFailure policy\n\nWorkers retry transient model errors at most three times. Authentication errors fail immediately. A failed publication must never be reported as successful."
+        }
+      ]
+    },
+    {
+      "id": "q22",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 4,
+      "citations_traceable": true,
+      "latency_ms": 1319.2,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "123ffc82-6390-5611-b9d4-0d0545aca06d",
+          "excerpt": "...Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文..."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "...续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "b9db50c6-3c54-5cf4-a00a-51b2e44a145e",
+          "excerpt": "...以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "daaa3368-a66f-5f00-b52e-aff8b56dfc3d",
+          "excerpt": "...Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文..."
+        }
+      ]
+    },
+    {
+      "id": "q23",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 4,
+      "citations_traceable": true,
+      "latency_ms": 1295.2,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "123ffc82-6390-5611-b9d4-0d0545aca06d",
+          "excerpt": "...图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。\n\n第八章：查询\n\n查询层使用代号 Hazel-1..."
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "...续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "b9db50c6-3c54-5cf4-a00a-51b2e44a145e",
+          "excerpt": "...以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "daaa3368-a66f-5f00-b52e-aff8b56dfc3d",
+          "excerpt": "...L 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。"
+        }
+      ]
+    },
+    {
+      "id": "q24",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 4,
+      "citations_traceable": true,
+      "latency_ms": 1138.9,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "123ffc82-6390-5611-b9d4-0d0545aca06d",
+          "excerpt": "...溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。\n\n第八章：查询\n\n查询层使用代号 Hazel-18。查询先做向量召回，再扩展图关系，最后由模型生成回答。无证据时必须说明无法从资料确认。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "b9db50c6-3c54-5cf4-a00a-51b2e44a145e",
+          "excerpt": "...以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "daaa3368-a66f-5f00-b52e-aff8b56dfc3d",
+          "excerpt": "...L 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "...续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。"
+        }
+      ]
+    },
+    {
+      "id": "q25",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 5,
+      "citations_traceable": true,
+      "latency_ms": 1284.8,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "123ffc82-6390-5611-b9d4-0d0545aca06d",
+          "excerpt": "...溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。\n\n第八章：查询\n\n查询层使用代号 Hazel-18。查询先做向量召回，再扩展图关系，最后由模型生成回答。无证据时必须说明无法从资料确认。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "daaa3368-a66f-5f00-b52e-aff8b56dfc3d",
+          "excerpt": "...L 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。\n\n第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "b9db50c6-3c54-5cf4-a00a-51b2e44a145e",
+          "excerpt": "...以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。\n\n第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "...续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。\n\n第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。\n\n第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。"
+        },
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...发布前先检查 Atlas 仪表盘，再运行灰度批次 B7。批次 B7 只覆盖 5% 的租户。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。\n\n依赖\n\n北极星服务从 PostgreSQ..."
+        }
+      ]
+    },
+    {
+      "id": "q26",
+      "status": "FAIL",
+      "rank": null,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 3027.5,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "878f525f-80d2-56be-8ab1-8f534c92f002",
+          "excerpt": "长文索引样本\n\n第一章：接入\n\n接入层使用代号 Amber-41。请求先通过租户鉴权，然后进入导入调度器。接入层不负责向量生成。\n\n第二章：解析\n\n解析层使用代号 Birch-52。Markdown 标题保留为章节路径，HTML 段落转换成文本元素。解析结果用于后续分块。\n\n第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chun..."
+        }
+      ]
+    },
+    {
+      "id": "q27",
+      "status": "FAIL",
+      "rank": null,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1112.5,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "d1a48858-2974-520a-a1d1-501e2a2dd339",
+          "excerpt": "...北极星服务的发布窗口是每周二 09:30 UTC。发布负责人是林岚。发布前先检查 Atlas 仪表盘，再运行灰度批次 B7。批次 B7 只覆盖 5% 的租户。\n\n回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。\n\n数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演..."
+        }
+      ]
+    },
+    {
+      "id": "q28",
+      "status": "FAIL",
+      "rank": null,
+      "source_count": 2,
+      "citations_traceable": true,
+      "latency_ms": 1199.0,
+      "sources": [
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "2713e6ee-a8c6-5fed-bc8f-dc16fcff21b7",
+          "excerpt": "...Harbor pipeline runs Parse, Chunk, Embed, Extract, Resolve, Write, and Publish in that order.\n\nParse accepts Markdown and HTML. Embed produces 1536-dimensional vectors. Publish runs after graph writin..."
+        },
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "7e2b2009-462a-5756-82a4-6b62c5073028",
+          "excerpt": "...Harbor pipeline runs Parse, Chunk, Embed, Extract, Resolve, Write, and Publish in that order.\n\nParse accepts Markdown and HTML. Embed produces 1536-dimensional vectors. Publish runs after graph writin..."
+        }
+      ]
+    },
+    {
+      "id": "q29",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1193.0,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "3f235b0f-fbc0-5acc-a0c9-cfbfcd243cf7",
+          "excerpt": "北极星服务运维手册\n\n发布\n\n北极星服务在这个租户的发布窗口是周五 18:00 UTC。发布负责人是周岳。灰度批次 C9 覆盖 20% 的租户。\n\n数据保留\n\n这个租户的审计日志保留 90 天。备份保留 30 天。专属恢复演练每季度执行一次。"
+        }
+      ]
+    },
+    {
+      "id": "q30",
+      "status": "PASS",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 884.5,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "3f235b0f-fbc0-5acc-a0c9-cfbfcd243cf7",
+          "excerpt": "北极星服务运维手册\n\n发布\n\n北极星服务在这个租户的发布窗口是周五 18:00 UTC。发布负责人是周岳。灰度批次 C9 覆盖 20% 的租户。\n\n数据保留\n\n这个租户的审计日志保留 90 天。备份保留 30 天。专属恢复演练每季度执行一次。"
+        }
+      ]
+    }
+  ],
+  "corpus_sha256": "95ab8cef9ab378ea822593fd55e3fb1399761dd80a08324a14c0ed67f151fd99"
+}

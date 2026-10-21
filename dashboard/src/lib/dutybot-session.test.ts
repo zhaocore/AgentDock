@@ -1,0 +1,172 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  boundedBody,
+  isAllowedDutybotRoute,
+  isSameOrigin,
+  jwtExpiry,
+} from './dutybot-session';
+import { getServerApiUrl } from './server-api-url';
+
+afterEach(() => vi.unstubAllEnvs());
+
+describe('dutybotGo session boundaries', () => {
+  it('only proxies explicit methods and paths', () => {
+    const id = '11111111-1111-1111-1111-111111111111';
+    // 仓库：列表 / 详情 / 同步 / 删除
+    expect(isAllowedDutybotRoute('GET', ['repositories'])).toBe(true);
+    expect(isAllowedDutybotRoute('GET', ['repositories', id])).toBe(true);
+    expect(isAllowedDutybotRoute('POST', ['repositories'])).toBe(true);
+    expect(isAllowedDutybotRoute('POST', ['repositories', id, 'sync'])).toBe(
+      true,
+    );
+    expect(isAllowedDutybotRoute('DELETE', ['repositories', id])).toBe(true);
+    // Agent / 实例 / 会话
+    expect(isAllowedDutybotRoute('GET', ['agents'])).toBe(true);
+    expect(isAllowedDutybotRoute('POST', ['agents', id, 'instances'])).toBe(
+      true,
+    );
+    expect(isAllowedDutybotRoute('POST', ['instances', id, 'start'])).toBe(
+      true,
+    );
+    expect(isAllowedDutybotRoute('POST', ['sessions', id, 'messages'])).toBe(
+      true,
+    );
+    expect(isAllowedDutybotRoute('GET', ['sessions', id, 'messages'])).toBe(
+      true,
+    );
+    expect(isAllowedDutybotRoute('DELETE', ['sessions', id])).toBe(true);
+    // 拒绝形态：未知方法、路径穿越、未登记资源
+    expect(isAllowedDutybotRoute('POST', ['auth', 'refresh'])).toBe(false);
+    expect(isAllowedDutybotRoute('GET', ['admin', 'users'])).toBe(false);
+    expect(isAllowedDutybotRoute('PATCH', ['agents', id])).toBe(false);
+    expect(isAllowedDutybotRoute('GET', ['agents', '..'])).toBe(false);
+    expect(isAllowedDutybotRoute('GET', ['agents', 'bad'])).toBe(false);
+    expect(isAllowedDutybotRoute('POST', ['sessions'])).toBe(false);
+  });
+  it('requires matching Origin for writes', () => {
+    expect(
+      isSameOrigin(
+        new Request('http://localhost:3000/api/session', {
+          headers: { origin: 'http://evil.test' },
+        }),
+      ),
+    ).toBe(false);
+    expect(isSameOrigin(new Request('http://localhost:3000/api/session'))).toBe(
+      false,
+    );
+    expect(
+      isSameOrigin(
+        new Request('http://localhost:3000/api/session', {
+          headers: { origin: 'http://localhost:3000' },
+        }),
+      ),
+    ).toBe(true);
+    vi.stubEnv('DASHBOARD_URL', 'https://studio.test');
+    expect(
+      isSameOrigin(
+        new Request('http://next:3000/api/session', {
+          headers: { origin: 'https://studio.test' },
+        }),
+      ),
+    ).toBe(true);
+  });
+  it('accepts explicitly registered extra origins like internal IPs', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('DASHBOARD_URL', 'https://studio.test');
+    vi.stubEnv(
+      'DASHBOARD_EXTRA_ORIGINS',
+      'http://10.53.1.2:3000, http://10.53.1.3:3000',
+    );
+    for (const origin of ['http://10.53.1.2:3000', 'http://10.53.1.3:3000']) {
+      expect(
+        isSameOrigin(
+          new Request('http://next:3000/api/dutybot/auth/login', {
+            headers: { origin },
+          }),
+        ),
+        origin,
+      ).toBe(true);
+    }
+    // 未登记的邻近 IP 仍拒绝
+    expect(
+      isSameOrigin(
+        new Request('http://next:3000/api/dutybot/auth/login', {
+          headers: { origin: 'http://10.53.1.4:3000' },
+        }),
+      ),
+    ).toBe(false);
+  });
+  it('accepts same-port loopback aliases only during development', () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('DASHBOARD_URL', 'http://127.0.0.1:3100');
+    const request = new Request(
+      'http://localhost:3100/api/dutybot/auth/register',
+      {
+        headers: { origin: 'http://localhost:3100' },
+      },
+    );
+    expect(isSameOrigin(request)).toBe(true);
+    vi.stubEnv('NODE_ENV', 'production');
+    expect(isSameOrigin(request)).toBe(false);
+  });
+  it('rejects foreign origins, ports, schemes and malformed Origin values', () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('DASHBOARD_URL', 'http://127.0.0.1:3100');
+    for (const origin of [
+      'http://localhost:3101',
+      'https://localhost:3100',
+      'http://localhost.evil.test:3100',
+      'http://evil.test:3100',
+      'http://localhost:3100/path',
+      'http://user@localhost:3100',
+      'null',
+      'broken',
+    ]) {
+      expect(
+        isSameOrigin(
+          new Request('http://localhost:3100/api/session', {
+            headers: { origin },
+          }),
+        ),
+        origin,
+      ).toBe(false);
+    }
+    expect(isSameOrigin(new Request('http://localhost:3100/api/session'))).toBe(
+      false,
+    );
+    vi.stubEnv('DASHBOARD_URL', 'https://studio.test');
+    expect(
+      isSameOrigin(
+        new Request('http://localhost:3100/api/session', {
+          headers: { origin: 'http://localhost:3100' },
+        }),
+      ),
+    ).toBe(false);
+  });
+  it('bounds cookie lifetime and refuses expired or malformed tokens', () => {
+    const token = `header.${Buffer.from(JSON.stringify({ exp: 200 })).toString('base64url')}.signature`;
+    expect(jwtExpiry(token, 100)).toBe(100);
+    expect(() => jwtExpiry(token, 201)).toThrow('expired');
+    expect(() => jwtExpiry('broken', 100)).toThrow('invalid JWT');
+  });
+  it('rejects oversized streamed bodies without disk buffering', async () => {
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new Uint8Array(4));
+        controller.enqueue(new Uint8Array(4));
+        controller.close();
+      },
+    });
+    await expect(
+      new Response(boundedBody(stream, 7)).arrayBuffer(),
+    ).rejects.toThrow('size limit');
+  });
+  it('never permits credentials or a non-HTTP upstream', () => {
+    vi.stubEnv('API_INTERNAL_URL', 'file:///etc/passwd');
+    expect(getServerApiUrl).toThrow();
+    vi.stubEnv('API_INTERNAL_URL', 'https://user:password@service.test/v1');
+    expect(getServerApiUrl).toThrow();
+    vi.stubEnv('API_INTERNAL_URL', 'http://dutybot:8080/custom/');
+    expect(getServerApiUrl()).toBe('http://dutybot:8080/custom');
+  });
+});

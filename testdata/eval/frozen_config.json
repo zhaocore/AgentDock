@@ -1,0 +1,27 @@
+{
+  "corpus_sha256": "a141d4fbfdd4fa4e1a48540e62535172d312449e7aafdc5ab854b48ad720a00e",
+  "source_sha256": {
+    "internal/query/engine.go": "b200a9627a22a440c797fc78c57c2608d61f5767bac4810bc84d3ac221152403",
+    "internal/query/generator.go": "2ce65b0986a1d56c7d4e58c10b0c976126efaba1f6798781ea7ac2042bce735f",
+    "internal/query/chat_client.go": "4cdacc7ee3fd7559e7178a1ac3f8362c1ae1f782a6ae1a6b00242660028c86a4",
+    "internal/llm/client.go": "c8a2e10642da12a8e27de23ce37df4cddbcc0b12d0fa38dc3ad4a93cfb03b772",
+    "scripts/evaluate.py": "e57afe37367c1d903ba0dedeedec522dbd622d0cf748379bea27d98b792ff23a",
+    "internal/pipeline/llm.go": "e8e7580fa2ecb19a7a23fe97f11960745fb3836cb801714feb68937d4a536b45",
+    "internal/query/retriever.go": "aabb738257482e267c7e23ede5e0f1da50348e208f361a5b1046227544f81516",
+    "internal/pipeline/parser.go": "08b476a06ae443e6e7689f03e67c5094f9218c76800671677af8695a7ac5f4f8",
+    "internal/pipeline/chunker.go": "066c1e7ef2ff8d69d2eeb3c8242d80e1e6a078b30197ba2f4e2279db23966142",
+    "internal/query/context.go": "6bebbfbec3f10885635d65240ce0e162636341600a69600f119ef573d85e18cf",
+    "internal/query/graph_expander.go": "db423c99a1bc8a6d8985801f77c93fd8209eed7bce1a0bae479f57b3f5306187",
+    "internal/pipeline/publisher.go": "a2533c6c4d77784ae45083edff281a8e61c64b1179b824fffc9a9277932e3bd7",
+    "internal/modelusage/usage.go": "8d11582dfecd7583c3e0f52fdaf3c96dc99fd8ea7a651daec09cc3af3f3428b7"
+  },
+  "chat_model": "gpt-4o-mini",
+  "embedding_provider": "openai",
+  "embedding_model": "text-embedding-3-small",
+  "embedding_dimensions": 1536,
+  "query_top_k": 10,
+  "query_max_tokens": 512,
+  "graph_hops": 2,
+  "similarity_threshold": 0,
+  "expected_evidence": "questions.json: type, document, evidence, optional alternatives"
+}

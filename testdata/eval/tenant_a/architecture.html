@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><body>
+<h1>Harbor ingestion architecture</h1>
+<h2>Pipeline</h2>
+<p>The Harbor pipeline runs Parse, Chunk, Embed, Extract, Resolve, Write, and Publish in that order.</p>
+<p>Parse accepts Markdown and HTML. Embed produces 1536-dimensional vectors. Publish runs after graph writing completes.</p>
+<h2>Evidence</h2>
+<p>Each answer citation records a document name, page number, chunk ID, and excerpt. The citation marker must point to a selected evidence chunk.</p>
+<h2>Failure policy</h2>
+<p>Workers retry transient model errors at most three times. Authentication errors fail immediately. A failed publication must never be reported as successful.</p>
+<h2>Ownership</h2>
+<p>Mira owns the ingestion pipeline. Theo owns retrieval. Mira asks Theo to verify citations before the release gate.</p>
+</body></html>

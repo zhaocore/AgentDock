@@ -1,0 +1,298 @@
+.gg-shell {
+  display: flex;
+  min-height: 100dvh;
+  background: hsl(var(--background));
+  letter-spacing: 0;
+}
+.gg-sidebar {
+  width: 224px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid hsl(var(--border));
+  background: hsl(var(--muted) / 0.35);
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 30;
+}
+.gg-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 64px;
+  padding: 0 22px;
+  font-size: 22px;
+  font-weight: 700;
+}
+.gg-navigation {
+  padding: 14px 12px;
+  display: grid;
+  gap: 4px;
+}
+.gg-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: hsl(var(--muted-foreground));
+}
+.gg-nav:hover {
+  background: hsl(var(--muted));
+}
+.gg-nav-active {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px hsl(var(--border));
+}
+.gg-workspace {
+  margin-left: 224px;
+  width: calc(100% - 224px);
+  min-width: 0;
+}
+.gg-header {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.gg-main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 28px;
+  display: grid;
+  gap: 22px;
+}
+.gg-main h1 {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.gg-main h2 {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+}
+.gg-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.gg-table-wrap {
+  overflow-x: auto;
+  min-width: 0;
+}
+.gg-table {
+  width: 100%;
+  text-align: left;
+  font-size: 14px;
+  border-collapse: collapse;
+}
+.gg-table th {
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.gg-table th,
+.gg-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid hsl(var(--border));
+  vertical-align: top;
+}
+.gg-table td:first-child {
+  overflow-wrap: anywhere;
+  min-width: 170px;
+}
+.gg-table tbody tr:hover {
+  background: hsl(var(--muted) / 0.35);
+}
+.gg-link {
+  color: #087c61;
+  font-weight: 550;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.dark .gg-link {
+  color: #66d6ae;
+}
+.gg-link:hover {
+  text-decoration: underline;
+}
+.gg-select {
+  height: 36px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 6px;
+  background: hsl(var(--background));
+  padding: 0 10px;
+  font-size: 14px;
+  max-width: 100%;
+}
+.gg-tabs {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.gg-tabs button {
+  padding: 12px 0;
+  font-size: 14px;
+  border-bottom: 2px solid transparent;
+}
+.gg-tabs button[aria-selected='true'] {
+  border-color: #059669;
+  font-weight: 600;
+}
+.gg-evidence {
+  border: 1px solid hsl(var(--border));
+  border-radius: 6px;
+  padding: 18px;
+  overflow-wrap: anywhere;
+}
+.gg-evidence pre {
+  white-space: pre-wrap;
+  font: inherit;
+  line-height: 1.7;
+}
+.gg-graph-wrap {
+  padding: 0;
+  overflow: hidden;
+}
+.gg-graph-wrap svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.gg-graph-edge {
+  stroke: hsl(var(--muted-foreground) / 0.45);
+  stroke-width: 1.5;
+}
+.gg-graph-node circle {
+  fill: hsl(var(--muted));
+  stroke: #059669;
+  stroke-width: 1.5;
+  cursor: pointer;
+}
+.gg-graph-node text {
+  font-size: 12px;
+  fill: hsl(var(--foreground));
+  pointer-events: none;
+}
+.gg-graph-node:hover circle,
+.gg-graph-node:focus-visible circle {
+  stroke-width: 3;
+}
+.gg-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid hsl(var(--border));
+  border-bottom: 1px solid hsl(var(--border));
+}
+.gg-metrics div {
+  padding: 24px 18px;
+  border-right: 1px solid hsl(var(--border));
+}
+.gg-metrics div:last-child {
+  border-right: 0;
+}
+.gg-metrics strong {
+  display: block;
+  margin-top: 12px;
+  font-size: 30px;
+}
+.gg-auth {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: hsl(var(--background));
+}
+.gg-auth form {
+  width: min(100%, 380px);
+  display: grid;
+  gap: 20px;
+}
+.gg-auth h1 {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 650;
+}
+.gg-field {
+  display: grid;
+  gap: 7px;
+  font-size: 14px;
+  min-width: 0;
+}
+.gg-detail {
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) minmax(0, 1fr);
+  gap: 14px;
+  font-size: 14px;
+}
+.gg-detail dt {
+  color: hsl(var(--muted-foreground));
+}
+.gg-detail dd {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 767px) {
+  .gg-sidebar {
+    display: none;
+  }
+  .gg-workspace {
+    margin-left: 0;
+    width: 100%;
+  }
+  .gg-header {
+    padding: 0 16px;
+  }
+  .gg-main {
+    padding: 20px 16px;
+  }
+  .gg-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .gg-detail {
+    grid-template-columns: 110px minmax(0, 1fr);
+  }
+}
+.gg-tree {
+  padding: 10px 8px;
+  display: grid;
+  gap: 2px;
+  align-content: start;
+  max-height: 480px;
+  overflow-y: auto;
+  font-size: 14px;
+}
+.gg-tree summary {
+  list-style: none;
+  cursor: pointer;
+}
+.gg-tree summary::-webkit-details-marker {
+  display: none;
+}
+.gg-tree-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  text-align: left;
+  color: hsl(var(--foreground));
+}
+.gg-tree-link:hover {
+  background: hsl(var(--muted));
+}
+.gg-tree-link[aria-current='true'] {
+  background: hsl(var(--muted));
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px hsl(var(--border));
+}

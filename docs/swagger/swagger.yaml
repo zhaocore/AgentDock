@@ -1,0 +1,1026 @@
+basePath: /v1
+definitions:
+  api.AgentRequest:
+    properties:
+      mcp_servers:
+        items:
+          $ref: '#/definitions/domain.MCPServerConfig'
+        type: array
+      model:
+        type: string
+      name:
+        type: string
+      skills:
+        items:
+          type: string
+        type: array
+      subagents:
+        items:
+          $ref: '#/definitions/domain.SubagentDef'
+        type: array
+      system_prompt:
+        type: string
+    required:
+    - model
+    - name
+    - system_prompt
+    type: object
+  api.AuthResponse:
+    properties:
+      email:
+        type: string
+      token:
+        type: string
+    type: object
+  api.ChangePasswordRequest:
+    properties:
+      new_password:
+        minLength: 6
+        type: string
+      old_password:
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
+  api.CreateAPITokenRequest:
+    properties:
+      can_write:
+        type: boolean
+      expires_at:
+        type: string
+      kb_scope:
+        type: string
+      label:
+        type: string
+    required:
+    - kb_scope
+    - label
+    type: object
+  api.CreateAPITokenResponse:
+    properties:
+      created_at:
+        type: string
+      expires_at:
+        type: string
+      id:
+        type: string
+      label:
+        type: string
+      last_used_at:
+        type: string
+      revoked_at:
+        type: string
+      scopes:
+        items:
+          $ref: '#/definitions/domain.APITokenScope'
+        type: array
+      tenant_id:
+        type: string
+      token:
+        type: string
+      token_prefix:
+        type: string
+    type: object
+  api.CreateInstanceRequest:
+    properties:
+      repo_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  api.CreateRepositoryRequest:
+    properties:
+      branch:
+        type: string
+      git_url:
+        type: string
+      name:
+        type: string
+      repo_type:
+        $ref: '#/definitions/domain.RepoType'
+    required:
+    - git_url
+    - name
+    - repo_type
+    type: object
+  api.ErrorResponse:
+    properties:
+      details:
+        type: string
+      error:
+        type: string
+    type: object
+  api.HealthResponse:
+    properties:
+      mysql:
+        type: string
+      mysql_error:
+        type: string
+      redis:
+        type: string
+      redis_error:
+        type: string
+      status:
+        type: string
+    type: object
+  api.ListAPITokensResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/domain.APIToken'
+        type: array
+    type: object
+  api.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  api.PaginatedResponse:
+    properties:
+      data: {}
+      has_more:
+        type: boolean
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
+  api.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  api.SendMessageRequest:
+    properties:
+      content:
+        type: string
+    required:
+    - content
+    type: object
+  api.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+    type: object
+  domain.APIToken:
+    properties:
+      created_at:
+        type: string
+      expires_at:
+        type: string
+      id:
+        type: string
+      label:
+        type: string
+      last_used_at:
+        type: string
+      revoked_at:
+        type: string
+      scopes:
+        items:
+          $ref: '#/definitions/domain.APITokenScope'
+        type: array
+      tenant_id:
+        type: string
+      token_prefix:
+        type: string
+    type: object
+  domain.APITokenScope:
+    properties:
+      can_write:
+        type: boolean
+      kb_id:
+        type: string
+    type: object
+  domain.Agent:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      mcp_servers:
+        items:
+          $ref: '#/definitions/domain.MCPServerConfig'
+        type: array
+      model:
+        type: string
+      name:
+        type: string
+      owner_user_id:
+        type: string
+      skills:
+        items:
+          type: string
+        type: array
+      subagents:
+        items:
+          $ref: '#/definitions/domain.SubagentDef'
+        type: array
+      system_prompt:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  domain.AgentInstance:
+    properties:
+      agent_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      owner_user_id:
+        type: string
+      repo_ids:
+        items:
+          type: string
+        type: array
+      status:
+        $ref: '#/definitions/domain.AgentStatus'
+      updated_at:
+        type: string
+    type: object
+  domain.AgentStatus:
+    enum:
+    - created
+    - running
+    - stopped
+    - failed
+    type: string
+    x-enum-varnames:
+    - AgentStatusCreated
+    - AgentStatusRunning
+    - AgentStatusStopped
+    - AgentStatusFailed
+  domain.MCPServerConfig:
+    properties:
+      command:
+        description: stdio 命令
+        type: string
+      endpoint:
+        description: sse URL
+        type: string
+      env:
+        additionalProperties:
+          type: string
+        type: object
+      name:
+        type: string
+      transport:
+        description: sse | stdio
+        type: string
+    type: object
+  domain.MessageView:
+    properties:
+      agent_meta:
+        additionalProperties: {}
+        type: object
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      role:
+        type: string
+      session_id:
+        type: string
+    type: object
+  domain.RepoStatus:
+    enum:
+    - pending
+    - cloning
+    - ready
+    - failed
+    type: string
+    x-enum-varnames:
+    - RepoStatusPending
+    - RepoStatusCloning
+    - RepoStatusReady
+    - RepoStatusFailed
+  domain.RepoType:
+    enum:
+    - frontend
+    - backend
+    - rn
+    type: string
+    x-enum-varnames:
+    - RepoTypeFrontend
+    - RepoTypeBackend
+    - RepoTypeRN
+  domain.Repository:
+    properties:
+      branch:
+        type: string
+      created_at:
+        type: string
+      git_url:
+        type: string
+      id:
+        type: string
+      last_error:
+        type: string
+      local_path:
+        type: string
+      name:
+        type: string
+      repo_type:
+        $ref: '#/definitions/domain.RepoType'
+      status:
+        $ref: '#/definitions/domain.RepoStatus'
+      updated_at:
+        type: string
+    type: object
+  domain.Session:
+    properties:
+      agent_id:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      instance_id:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  domain.SubagentDef:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      tools:
+        items:
+          type: string
+        type: array
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: dutybotGo Team
+  description: Agent 管理与仓库托管服务
+  title: dutybotGo API
+  version: 0.1.0
+paths:
+  /v1/agents:
+    get:
+      description: 同步部署配置并返回公共预设与当前用户的私有 Agent。
+      parameters:
+      - description: 分页大小
+        in: query
+        name: limit
+        type: integer
+      - description: 偏移
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.PaginatedResponse'
+      security:
+      - JWTAuth: []
+      summary: Agent 列表
+      tags:
+      - Agents
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Agent 定义
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.AgentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Agent'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 创建 Agent
+      tags:
+      - Agents
+  /v1/agents/{agent_id}:
+    delete:
+      description: 删除 Agent 及其实例与会话（级联）。
+      parameters:
+      - description: Agent ID
+        in: path
+        name: agent_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 删除 Agent
+      tags:
+      - Agents
+    get:
+      parameters:
+      - description: Agent ID
+        in: path
+        name: agent_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Agent'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: Agent 详情
+      tags:
+      - Agents
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Agent ID
+        in: path
+        name: agent_id
+        required: true
+        type: string
+      - description: Agent 定义
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.AgentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Agent'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 更新 Agent
+      tags:
+      - Agents
+  /v1/agents/{agent_id}/instances:
+    get:
+      parameters:
+      - description: Agent ID
+        in: path
+        name: agent_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 实例列表
+      tags:
+      - Instances
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Agent ID
+        in: path
+        name: agent_id
+        required: true
+        type: string
+      - description: 实例参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateInstanceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.AgentInstance'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 创建 Agent 实例
+      tags:
+      - Instances
+  /v1/api-tokens:
+    get:
+      description: 返回租户全部令牌（含已撤销），不含密钥本体。仅 JWT 可调用。
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.ListAPITokensResponse'
+      security:
+      - JWTAuth: []
+      summary: 列出 API 令牌
+      tags:
+      - APITokens
+    post:
+      consumes:
+      - application/json
+      description: 创建面向外部调用方的令牌；密钥本体仅在响应中出现一次。仅 JWT 可调用。
+      parameters:
+      - description: 令牌信息
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateAPITokenRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.CreateAPITokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 创建 API 令牌
+      tags:
+      - APITokens
+  /v1/api-tokens/{token_id}:
+    delete:
+      parameters:
+      - description: 令牌 ID
+        in: path
+        name: token_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 撤销 API 令牌
+      tags:
+      - APITokens
+  /v1/auth/change-password:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 密码修改
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 修改密码
+      tags:
+      - Auth
+  /v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 登录信息
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.AuthResponse'
+      summary: 用户登录
+      tags:
+      - Auth
+  /v1/auth/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.UserResponse'
+      summary: 当前用户信息
+      tags:
+      - Auth
+  /v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 注册信息
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.AuthResponse'
+      summary: 用户注册
+      tags:
+      - Auth
+  /v1/health:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.HealthResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/api.HealthResponse'
+      summary: 检查 MySQL 与 Redis
+      tags:
+      - Health
+  /v1/instances/{instance_id}/sessions:
+    post:
+      parameters:
+      - description: 实例 ID
+        in: path
+        name: instance_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Session'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 创建会话
+      tags:
+      - Sessions
+  /v1/instances/{instance_id}/start:
+    post:
+      parameters:
+      - description: 实例 ID
+        in: path
+        name: instance_id
+        required: true
+        type: string
+      responses:
+        "202":
+          description: Accepted
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 启动实例
+      tags:
+      - Instances
+  /v1/instances/{instance_id}/stop:
+    post:
+      parameters:
+      - description: 实例 ID
+        in: path
+        name: instance_id
+        required: true
+        type: string
+      responses:
+        "202":
+          description: Accepted
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 停止实例
+      tags:
+      - Instances
+  /v1/repositories:
+    get:
+      description: 全局共享仓库分页列表，所有用户可见。
+      parameters:
+      - description: 分页大小
+        in: query
+        name: limit
+        type: integer
+      - description: 偏移
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.PaginatedResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 仓库列表
+      tags:
+      - Repositories
+    post:
+      consumes:
+      - application/json
+      description: 登记仓库并触发后台克隆与 codegraph 初始化。仓库为全局共享资源。写操作要求 API 令牌 can_write。
+      parameters:
+      - description: 仓库信息
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateRepositoryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Repository'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 添加仓库
+      tags:
+      - Repositories
+  /v1/repositories/{repo_id}:
+    delete:
+      description: 删除仓库记录并清理本地目录。
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repo_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 删除仓库
+      tags:
+      - Repositories
+    get:
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repo_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Repository'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 仓库详情
+      tags:
+      - Repositories
+  /v1/repositories/{repo_id}/sync:
+    post:
+      description: 触发 git fetch + reset 到远端分支（202 异步执行）。
+      parameters:
+      - description: 仓库 ID
+        in: path
+        name: repo_id
+        required: true
+        type: string
+      responses:
+        "202":
+          description: Accepted
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 同步仓库
+      tags:
+      - Repositories
+  /v1/sessions:
+    get:
+      description: 当前用户的会话分页列表，按更新时间倒序。
+      parameters:
+      - description: 分页大小
+        in: query
+        name: limit
+        type: integer
+      - description: 偏移
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.PaginatedResponse'
+      security:
+      - JWTAuth: []
+      summary: 会话列表
+      tags:
+      - Sessions
+  /v1/sessions/{session_id}:
+    delete:
+      description: 软删除当前用户的会话。
+      parameters:
+      - description: 会话 ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 删除会话
+      tags:
+      - Sessions
+  /v1/sessions/{session_id}/messages:
+    get:
+      parameters:
+      - description: 会话 ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 会话消息历史
+      tags:
+      - Sessions
+    post:
+      consumes:
+      - application/json
+      description: 在会话上执行一轮 Agent 对话；要求实例处于运行状态。
+      parameters:
+      - description: 会话 ID
+        in: path
+        name: session_id
+        required: true
+        type: string
+      - description: 消息内容
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.SendMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.MessageView'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - JWTAuth: []
+      summary: 发送消息
+      tags:
+      - Sessions
+swagger: "2.0"

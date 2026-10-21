@@ -1,0 +1,741 @@
+{
+  "status": "PASS",
+  "corpus": "testdata/eval/questions.json",
+  "query_count": 30,
+  "recall_at_10": 1.0,
+  "ndcg_at_10": 0.9623712367984709,
+  "citations_traceable": 1.0,
+  "latency_p50_ms": 1217.55,
+  "latency_p95_ms": 1580.4,
+  "delete_removes_vector_sources": true,
+  "delete_check_error": null,
+  "token_usage": {
+    "input_tokens": 45172,
+    "output_tokens": 1006
+  },
+  "model_call_count": 60,
+  "results": [
+    {
+      "id": "q01",
+      "status": "PASS",
+      "answer": "北极星服务每周二发布。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1422.4,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "9a011108-511c-512d-abdf-a8ec62e363c9",
+          "excerpt": "北极星服务运维手册\n\n发布\n\n北极星服务的发布窗口是每周二 09:30 UTC。发布负责人是林岚。发布前先检查 Atlas 仪表盘，再运行灰度批次 B7。批次 B7 只覆盖 5% 的租户。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1525,
+        "output_tokens": 18
+      }
+    },
+    {
+      "id": "q02",
+      "status": "PASS",
+      "answer": "北极星服务的发布负责人是林岚。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1144.1,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "9a011108-511c-512d-abdf-a8ec62e363c9",
+          "excerpt": "北极星服务运维手册\n\n发布\n\n北极星服务的发布窗口是每周二 09:30 UTC。发布负责人是林岚。发布前先检查 Atlas 仪表盘，再运行灰度批次 B7。批次 B7 只覆盖 5% 的租户。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1524,
+        "output_tokens": 21
+      }
+    },
+    {
+      "id": "q03",
+      "status": "PASS",
+      "answer": "发布前先检查 Atlas 仪表盘。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1147.9,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "9a011108-511c-512d-abdf-a8ec62e363c9",
+          "excerpt": "北极星服务运维手册\n\n发布\n\n北极星服务的发布窗口是每周二 09:30 UTC。发布负责人是林岚。发布前先检查 Atlas 仪表盘，再运行灰度批次 B7。批次 B7 只覆盖 5% 的租户。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1525,
+        "output_tokens": 19
+      }
+    },
+    {
+      "id": "q04",
+      "status": "PASS",
+      "answer": "灰度批次 B7 只覆盖 5% 的租户。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1211.6,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "9a011108-511c-512d-abdf-a8ec62e363c9",
+          "excerpt": "北极星服务运维手册\n\n发布\n\n北极星服务的发布窗口是每周二 09:30 UTC。发布负责人是林岚。发布前先检查 Atlas 仪表盘，再运行灰度批次 B7。批次 B7 只覆盖 5% 的租户。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1535,
+        "output_tokens": 25
+      }
+    },
+    {
+      "id": "q05",
+      "status": "PASS",
+      "answer": "五分钟错误率超过 2% 时，值班工程师必须回滚。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1286.3,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "9a011108-511c-512d-abdf-a8ec62e363c9",
+          "excerpt": "回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1534,
+        "output_tokens": 27
+      }
+    },
+    {
+      "id": "q06",
+      "status": "PASS",
+      "answer": "回滚命令标识是 rollback-northstar。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1369.1,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "9a011108-511c-512d-abdf-a8ec62e363c9",
+          "excerpt": "回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1527,
+        "output_tokens": 21
+      }
+    },
+    {
+      "id": "q07",
+      "status": "PASS",
+      "answer": "回滚后在 15 分钟内通知支持团队。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1479.7,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "9a011108-511c-512d-abdf-a8ec62e363c9",
+          "excerpt": "回滚\n\n当五分钟错误率超过 2% 时，值班工程师必须回滚。回滚命令标识是 rollback-northstar。回滚后在 15 分钟内通知支持团队。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1525,
+        "output_tokens": 22
+      }
+    },
+    {
+      "id": "q08",
+      "status": "PASS",
+      "answer": "审计日志保留 45 天。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1087.6,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "9a011108-511c-512d-abdf-a8ec62e363c9",
+          "excerpt": "数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1521,
+        "output_tokens": 18
+      }
+    },
+    {
+      "id": "q09",
+      "status": "PASS",
+      "answer": "备份保留 14 天。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1268.0,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "9a011108-511c-512d-abdf-a8ec62e363c9",
+          "excerpt": "数据保留\n\n审计日志保留 45 天。备份保留 14 天。客户文档不写入审计日志。恢复演练每月第一个星期三执行。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1518,
+        "output_tokens": 17
+      }
+    },
+    {
+      "id": "q10",
+      "status": "PASS",
+      "answer": "北极星服务从 PostgreSQL 读取订单，从 Redis 读取短期会话。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1311.0,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "9a011108-511c-512d-abdf-a8ec62e363c9",
+          "excerpt": "依赖\n\n北极星服务从 PostgreSQL 读取订单，从 Redis 读取短期会话。Neo4j 保存实体关系，不保存订单主记录。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1820,
+        "output_tokens": 28
+      }
+    },
+    {
+      "id": "q11",
+      "status": "PASS",
+      "answer": "Neo4j 不保存订单主记录。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1191.7,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "9a011108-511c-512d-abdf-a8ec62e363c9",
+          "excerpt": "依赖\n\n北极星服务从 PostgreSQL 读取订单，从 Redis 读取短期会话。Neo4j 保存实体关系，不保存订单主记录。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1634,
+        "output_tokens": 18
+      }
+    },
+    {
+      "id": "q12",
+      "status": "PASS",
+      "answer": "Harbor 流水线的七个阶段顺序是：Parse, Chunk, Embed, Extract, Resolve, Write, 和 Publish。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1451.5,
+      "sources": [
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "91a62766-858c-582d-8c32-5dd65cf4c033",
+          "excerpt": "Pipeline\n\nThe Harbor pipeline runs Parse, Chunk, Embed, Extract, Resolve, Write, and Publish in that order."
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1737,
+        "output_tokens": 38
+      }
+    },
+    {
+      "id": "q13",
+      "status": "PASS",
+      "answer": "Parse 支持 Markdown 和 HTML 格式。",
+      "rank": 2,
+      "source_count": 2,
+      "citations_traceable": true,
+      "latency_ms": 1149.3,
+      "sources": [
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "91a62766-858c-582d-8c32-5dd65cf4c033",
+          "excerpt": "Pipeline\n\nThe Harbor pipeline runs Parse, Chunk, Embed, Extract, Resolve, Write, and Publish in that order."
+        },
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "b676f079-1da9-59f8-9e15-83aab8d8d681",
+          "excerpt": "Parse accepts Markdown and HTML. Embed produces 1536-dimensional vectors. Publish runs after graph writing completes."
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1701,
+        "output_tokens": 20
+      }
+    },
+    {
+      "id": "q14",
+      "status": "PASS",
+      "answer": "Embed 生成 1536 维向量。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1124.7,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "73cc8611-b51e-5cee-b6f4-b9b51d314abd",
+          "excerpt": "第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1701,
+        "output_tokens": 20
+      }
+    },
+    {
+      "id": "q15",
+      "status": "PASS",
+      "answer": "Publish 在图写入完成后运行。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1164.5,
+      "sources": [
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "b676f079-1da9-59f8-9e15-83aab8d8d681",
+          "excerpt": "Parse accepts Markdown and HTML. Embed produces 1536-dimensional vectors. Publish runs after graph writing completes."
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1704,
+        "output_tokens": 18
+      }
+    },
+    {
+      "id": "q16",
+      "status": "PASS",
+      "answer": "每条答案引用需要记录文档名称、页码、分块 ID 和摘录。这些字段确保引用的证据可以追溯到具体的分块内容。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1413.6,
+      "sources": [
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "dbe33e43-8dbe-5503-ade1-3065fd8afdd5",
+          "excerpt": "Evidence\n\nEach answer citation records a document name, page number, chunk ID, and excerpt. The citation marker must point to a selected evidence chunk."
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1524,
+        "output_tokens": 47
+      }
+    },
+    {
+      "id": "q17",
+      "status": "PASS",
+      "answer": "模型瞬时错误最多重试三次。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1249.8,
+      "sources": [
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "e91f46a6-0868-53d2-857f-edf596421ac5",
+          "excerpt": "Failure policy\n\nWorkers retry transient model errors at most three times. Authentication errors fail immediately. A failed publication must never be reported as successful."
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1528,
+        "output_tokens": 19
+      }
+    },
+    {
+      "id": "q18",
+      "status": "PASS",
+      "answer": "Mira 请 Theo 在发布关口前核对引用。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1580.4,
+      "sources": [
+        {
+          "document_name": "architecture.html",
+          "page_number": 0,
+          "chunk_id": "e91f46a6-0868-53d2-857f-edf596421ac5",
+          "excerpt": "Ownership\n\nMira owns the ingestion pipeline. Theo owns retrieval. Mira asks Theo to verify citations before the release gate."
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1591,
+        "output_tokens": 22
+      }
+    },
+    {
+      "id": "q19",
+      "status": "PASS",
+      "answer": "长文接入层的代号是 Amber-41。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1073.7,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "73cc8611-b51e-5cee-b6f4-b9b51d314abd",
+          "excerpt": "长文索引样本\n\n第一章：接入\n\n接入层使用代号 Amber-41。请求先通过租户鉴权，然后进入导入调度器。接入层不负责向量生成。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1527,
+        "output_tokens": 22
+      }
+    },
+    {
+      "id": "q20",
+      "status": "PASS",
+      "answer": "长文解析层的代号是 Birch-52。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1151.1,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "73cc8611-b51e-5cee-b6f4-b9b51d314abd",
+          "excerpt": "第二章：解析\n\n解析层使用代号 Birch-52。Markdown 标题保留为章节路径，HTML 段落转换成文本元素。解析结果用于后续分块。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1526,
+        "output_tokens": 21
+      }
+    },
+    {
+      "id": "q21",
+      "status": "PASS",
+      "answer": "第三章：分块说明每个 Chunk 记录文档、章节路径和页码。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1109.5,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "40278f63-ac50-56e4-bb6c-6523eee95ebc",
+          "excerpt": "第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1802,
+        "output_tokens": 29
+      }
+    },
+    {
+      "id": "q22",
+      "status": "PASS",
+      "answer": "Delta-74 使用 PostgreSQL 的 pgvector 列来存储向量。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1088.6,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "383f4330-903e-575c-bc41-fa5d01d3d038",
+          "excerpt": "第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1576,
+        "output_tokens": 26
+      }
+    },
+    {
+      "id": "q23",
+      "status": "PASS",
+      "answer": "图谱层的代号是 Elm-85。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1287.6,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "383f4330-903e-575c-bc41-fa5d01d3d038",
+          "excerpt": "第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1657,
+        "output_tokens": 20
+      }
+    },
+    {
+      "id": "q24",
+      "status": "PASS",
+      "answer": "导入任务只有在图写入与状态收尾都成功的情况下才能显示 SUCCEEDED。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1137.8,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "383f4330-903e-575c-bc41-fa5d01d3d038",
+          "excerpt": "第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1528,
+        "output_tokens": 30
+      }
+    },
+    {
+      "id": "q25",
+      "status": "PASS",
+      "answer": "删除文档后，旧任务不应重新发布该文档。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1223.5,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "44c3b727-69ca-55f4-a1f2-d7eca6176d7b",
+          "excerpt": "第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1526,
+        "output_tokens": 24
+      }
+    },
+    {
+      "id": "q26",
+      "status": "PASS",
+      "answer": "长文描述了以下处理层：\n\n1. **接入层 (Amber-41)**：负责租户鉴权和导入调度，但不负责向量生成。[1]\n2. **解析层 (Birch-52)**：将Markdown标题保留为章节路径，并将HTML段落转换为文本元素，解析结果用于后续分块。[2]\n3. **分块层 (Cedar-63)**：记录文档、章节路径和页码，处理过长章节以生成多个Chunk。[3]\n4. **向量层 (Delta-74)**：生成1536维的向量，并将其写入PostgreSQL的pgvector列。[4]\n5. **图谱层 (Elm-85)**：草拟实体关系，发布后才能进行正式查询，关系证据需追溯到Chunk。[5]\n6. **发布层 (Fir-96)**：确保图写入和状态收尾成功后，导入任务才能显示为成功。[10]\n7. **删除层 (Grove-07)**：处理文档删除，确保旧任务不重新发布已删除文档。[15]\n8. **查询层 (Hazel-18)**：执行向量召回、扩展图关系，并由模型生成回答。[20]",
+      "rank": 8,
+      "source_count": 8,
+      "citations_traceable": true,
+      "latency_ms": 4106.0,
+      "sources": [
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "73cc8611-b51e-5cee-b6f4-b9b51d314abd",
+          "excerpt": "长文索引样本\n\n第一章：接入\n\n接入层使用代号 Amber-41。请求先通过租户鉴权，然后进入导入调度器。接入层不负责向量生成。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "73cc8611-b51e-5cee-b6f4-b9b51d314abd",
+          "excerpt": "第二章：解析\n\n解析层使用代号 Birch-52。Markdown 标题保留为章节路径，HTML 段落转换成文本元素。解析结果用于后续分块。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "73cc8611-b51e-5cee-b6f4-b9b51d314abd",
+          "excerpt": "第三章：分块\n\n分块层使用代号 Cedar-63。每个 Chunk 记录文档、章节路径和页码。过长章节可以产生多个 Chunk。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "73cc8611-b51e-5cee-b6f4-b9b51d314abd",
+          "excerpt": "第四章：向量\n\n向量层使用代号 Delta-74。向量维度是 1536。向量写入 PostgreSQL 的 pgvector 列。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "73cc8611-b51e-5cee-b6f4-b9b51d314abd",
+          "excerpt": "第五章：图谱\n\n图谱层使用代号 Elm-85。实体关系先写为草稿，发布后才能进入正式查询。关系证据应能追溯到 Chunk。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "40278f63-ac50-56e4-bb6c-6523eee95ebc",
+          "excerpt": "第六章：发布\n\n发布层使用代号 Fir-96。只有图写入与状态收尾都成功，导入任务才能显示 SUCCEEDED。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "44c3b727-69ca-55f4-a1f2-d7eca6176d7b",
+          "excerpt": "第七章：删除\n\n删除层使用代号 Grove-07。删除文档后，旧任务不应重新发布该文档。共享实体仍有其他文档证据时不得误删。"
+        },
+        {
+          "document_name": "long_reference.md",
+          "page_number": 0,
+          "chunk_id": "383f4330-903e-575c-bc41-fa5d01d3d038",
+          "excerpt": "第八章：查询\n\n查询层使用代号 Hazel-18。查询先做向量召回，再扩展图关系，最后由模型生成回答。无证据时必须说明无法从资料确认。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1520,
+        "output_tokens": 308
+      }
+    },
+    {
+      "id": "q27",
+      "status": "PASS",
+      "answer": "提供的上下文中没有提到北极星服务的 CEO，因此无法回答这个问题。",
+      "rank": null,
+      "source_count": 0,
+      "citations_traceable": true,
+      "latency_ms": 1440.7,
+      "sources": [],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1522,
+        "output_tokens": 28
+      }
+    },
+    {
+      "id": "q28",
+      "status": "PASS",
+      "answer": "根据提供的上下文，没有关于 Harbor 年度收入的具体信息。因此，无法回答这个问题。",
+      "rank": null,
+      "source_count": 0,
+      "citations_traceable": true,
+      "latency_ms": 1468.2,
+      "sources": [],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1717,
+        "output_tokens": 29
+      }
+    },
+    {
+      "id": "q29",
+      "status": "PASS",
+      "answer": "北极星服务在本租户的发布窗口是周五 18:00 UTC。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1139.6,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "51beffcc-6dbe-56c1-8ba1-084aca27296a",
+          "excerpt": "北极星服务运维手册\n\n发布\n\n北极星服务在这个租户的发布窗口是周五 18:00 UTC。发布负责人是周岳。灰度批次 C9 覆盖 20% 的租户。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 303,
+        "output_tokens": 29
+      }
+    },
+    {
+      "id": "q30",
+      "status": "PASS",
+      "answer": "这个租户的审计日志保留 90 天。",
+      "rank": 1,
+      "source_count": 1,
+      "citations_traceable": true,
+      "latency_ms": 1033.8,
+      "sources": [
+        {
+          "document_name": "operations.md",
+          "page_number": 0,
+          "chunk_id": "51beffcc-6dbe-56c1-8ba1-084aca27296a",
+          "excerpt": "数据保留\n\n这个租户的审计日志保留 90 天。备份保留 30 天。专属恢复演练每季度执行一次。"
+        }
+      ],
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 294,
+        "output_tokens": 22
+      }
+    }
+  ],
+  "frozen_config": {
+    "corpus_sha256": "a141d4fbfdd4fa4e1a48540e62535172d312449e7aafdc5ab854b48ad720a00e",
+    "source_sha256": {
+      "internal/query/engine.go": "090dff6533684d65b13e9652f1e923d162cfc588570d8be5975355f46d286735",
+      "internal/query/generator.go": "2ce65b0986a1d56c7d4e58c10b0c976126efaba1f6798781ea7ac2042bce735f",
+      "internal/query/chat_client.go": "4cdacc7ee3fd7559e7178a1ac3f8362c1ae1f782a6ae1a6b00242660028c86a4",
+      "internal/llm/client.go": "c8a2e10642da12a8e27de23ce37df4cddbcc0b12d0fa38dc3ad4a93cfb03b772",
+      "scripts/evaluate.py": "52969ca98f863b5a5f137cf4e61c9545f12e4846699845f88667c4a5974d41a7",
+      "internal/pipeline/llm.go": "e8e7580fa2ecb19a7a23fe97f11960745fb3836cb801714feb68937d4a536b45",
+      "internal/query/retriever.go": "04f9316968a594ee09af5affba81fdee10c3f70b70c5125cfb6578a87565f0e7",
+      "internal/pipeline/parser.go": "08b476a06ae443e6e7689f03e67c5094f9218c76800671677af8695a7ac5f4f8",
+      "internal/pipeline/chunker.go": "066c1e7ef2ff8d69d2eeb3c8242d80e1e6a078b30197ba2f4e2279db23966142",
+      "internal/query/context.go": "c2e11276da2c24ff12050f420efdb0b061eabd029652e3ad21f472136a3b8bf5",
+      "internal/query/graph_expander.go": "1bc19128d84d9c3ef08c73735b73c32be830e485d1c6a67bdcc8559a6cf07eef",
+      "internal/pipeline/publisher.go": "81a8def54cbee30e1eb021dca1c3d26ac137c6598ea0f6d9d55114517eac8a11",
+      "internal/modelusage/usage.go": "8d11582dfecd7583c3e0f52fdaf3c96dc99fd8ea7a651daec09cc3af3f3428b7"
+    },
+    "chat_model": "gpt-4o-mini",
+    "embedding_provider": "openai",
+    "embedding_model": "text-embedding-3-small",
+    "embedding_dimensions": 1536,
+    "query_top_k": 10,
+    "query_max_tokens": 512,
+    "graph_hops": 2,
+    "similarity_threshold": 0,
+    "expected_evidence": "questions.json: type, document, evidence, optional alternatives"
+  },
+  "corpus_sha256": "a141d4fbfdd4fa4e1a48540e62535172d312449e7aafdc5ab854b48ad720a00e"
+}

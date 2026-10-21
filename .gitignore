@@ -1,0 +1,42 @@
+# 密钥与本地配置
+.env
+*.pem
+*.key
+
+# 构建产物
+bin/
+dist/
+*.exe
+*.exe~
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+
+# 临时文件
+tmp/
+temp/
+.codegraph
+.cursor
+
+node_modules/
+*.pyc
+coverage.out
+CODE_REVIEW_*
+data
+.pnpm-store
+.env
+.env.local
+.claude
+.trash-p0
+repo/
