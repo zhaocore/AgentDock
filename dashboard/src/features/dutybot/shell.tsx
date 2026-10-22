@@ -29,6 +29,8 @@ import { Notice } from './ui';
 
 const navigation = [
   ['repositories', 'dutybot.repositories', Boxes],
+  ['confluence', 'dutybot.confluence', Boxes],
+  ['confluence-library', 'dutybot.confluenceLibrary', Boxes],
   ['agents', 'dutybot.agents', Bot],
   ['sessions', 'dutybot.sessions', MessageSquare],
   ['api-keys', 'dutybot.apiKeys', KeyRound],
@@ -52,7 +54,7 @@ function WorkspaceNavigation({
           data-testid={`${prefix}-${route}`}
           href={`/dashboard/${route}`}
           onClick={onNavigate}
-          className={`gg-nav ${path.includes(`/dashboard/${route}`) ? 'gg-nav-active' : ''}`}
+          className={`gg-nav ${path === `/dashboard/${route}` || path.startsWith(`/dashboard/${route}/`) ? 'gg-nav-active' : ''}`}
         >
           <Icon className="size-4" />
           {t(label)}

@@ -20,7 +20,7 @@ bun "${SKILL_DIR}/scripts/confluence.ts" plan /private/tmp/export-input/page.jso
   --url 'https://confluence.example.com/pages/viewpage.action?pageId=123'
 ```
 
-脚本按正文资源生成 `contentId`、原始 `filename` 与安全本地文件名。引用其他页面附件时使用该附件所属 contentId。缩略图使用原始附件；重复引用只导出一次。普通超链接保持在线，不递归抓其他页面。资源指向其他实例或外部 CDN 时脚本明确拒绝，需要针对该来源取得资源并增加对应支持；不要宣称已完成全部离线导出。
+脚本仅为当前 Confluence 实例可识别的附件生成 `contentId`、原始 `filename` 与安全本地文件名。引用其他页面附件时使用该附件所属 contentId。缩略图使用原始附件；重复引用只导出一次。普通超链接保持在线，不递归抓其他页面。Jira 图标、其他实例、外部 CDN 或当前实例的非附件资源保留绝对 HTTP(S) 链接，不进入下载计划、不携带当前实例凭据下载，也不阻断整页导出；这些资源仍需联网访问，不宣称全部离线。已进入计划的附件下载或字节校验失败仍明确报错。
 
 ## 下载附件
 
@@ -60,5 +60,7 @@ bun "${SKILL_DIR}/scripts/confluence.ts" export /private/tmp/export-input/page.j
 `--output-dir` 是导出根目录，在其下创建 `<标题>/<标题>.md` 与 `<标题>/assets/`，已有同名标题目录明确报错。标题安全命名规则见 SKILL.md。脚本核对实例、页面 ID、附件文件名、base64 完整性和声明字节数，所有资源完整后才创建最终标题目录。正文图片/附件原位置改为 `./assets/asset-<hash>.<ext>`；元信息包括原始标题、页面 ID、页面版本、源 URL 和捕获时间。目录宏生成的界面、脚本和样式删除，正文不改写成摘要。
 
 简单表格去掉纯布局 colgroup 后转换为 GFM 表格；复杂合并单元格仍可能保留 HTML。Jira 宏若只返回 `Getting issue details...` 占位信息，仅保留原工单链接，不能宣称读到了实时工单状态。
+
+成功读取且身份、版本有效的合法空白页可正常导出：源正文为空 HTML、空白文本或只有空段落/换行时，Markdown 保留页面元数据，添加 `confluence_body_empty: true`，正文保持为空。缺失 `body.view`、非空正文转换丢失、无法转换的宏或嵌入内容仍明确报错，不按空页处理。
 
 核对所有 Markdown 本地资源路径存在、数量与去重后的计划一致，图片文件头有效，并抽查开头、中段、结尾、列表/表格及宏内容。返回 Markdown 绝对路径与资源数量。完成后清理本次临时 MCP JSON，输出内容按源站权限保管，不提交到代码仓库。

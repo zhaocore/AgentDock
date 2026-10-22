@@ -12,13 +12,15 @@ import (
 
 // Config 是应用全部配置的聚合结构体。
 type Config struct {
-	Server   ServerConfig
-	Database DatabaseConfig
-	Redis    RedisConfig
-	Repo     RepoConfig
-	Agent    AgentConfig
-	LLM      LLMConfig
-	Auth     AuthConfig
+	Server     ServerConfig
+	Database   DatabaseConfig
+	Redis      RedisConfig
+	Repo       RepoConfig
+	Agent      AgentConfig
+	LLM        LLMConfig
+	Confluence ConfluenceConfig
+	RustFS     RustFSConfig
+	Auth       AuthConfig
 }
 
 // ServerConfig HTTP 服务配置。
@@ -75,6 +77,21 @@ type AuthConfig struct {
 	TokenExpiry time.Duration
 }
 
+// ConfluenceConfig 限定后台读取的实例与部署凭据。
+type ConfluenceConfig struct {
+	BaseURL string
+	Cookie  string
+}
+
+// RustFSConfig 私有对象存储配置。
+type RustFSConfig struct {
+	Endpoint  string
+	Region    string
+	Bucket    string
+	AccessKey string
+	SecretKey string
+}
+
 // Load 从环境变量和 .env 文件加载配置。
 func Load() (*Config, error) {
 	viper.SetConfigFile(".env")
@@ -102,6 +119,7 @@ func Load() (*Config, error) {
 	viper.SetDefault("REDIS_PORT", "6379")
 	viper.SetDefault("REDIS_PASSWORD", "")
 
+	viper.SetDefault("RUSTFS_REGION", "us-east-1")
 	viper.SetDefault("REPO_ROOT_DIR", "repo")
 	viper.SetDefault("AGENT_CONFIG_DIR", "agents")
 
@@ -164,6 +182,8 @@ func Load() (*Config, error) {
 	}
 
 	cfg := &Config{
+		Confluence: ConfluenceConfig{BaseURL: strings.TrimRight(viper.GetString("CONFLUENCE_BASE_URL"), "/"), Cookie: viper.GetString("CONFLUENCE_COOKIE")},
+		RustFS:     RustFSConfig{Endpoint: viper.GetString("RUSTFS_ENDPOINT"), Region: viper.GetString("RUSTFS_REGION"), Bucket: viper.GetString("RUSTFS_BUCKET"), AccessKey: viper.GetString("RUSTFS_ACCESS_KEY"), SecretKey: viper.GetString("RUSTFS_SECRET_KEY")},
 		Server: ServerConfig{
 			Host:     viper.GetString("SERVER_HOST"),
 			Port:     viper.GetString("SERVER_PORT"),

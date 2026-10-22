@@ -24,12 +24,12 @@ build-swagger:
 
 # 本地开发：启动基础设施 + 运行服务
 dev:
-	docker-compose -f docker-compose.dev.yml up -d mysql redis
+	docker-compose -f docker-compose.dev.yml up -d mysql redis rustfs
 	go run ./cmd/server
 
 # 启动基础设施
 db-up:
-	docker-compose -f docker-compose.dev.yml up -d mysql redis
+	docker-compose -f docker-compose.dev.yml up -d mysql redis rustfs
 
 # 停止基础设施
 db-down:

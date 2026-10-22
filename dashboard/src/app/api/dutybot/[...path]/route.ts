@@ -8,6 +8,7 @@ import {
   isSameOrigin,
   jwtExpiry,
   MAX_UPLOAD_BYTES,
+  CONFLUENCE_UPLOAD_BYTES,
   SESSION_COOKIE,
 } from '@/lib/dutybot-session';
 
@@ -35,7 +36,14 @@ async function proxy(
       { error: 'Authentication required' },
       { status: 401 },
     );
-  const limit = path.at(-1) === 'documents' ? MAX_UPLOAD_BYTES : 16 * 1024;
+  const limit =
+    path[0] === 'confluence-library' &&
+    path[1] === 'imports' &&
+    path.length === 2
+      ? CONFLUENCE_UPLOAD_BYTES
+      : path.at(-1) === 'documents'
+        ? MAX_UPLOAD_BYTES
+        : 16 * 1024;
   const length = request.headers.get('content-length');
   if (length && (!/^\d+$/.test(length) || Number(length) > limit))
     return NextResponse.json(

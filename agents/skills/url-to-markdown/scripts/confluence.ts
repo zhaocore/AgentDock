@@ -26,7 +26,7 @@ function readPage(text: string): Page {
     || !("title" in page) || typeof page.title !== "string"
     || !("body" in page) || !page.body || typeof page.body !== "object"
     || !("view" in page.body) || !page.body.view || typeof page.body.view !== "object"
-    || !("value" in page.body.view) || typeof page.body.view.value !== "string" || !page.body.view.value.trim()
+    || !("value" in page.body.view) || typeof page.body.view.value !== "string"
     || !("_links" in page) || !page._links || typeof page._links !== "object"
     || !("base" in page._links) || typeof page._links.base !== "string"
     || !("version" in page) || !page.version || typeof page.version !== "object"
@@ -58,12 +58,12 @@ function pageDocument(page: Page): Document {
   return document;
 }
 
-/** 从正文定位附件所属页面，拒绝把其他实例交给当前 MCP 下载。 */
-function resourceRequest(url: string, base: string): ResourceRequest {
+/** 仅规划当前实例附件，其他安全网页资源由 Markdown 保留原链接。 */
+function resourceRequest(url: string, base: string): ResourceRequest | null {
   const source = httpUrl(url);
   const match = source.pathname.match(/\/download\/(?:attachments|thumbnails)\/(\d+)\/([^/]+)$/);
   if (source.origin !== new URL(base).origin || !match) {
-    throw new Error(`资源不是当前 Confluence 实例的附件，需另行下载并核对：${source.origin}${source.pathname}`);
+    return null;
   }
   const contentId = match[1];
   const filename = decodeURIComponent(match[2]);
@@ -84,7 +84,7 @@ export function planConfluence(pageResponse: string, url: string): { pageId: str
   const unique = new Map<string, ResourceRequest>();
   for (const ref of refs) {
     const request = resourceRequest(ref.url, page.base);
-    unique.set(request.localName, request);
+    if (request) unique.set(request.localName, request);
   }
   return { pageId: page.id, title: page.title, version: page.version, resources: [...unique.values()] };
 }
@@ -111,12 +111,40 @@ function attachmentBytes(data: object, request: ResourceRequest): Buffer {
   return bytes;
 }
 
+/** 将已验证正文和下载资源转换为内存文件包，供 RustFS 后台接缝使用。 */
+export function confluenceBundle(pageResponse: string, url: string, assets: {name: string; content: string}[]): {name: string; content: string}[] {
+  const page = readPage(pageResponse);
+  const plan = planConfluence(pageResponse, url);
+  const document = pageDocument(page);
+  const expected = new Set(plan.resources.map((item) => item.localName));
+  if (assets.length !== expected.size || new Set(assets.map((item) => item.name)).size !== expected.size) throw new Error("附件数量或名称重复");
+  for (const asset of assets) {
+    if (!expected.has(asset.name) || Buffer.from(asset.content, "base64").toString("base64") !== asset.content) throw new Error("附件名称或 base64 无效");
+  }
+  for (const ref of resources(document, page.base)) {
+    const request = resourceRequest(ref.url, page.base);
+    ref.node.setAttribute(ref.attribute, request ? `./assets/${request.localName}` : ref.url);
+  }
+  const markdown = toMarkdown(document.body.innerHTML);
+  const emptyBody = !markdown.trim();
+  if (emptyBody) {
+    // 只认定源正文的空段落/换行，避免把宏或嵌入内容丢失当成空白页。
+    const source = parseHTML(`<html><body>${page.html}</body></html>`).document.body;
+    if (source.textContent.trim() || [...source.querySelectorAll("*")].some(node => !["p", "br"].includes(node.localName))) {
+      throw new Error(`Confluence 转换后正文为空 page_id=${page.id}；源页面包含未转换内容`);
+    }
+  }
+  const metadata = ["---", `url: ${JSON.stringify(url)}`, `title: ${JSON.stringify(page.title)}`,
+    `confluence_page_id: ${JSON.stringify(page.id)}`, `confluence_version: ${page.version}`,
+    ...(emptyBody ? ["confluence_body_empty: true"] : []),
+    `captured_at: ${JSON.stringify(new Date().toISOString())}`, "---", "", markdown, ""].join("\n");
+  return [{name: "page.md", content: Buffer.from(metadata).toString("base64")}, ...assets.map((item) => ({...item, name: `assets/${item.name}`}))];
+}
+
 /** 将宿主 MCP 结果导出为标题目录、同名 Markdown 与 assets，不需要浏览器或 Cookie。 */
 export async function exportConfluence(pageResponse: string, url: string, attachmentsDir: string, outputDir: string): Promise<string> {
   const page = readPage(pageResponse);
   const plan = planConfluence(pageResponse, url);
-  const document = pageDocument(page);
-  const refs = resources(document, page.base);
   const responses = new Map<string, object>();
   const files = new Map<string, Buffer>();
   for (const request of plan.resources) {
@@ -127,21 +155,16 @@ export async function exportConfluence(pageResponse: string, url: string, attach
     }
     files.set(request.localName, attachmentBytes(response, request));
   }
-  for (const ref of refs) ref.node.setAttribute(ref.attribute, `./assets/${resourceRequest(ref.url, page.base).localName}`);
-  const markdown = toMarkdown(document.body.innerHTML);
-  if (!markdown.trim()) throw new Error("Confluence 转换后正文为空");
+  const bundle = confluenceBundle(pageResponse, url, [...files].map(([name, bytes]) => ({name, content: bytes.toString("base64")})));
   const name = titleName(page.title);
   const destination = path.resolve(outputDir, name);
   await mkdir(path.dirname(destination), { recursive: true });
   await mkdir(destination);
   try {
     await mkdir(path.join(destination, "assets"));
-    for (const [filename, bytes] of files) await writeFile(path.join(destination, "assets", filename), bytes, { flag: "wx" });
-    const metadata = ["---", `url: ${JSON.stringify(url)}`, `title: ${JSON.stringify(page.title)}`,
-      `confluence_page_id: ${JSON.stringify(page.id)}`, `confluence_version: ${page.version}`,
-      `captured_at: ${JSON.stringify(new Date().toISOString())}`, "---", "", markdown, ""].join("\n");
+    for (const file of bundle.slice(1)) await writeFile(path.join(destination, file.name), Buffer.from(file.content, "base64"), { flag: "wx" });
     const output = path.join(destination, `${name}.md`);
-    await writeFile(output, metadata, { flag: "wx" });
+    await writeFile(output, Buffer.from(bundle[0].content, "base64"), { flag: "wx" });
     return output;
   } catch (error) {
     await rm(destination, { recursive: true });

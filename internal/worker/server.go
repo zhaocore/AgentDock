@@ -71,9 +71,10 @@ func enqueueRepoTask(ctx context.Context, client Enqueuer, taskType, repoID, loc
 
 // Server Asynq worker 服务。
 type Server struct {
-	srv     *asynq.Server
-	db      *sql.DB
-	rootDir string
+	srv        *asynq.Server
+	db         *sql.DB
+	rootDir    string
+	Confluence *ConfluenceWorker
 }
 
 // NewServer 创建 worker 服务。
@@ -88,6 +89,9 @@ func NewServer(addr, password string, db *sql.DB, rootDir string) *Server {
 // Start 注册处理器并启动 worker（阻塞）。
 func (s *Server) Start() error {
 	mux := asynq.NewServeMux()
+	if s.Confluence != nil {
+		mux.HandleFunc(TypeConfluenceExport, s.Confluence.Handle)
+	}
 	mux.HandleFunc(TypeRepoClone, s.handleRepoClone)
 	mux.HandleFunc(TypeRepoSync, s.handleRepoSync)
 	mux.HandleFunc(TypeRepoDelete, s.handleRepoDelete)

@@ -3,6 +3,7 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -19,6 +20,7 @@ import (
 	"github.com/zhaocore/dutybotgo/internal/config"
 	"github.com/zhaocore/dutybotgo/internal/domain"
 	"github.com/zhaocore/dutybotgo/internal/store/mysql"
+	"github.com/zhaocore/dutybotgo/internal/worker"
 )
 
 // TestSharedPresetsMySQL 验证真实迁移、JWT 用户隔离、配置同步与历史保留。
@@ -74,6 +76,53 @@ func TestSharedPresetsMySQL(t *testing.T) {
 	if _, err := mysql.GetAgent(ctx, db, privateID, u1); err != nil {
 		t.Fatalf("migration lost legacy agent: %v", err)
 	}
+
+	t.Run("ConfluenceTasks", func(t *testing.T) {
+		export := domain.ConfluenceTask{ID: uuid.NewString(), UserID: u1, URL: "https://example.com/pages/viewpage.action?pageId=1"}
+		if err := mysql.CreateConfluenceTask(ctx, db, export); err != nil {
+			t.Fatal(err)
+		}
+		current, err := mysql.GetConfluenceTask(ctx, db, export.ID, u1)
+		if err != nil || current.Status != "queued" {
+			t.Fatal(current, err)
+		}
+		if _, err := mysql.GetConfluenceTask(ctx, db, export.ID, u2); err != sql.ErrNoRows {
+			t.Fatalf("other user read task: %v", err)
+		}
+		changed, err := mysql.TransitionConfluenceTask(ctx, db, export.ID, u2, "queued", "running")
+		if err != nil || changed {
+			t.Fatal(changed, err)
+		}
+		changed, err = mysql.TransitionConfluenceTask(ctx, db, export.ID, u1, "queued", "running")
+		if err != nil || !changed {
+			t.Fatal(changed, err)
+		}
+		changed, err = mysql.TransitionConfluenceTask(ctx, db, export.ID, u1, "queued", "running")
+		if err != nil || changed {
+			t.Fatal("duplicate worker claim", changed, err)
+		}
+		if err := mysql.ProgressConfluenceTask(ctx, db, export.ID, u1, "export", 1, 2); err != nil {
+			t.Fatal(err)
+		}
+		if err := mysql.ResetConfluenceTasks(ctx, db); err != nil {
+			t.Fatal(err)
+		}
+		current, err = mysql.GetConfluenceTask(ctx, db, export.ID, u1)
+		if err != nil || current.Status != "stopped" || current.Completed != 1 || current.Total != 2 || current.Stage != "export" {
+			t.Fatal(current, err)
+		}
+		if err := mysql.ProgressConfluenceTask(ctx, db, export.ID, u1, "export", 2, 2); err != nil {
+			t.Fatal(err)
+		}
+		current, err = mysql.GetConfluenceTask(ctx, db, export.ID, u1)
+		if err != nil || current.Completed != 1 {
+			t.Fatal("stopped progress overwritten", current, err)
+		}
+		list, err := mysql.ListConfluenceTasks(ctx, db, u2)
+		if err != nil || len(list) != 0 {
+			t.Fatal("other user listed task", list, err)
+		}
+	})
 
 	root := t.TempDir()
 	write := func(path, body string) {
@@ -149,6 +198,101 @@ func TestSharedPresetsMySQL(t *testing.T) {
 		}
 		return response
 	}
+	t.Run("ConfluenceLibraryZIP", func(t *testing.T) {
+		sourceUser, targetUser := uuid.NewString(), uuid.NewString()
+		for _, user := range []string{sourceUser, targetUser} {
+			if _, err := db.ExecContext(ctx, `INSERT INTO users (id,email,password_hash) VALUES (?,?,?)`, user, user+"@test.example", "unused"); err != nil {
+				t.Fatal(err)
+			}
+		}
+		taskID := uuid.NewString()
+		task := domain.ConfluenceTask{ID: taskID, UserID: sourceUser, URL: "https://example.com/pages/viewpage.action?pageId=1"}
+		if err := mysql.CreateConfluenceTask(ctx, db, task); err != nil {
+			t.Fatal(err)
+		}
+		if changed, err := mysql.TransitionConfluenceTask(ctx, db, taskID, sourceUser, "queued", "running"); err != nil || !changed {
+			t.Fatal(changed, err)
+		}
+		if err := mysql.ProgressConfluenceTask(ctx, db, taskID, sourceUser, "export", 1, 1); err != nil {
+			t.Fatal(err)
+		}
+		prefix := "confluence/" + sourceUser + "/" + taskID + "/"
+		markdown := []byte("---\nconfluence_page_id: \"1\"\nconfluence_version: 1\n---\n# One")
+		objects := &libraryAPIObjects{data: map[string][]byte{prefix + "tree.json": []byte(libraryAPITree), prefix + "1/page.md": markdown}}
+		h.ConfluenceLibrary = &worker.ConfluenceLibrary{DB: db, Objects: objects}
+		spaceID := domain.ConfluenceSpaceID("https://example.com", "TEAM")
+		call(sourceUser, "GET", "/confluence-library", "", 200)
+		empty := call(targetUser, "GET", "/confluence-library", "", 200)
+		if !strings.Contains(empty.Body.String(), `"spaces":[]`) {
+			t.Fatal("other user saw source library")
+		}
+		filePath := "/confluence-library/spaces/" + spaceID + "/pages/1/file?name=page.md"
+		call(targetUser, "GET", filePath, "", 404)
+		zipResponse := call(sourceUser, "GET", "/confluence-library/archive?space_id="+spaceID+"&path=Root", "", 200)
+		manifest, files, err := domain.ReadConfluenceArchive(zipResponse.Body.Bytes())
+		if err != nil {
+			t.Fatal(err)
+		}
+		var preview domain.ConfluenceImportReport
+		response := call(targetUser, "POST", "/confluence-library/imports", zipResponse.Body.String(), 200)
+		if err = json.Unmarshal(response.Body.Bytes(), &preview); err != nil || preview.Added != 1 {
+			t.Fatal(preview, err)
+		}
+		call(sourceUser, "POST", "/confluence-library/imports/"+preview.ID+"/apply", "", 404)
+		call(targetUser, "GET", filePath, "", 404)
+		call(targetUser, "POST", "/confluence-library/imports/"+preview.ID+"/apply", "", 200)
+		if body := call(targetUser, "GET", filePath, "", 200).Body.Bytes(); !bytes.Equal(body, markdown) {
+			t.Fatal("ZIP import changed Markdown")
+		}
+		call(targetUser, "POST", "/confluence-library/imports/"+preview.ID+"/apply", "", 409)
+		incoming := &manifest.Spaces[0].Pages[0]
+		incoming.ModifiedAt = incoming.ModifiedAt.Add(-time.Hour)
+		var archive bytes.Buffer
+		if err = domain.WriteConfluenceArchive(&archive, manifest, files); err != nil {
+			t.Fatal(err)
+		}
+		response = call(targetUser, "POST", "/confluence-library/imports", archive.String(), 200)
+		if err = json.Unmarshal(response.Body.Bytes(), &preview); err != nil || preview.Kept != 1 {
+			t.Fatal(preview, err)
+		}
+		incoming.ModifiedAt = incoming.ModifiedAt.Add(time.Hour)
+		changed := append(append([]byte{}, markdown...), []byte(" changed")...)
+		filename := incoming.Files[0].Path
+		files[filename] = changed
+		incoming.Files[0].SHA256 = domain.ConfluenceFileHash(changed)
+		incoming.Files[0].Size = int64(len(changed))
+		archive.Reset()
+		if err = domain.WriteConfluenceArchive(&archive, manifest, files); err != nil {
+			t.Fatal(err)
+		}
+		response = call(targetUser, "POST", "/confluence-library/imports", archive.String(), 200)
+		if err = json.Unmarshal(response.Body.Bytes(), &preview); err != nil || preview.Conflicts != 1 {
+			t.Fatal(preview, err)
+		}
+		incoming.ModifiedAt = incoming.ModifiedAt.Add(time.Hour)
+		archive.Reset()
+		if err = domain.WriteConfluenceArchive(&archive, manifest, files); err != nil {
+			t.Fatal(err)
+		}
+		response = call(targetUser, "POST", "/confluence-library/imports", archive.String(), 200)
+		if err = json.Unmarshal(response.Body.Bytes(), &preview); err != nil || preview.Updated != 1 {
+			t.Fatal(preview, err)
+		}
+		staleID := preview.ID
+		response = call(targetUser, "POST", "/confluence-library/imports", archive.String(), 200)
+		if err = json.Unmarshal(response.Body.Bytes(), &preview); err != nil {
+			t.Fatal(err)
+		}
+		call(targetUser, "POST", "/confluence-library/imports/"+preview.ID+"/apply", "", 200)
+		call(targetUser, "POST", "/confluence-library/imports/"+staleID+"/apply", "", 409)
+		if body := call(targetUser, "GET", filePath, "", 200).Body.Bytes(); !bytes.Equal(body, changed) {
+			t.Fatal("newer content not published")
+		}
+		if !bytes.Equal(objects.data[prefix+"1/page.md"], markdown) {
+			t.Fatal("original task overwritten")
+		}
+	})
+
 	for _, user := range []string{u1, u2} {
 		response := call(user, "GET", "/agents", "", 200)
 		if !strings.Contains(response.Body.String(), sharedID) || strings.Contains(response.Body.String(), "secret-value") || strings.Contains(response.Body.String(), "private.example") {

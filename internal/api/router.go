@@ -14,6 +14,7 @@ import (
 	"github.com/zhaocore/dutybotgo/internal/api/middleware"
 	"github.com/zhaocore/dutybotgo/internal/config"
 	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/dutybotgo/internal/store/rustfs"
 	"github.com/zhaocore/dutybotgo/internal/worker"
 )
 
@@ -28,13 +29,15 @@ type InstanceManager interface {
 
 // Handler 持有所有外部依赖，供 API 处理器使用。
 type Handler struct {
-	Config      *config.Config
-	DB          *sql.DB
-	AsynqClient worker.Enqueuer // 仓库任务入队客户端
-	Instances   InstanceManager // Agent 实例管理器
-	Runtime     agent.Runtime   // Agent 构建/执行运行时
-	RedisHealth func(ctx context.Context) error
-	SyncAgents  func(ctx context.Context) error
+	ConfluenceObjects rustfs.Objects
+	ConfluenceLibrary *worker.ConfluenceLibrary
+	Config            *config.Config
+	DB                *sql.DB
+	AsynqClient       worker.Enqueuer // 仓库任务入队客户端
+	Instances         InstanceManager // Agent 实例管理器
+	Runtime           agent.Runtime   // Agent 构建/执行运行时
+	RedisHealth       func(ctx context.Context) error
+	SyncAgents        func(ctx context.Context) error
 }
 
 // NewRouter 创建并配置 gin 路由。
@@ -76,6 +79,11 @@ func NewRouter(h *Handler) *gin.Engine {
 	// 写操作（API 令牌要求 can_write）
 	writes := authed.Group("", RequireTokenWrite())
 	{
+		writes.POST("/confluence-library/imports", h.PreviewConfluenceImport)
+		writes.POST("/confluence-library/imports/:import_id/apply", h.ApplyConfluenceImport)
+		writes.POST("/confluence-tasks", h.CreateConfluenceTask)
+		writes.POST("/confluence-tasks/:task_id/start", h.StartConfluenceTask)
+		writes.POST("/confluence-tasks/:task_id/stop", h.StopConfluenceTask)
 		writes.POST("/repositories", h.CreateRepository)
 		writes.POST("/repositories/:repo_id/sync", h.SyncRepository)
 		writes.DELETE("/repositories/:repo_id", h.DeleteRepository)
@@ -90,6 +98,14 @@ func NewRouter(h *Handler) *gin.Engine {
 		writes.DELETE("/sessions/:session_id", h.DeleteSession)
 	}
 	{
+		authed.GET("/confluence-library", h.GetConfluenceLibrary)
+		authed.GET("/confluence-library/archive", h.ExportConfluenceLibrary)
+		authed.GET("/confluence-library/archive-check", h.CheckConfluenceArchive)
+		authed.GET("/confluence-library/spaces/:space_id/pages/:page_id/file", h.ConfluenceLibraryFile)
+		authed.GET("/confluence-tasks", h.ListConfluenceTasks)
+		authed.GET("/confluence-tasks/:task_id", h.GetConfluenceTask)
+		authed.GET("/confluence-tasks/:task_id/tree", h.ConfluenceTree)
+		authed.GET("/confluence-tasks/:task_id/pages/:page_id/file", h.ConfluenceFile)
 		// 用户
 		authed.POST("/auth/change-password", h.ChangePassword)
 		authed.GET("/auth/me", h.CurrentUser)

@@ -17,6 +17,462 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/confluence-library": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Confluence Library"
+                ],
+                "summary": "查看 Confluence 文件库",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ConfluenceLibrary"
+                        }
+                    }
+                }
+            }
+        },
+        "/confluence-library/archive": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/zip"
+                ],
+                "tags": [
+                    "Confluence Library"
+                ],
+                "summary": "下载 Confluence 目录 ZIP",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Space ID；留空导出全部",
+                        "name": "space_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Space 内目录路径",
+                        "name": "path",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/confluence-library/archive-check": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "tags": [
+                    "Confluence Library"
+                ],
+                "summary": "检查 Confluence ZIP 下载",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Space ID",
+                        "name": "space_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Space 内目录路径",
+                        "name": "path",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
+        },
+        "/confluence-library/imports": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/zip"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Confluence Library"
+                ],
+                "summary": "上传 ZIP 并检查目录合并",
+                "parameters": [
+                    {
+                        "description": "本模块导出的 ZIP 字节",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ConfluenceImportReport"
+                        }
+                    }
+                }
+            }
+        },
+        "/confluence-library/imports/{import_id}/apply": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Confluence Library"
+                ],
+                "summary": "确认合并 Confluence ZIP",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "导入检查 ID",
+                        "name": "import_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ConfluenceImportReport"
+                        }
+                    }
+                }
+            }
+        },
+        "/confluence-library/spaces/{space_id}/pages/{page_id}/file": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "tags": [
+                    "Confluence Library"
+                ],
+                "summary": "读取文件库 Markdown 或附件",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Space ID",
+                        "name": "space_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "页面 ID",
+                        "name": "page_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "page.md 或 assets/哈希附件名",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/confluence-tasks": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Confluence"
+                ],
+                "summary": "当前用户最近导出任务",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/domain.ConfluenceTask"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Confluence"
+                ],
+                "summary": "开始 Confluence 两阶段导出",
+                "parameters": [
+                    {
+                        "description": "Confluence 页面地址",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateConfluenceTaskRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ConfluenceTask"
+                        }
+                    }
+                }
+            }
+        },
+        "/confluence-tasks/{task_id}": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Confluence"
+                ],
+                "summary": "查询导出进度",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "任务 ID",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ConfluenceTask"
+                        }
+                    }
+                }
+            }
+        },
+        "/confluence-tasks/{task_id}/pages/{page_id}/file": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "Confluence"
+                ],
+                "summary": "读取已发布 Markdown 或附件",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "任务 ID",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "页面 ID",
+                        "name": "page_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "page.md 或 assets/哈希附件名",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/confluence-tasks/{task_id}/start": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Confluence"
+                ],
+                "summary": "继续停止或失败的导出",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "任务 ID",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ConfluenceTask"
+                        }
+                    }
+                }
+            }
+        },
+        "/confluence-tasks/{task_id}/stop": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Confluence"
+                ],
+                "summary": "停止导出并保留检查点",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "任务 ID",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ConfluenceTask"
+                        }
+                    }
+                }
+            }
+        },
+        "/confluence-tasks/{task_id}/tree": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Confluence"
+                ],
+                "summary": "查看完整导出目录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "任务 ID",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ConfluenceTree"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/agents": {
             "get": {
                 "security": [
@@ -1164,6 +1620,17 @@ const docTemplate = `{
                 }
             }
         },
+        "api.CreateConfluenceTaskRequest": {
+            "type": "object",
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "api.CreateInstanceRequest": {
             "type": "object",
             "properties": {
@@ -1446,6 +1913,229 @@ const docTemplate = `{
                 "AgentStatusStopped",
                 "AgentStatusFailed"
             ]
+        },
+        "domain.ConfluenceImportItem": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "page_id": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "space_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ConfluenceImportReport": {
+            "type": "object",
+            "properties": {
+                "added": {
+                    "type": "integer"
+                },
+                "conflicts": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ConfluenceImportItem"
+                    }
+                },
+                "kept": {
+                    "type": "integer"
+                },
+                "updated": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.ConfluenceLibrary": {
+            "type": "object",
+            "properties": {
+                "digest": {
+                    "type": "string"
+                },
+                "spaces": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ConfluenceLibrarySpace"
+                    }
+                }
+            }
+        },
+        "domain.ConfluenceLibraryPage": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "modified_at": {
+                    "type": "string"
+                },
+                "object_prefix": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.ConfluenceLibrarySpace": {
+            "type": "object",
+            "properties": {
+                "base_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "pages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ConfluenceLibraryPage"
+                    }
+                }
+            }
+        },
+        "domain.ConfluenceNode": {
+            "type": "object",
+            "properties": {
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ConfluenceNode"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_modified_at": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.ConfluencePage": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.ConfluenceSnapshotInfo": {
+            "type": "object",
+            "properties": {
+                "captured_at": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "object",
+                    "properties": {
+                        "base_url": {
+                            "type": "string"
+                        },
+                        "space_key": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "domain.ConfluenceTask": {
+            "type": "object",
+            "properties": {
+                "completed": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "stage": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ConfluenceTree": {
+            "type": "object",
+            "properties": {
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ConfluenceNode"
+                    }
+                },
+                "pages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ConfluencePage"
+                    }
+                },
+                "snapshot": {
+                    "$ref": "#/definitions/domain.ConfluenceSnapshotInfo"
+                }
+            }
         },
         "domain.MCPServerConfig": {
             "type": "object",

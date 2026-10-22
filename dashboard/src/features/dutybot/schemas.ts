@@ -137,3 +137,88 @@ export type CreateApiTokenResponse = z.infer<
 export const apiTokenListSchema = z.object({
   data: z.array(apiTokenSchema),
 });
+
+/** Confluence 后台任务与冻结目录。 */
+export const confluenceTaskSchema = z.object({
+  id: z.string().uuid(),
+  url: z.string().url(),
+  status: z.enum([
+    'queued',
+    'running',
+    'stopping',
+    'stopped',
+    'failed',
+    'completed',
+  ]),
+  stage: z.enum(['tree', 'export']),
+  completed: z.number().int().nonnegative(),
+  total: z.number().int().nonnegative(),
+  error: z.string(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+export const confluenceTaskListSchema = z.object({
+  data: z.array(confluenceTaskSchema),
+});
+export type ConfluenceNode = {
+  id: string;
+  title: string;
+  children: ConfluenceNode[];
+};
+const confluenceNodeSchema: z.ZodType<ConfluenceNode> = z.lazy(() =>
+  z.object({
+    id: z.string().regex(/^\d+$/),
+    title: z.string(),
+    children: z.array(confluenceNodeSchema),
+  }),
+);
+export const confluenceTreeSchema = z.object({
+  nodes: z.array(confluenceNodeSchema),
+  pages: z.array(
+    z.object({
+      id: z.string().regex(/^\d+$/),
+      title: z.string(),
+      path: z.string(),
+      url: z.string().url(),
+      version: z.number().int().positive(),
+    }),
+  ),
+});
+export const markdownFileSchema = z.string();
+
+/** 文件库按 Space 汇集任务与导入页面，校验界面所需字段。 */
+export const confluenceLibraryPageSchema = z.object({
+  id: z.string().regex(/^\d+$/),
+  title: z.string(),
+  url: z.string().url(),
+  version: z.number().int().positive(),
+  path: z.string(),
+  modified_at: z.string().datetime({ offset: true }),
+});
+export const confluenceLibrarySpaceSchema = z.object({
+  id: z.string().regex(/^[a-f0-9]{64}$/),
+  key: z.string(),
+  base_url: z.string().url(),
+  pages: z.array(confluenceLibraryPageSchema),
+});
+export const confluenceLibrarySchema = z.object({
+  spaces: z.array(confluenceLibrarySpaceSchema),
+  digest: z.string(),
+});
+export type ConfluenceLibraryPage = z.infer<typeof confluenceLibraryPageSchema>;
+export const confluenceImportReportSchema = z.object({
+  id: z.string().uuid(),
+  added: z.number().int().nonnegative(),
+  updated: z.number().int().nonnegative(),
+  kept: z.number().int().nonnegative(),
+  conflicts: z.number().int().nonnegative(),
+  items: z.array(
+    z.object({
+      space_id: z.string(),
+      page_id: z.string(),
+      path: z.string(),
+      action: z.enum(['added', 'updated', 'kept', 'conflict']),
+      reason: z.string(),
+    }),
+  ),
+});

@@ -82,6 +82,13 @@ definitions:
       token_prefix:
         type: string
     type: object
+  api.CreateConfluenceTaskRequest:
+    properties:
+      url:
+        type: string
+    required:
+    - url
+    type: object
   api.CreateInstanceRequest:
     properties:
       repo_ids:
@@ -270,6 +277,151 @@ definitions:
     - AgentStatusRunning
     - AgentStatusStopped
     - AgentStatusFailed
+  domain.ConfluenceImportItem:
+    properties:
+      action:
+        type: string
+      page_id:
+        type: string
+      path:
+        type: string
+      reason:
+        type: string
+      space_id:
+        type: string
+    type: object
+  domain.ConfluenceImportReport:
+    properties:
+      added:
+        type: integer
+      conflicts:
+        type: integer
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/domain.ConfluenceImportItem'
+        type: array
+      kept:
+        type: integer
+      updated:
+        type: integer
+    type: object
+  domain.ConfluenceLibrary:
+    properties:
+      digest:
+        type: string
+      spaces:
+        items:
+          $ref: '#/definitions/domain.ConfluenceLibrarySpace'
+        type: array
+    type: object
+  domain.ConfluenceLibraryPage:
+    properties:
+      id:
+        type: string
+      modified_at:
+        type: string
+      object_prefix:
+        type: string
+      path:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+      version:
+        type: integer
+    type: object
+  domain.ConfluenceLibrarySpace:
+    properties:
+      base_url:
+        type: string
+      id:
+        type: string
+      key:
+        type: string
+      pages:
+        items:
+          $ref: '#/definitions/domain.ConfluenceLibraryPage'
+        type: array
+    type: object
+  domain.ConfluenceNode:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/domain.ConfluenceNode'
+        type: array
+      id:
+        type: string
+      last_modified_at:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+      version:
+        type: integer
+    type: object
+  domain.ConfluencePage:
+    properties:
+      id:
+        type: string
+      path:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+      version:
+        type: integer
+    type: object
+  domain.ConfluenceSnapshotInfo:
+    properties:
+      captured_at:
+        type: string
+      source:
+        properties:
+          base_url:
+            type: string
+          space_key:
+            type: string
+        type: object
+    type: object
+  domain.ConfluenceTask:
+    properties:
+      completed:
+        type: integer
+      created_at:
+        type: string
+      error:
+        type: string
+      id:
+        type: string
+      stage:
+        type: string
+      status:
+        type: string
+      total:
+        type: integer
+      updated_at:
+        type: string
+      url:
+        type: string
+    type: object
+  domain.ConfluenceTree:
+    properties:
+      nodes:
+        items:
+          $ref: '#/definitions/domain.ConfluenceNode'
+        type: array
+      pages:
+        items:
+          $ref: '#/definitions/domain.ConfluencePage'
+        type: array
+      snapshot:
+        $ref: '#/definitions/domain.ConfluenceSnapshotInfo'
+    type: object
   domain.MCPServerConfig:
     properties:
       command:
@@ -385,6 +537,284 @@ info:
   title: dutybotGo API
   version: 0.1.0
 paths:
+  /confluence-library:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ConfluenceLibrary'
+      security:
+      - JWTAuth: []
+      summary: 查看 Confluence 文件库
+      tags:
+      - Confluence Library
+  /confluence-library/archive:
+    get:
+      parameters:
+      - description: Space ID；留空导出全部
+        in: query
+        name: space_id
+        type: string
+      - description: Space 内目录路径
+        in: query
+        name: path
+        type: string
+      produces:
+      - application/zip
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      security:
+      - JWTAuth: []
+      summary: 下载 Confluence 目录 ZIP
+      tags:
+      - Confluence Library
+  /confluence-library/archive-check:
+    get:
+      parameters:
+      - description: Space ID
+        in: query
+        name: space_id
+        type: string
+      - description: Space 内目录路径
+        in: query
+        name: path
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - JWTAuth: []
+      summary: 检查 Confluence ZIP 下载
+      tags:
+      - Confluence Library
+  /confluence-library/imports:
+    post:
+      consumes:
+      - application/zip
+      parameters:
+      - description: 本模块导出的 ZIP 字节
+        in: body
+        name: body
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ConfluenceImportReport'
+      security:
+      - JWTAuth: []
+      summary: 上传 ZIP 并检查目录合并
+      tags:
+      - Confluence Library
+  /confluence-library/imports/{import_id}/apply:
+    post:
+      parameters:
+      - description: 导入检查 ID
+        in: path
+        name: import_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ConfluenceImportReport'
+      security:
+      - JWTAuth: []
+      summary: 确认合并 Confluence ZIP
+      tags:
+      - Confluence Library
+  /confluence-library/spaces/{space_id}/pages/{page_id}/file:
+    get:
+      parameters:
+      - description: Space ID
+        in: path
+        name: space_id
+        required: true
+        type: string
+      - description: 页面 ID
+        in: path
+        name: page_id
+        required: true
+        type: string
+      - description: page.md 或 assets/哈希附件名
+        in: query
+        name: name
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - JWTAuth: []
+      summary: 读取文件库 Markdown 或附件
+      tags:
+      - Confluence Library
+  /confluence-tasks:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/domain.ConfluenceTask'
+                type: array
+            type: object
+      security:
+      - JWTAuth: []
+      summary: 当前用户最近导出任务
+      tags:
+      - Confluence
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Confluence 页面地址
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateConfluenceTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/domain.ConfluenceTask'
+      security:
+      - JWTAuth: []
+      summary: 开始 Confluence 两阶段导出
+      tags:
+      - Confluence
+  /confluence-tasks/{task_id}:
+    get:
+      parameters:
+      - description: 任务 ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ConfluenceTask'
+      security:
+      - JWTAuth: []
+      summary: 查询导出进度
+      tags:
+      - Confluence
+  /confluence-tasks/{task_id}/pages/{page_id}/file:
+    get:
+      parameters:
+      - description: 任务 ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      - description: 页面 ID
+        in: path
+        name: page_id
+        required: true
+        type: string
+      - description: page.md 或 assets/哈希附件名
+        in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - JWTAuth: []
+      summary: 读取已发布 Markdown 或附件
+      tags:
+      - Confluence
+  /confluence-tasks/{task_id}/start:
+    post:
+      parameters:
+      - description: 任务 ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/domain.ConfluenceTask'
+      security:
+      - JWTAuth: []
+      summary: 继续停止或失败的导出
+      tags:
+      - Confluence
+  /confluence-tasks/{task_id}/stop:
+    post:
+      parameters:
+      - description: 任务 ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/domain.ConfluenceTask'
+      security:
+      - JWTAuth: []
+      summary: 停止导出并保留检查点
+      tags:
+      - Confluence
+  /confluence-tasks/{task_id}/tree:
+    get:
+      parameters:
+      - description: 任务 ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ConfluenceTree'
+      security:
+      - JWTAuth: []
+      summary: 查看完整导出目录
+      tags:
+      - Confluence
   /v1/agents:
     get:
       description: 同步部署配置并返回公共预设与当前用户的私有 Agent。

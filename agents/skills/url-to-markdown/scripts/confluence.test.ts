@@ -81,3 +81,62 @@ test("未加载 Jira 宏保留真实工单链接，移除加载占位文本", as
     await rm(root, { recursive: true });
   }
 });
+
+test("RustFS 内存转换保留正文与资源且拒绝缺失附件", async () => {
+  const { confluenceBundle } = await import('./confluence');
+  const plan = planConfluence(page, url);
+  const assets = plan.resources.map(item => ({name:item.localName, content:Buffer.from('bytes').toString('base64')}));
+  const bundle = confluenceBundle(page,url,assets);
+  expect(bundle).toHaveLength(3);
+  const markdown = Buffer.from(bundle[0].content,'base64').toString();
+  expect(markdown).toContain('confluence_version: 4');
+  expect(markdown).toContain('结尾');
+  expect(markdown).toContain('./assets/asset-');
+  expect(() => confluenceBundle(page,url,[])).toThrow('附件数量');
+  expect(() => confluenceBundle(page,url,[assets[0],assets[0]])).toThrow('附件数量');
+});
+
+test("合法空白页保留元数据并标记为空，缺正文和不可转换内容仍失败", async () => {
+  const { confluenceBundle } = await import('./confluence');
+  const response = (html: string) => JSON.stringify({ success: true, data: {
+    id: "123", title: "空白页面", version: { number: 1 }, _links: { base: "https://confluence.example.com" },
+    body: { view: { value: html } },
+  } });
+  for (const html of ["<p><br></p>", "", "<p>&nbsp;</p>", "  \n"]) {
+    expect(planConfluence(response(html), url).resources).toHaveLength(0);
+    const files = confluenceBundle(response(html), url, []);
+    const markdown = Buffer.from(files[0].content, "base64").toString();
+    expect(files).toHaveLength(1);
+    expect(markdown).toContain('title: "空白页面"');
+    expect(markdown).toContain('confluence_page_id: "123"');
+    expect(markdown).toContain('confluence_version: 1');
+    expect(markdown).toContain('confluence_body_empty: true');
+    expect(markdown.split('---')[2]?.trim()).toBe('');
+  }
+  for (const html of ['<iframe src="https://example.com"></iframe>', '<canvas></canvas>', '<div data-macro-name="easy-heading-free">目录内容</div>']) {
+    expect(() => confluenceBundle(response(html), url, [])).toThrow('Confluence 转换后正文为空');
+  }
+  expect(() => confluenceBundle(response('text').replace('"view"', '"storage"'), url, [])).toThrow('body.view');
+});
+
+test("Jira 与其他不可本地化资源保留绝对链接，当前实例附件照常下载", async () => {
+  const { confluenceBundle } = await import('./confluence');
+  const response = JSON.stringify({ success: true, data: {
+    id: "123", title: "混合资源", version: { number: 1 }, _links: { base: "https://confluence.example.com" },
+    body: { view: { value: '<p>开始</p><img src="/download/attachments/123/shot.png"><img src="https://jira.example.com/images/icons/issuetypes/epic.svg"><img src="/images/icons/static.svg"><img src="https://other.example.com/download/attachments/456/remote.png"><a href="https://cdn.example.com/spec.pdf?version=2">远程附件</a><p>结尾</p>' } },
+  } });
+  const plan = planConfluence(response, url);
+  expect(plan.resources).toHaveLength(1);
+  expect(plan.resources.every(item => item.url.startsWith('https://confluence.example.com/download/'))).toBe(true);
+  const assets = plan.resources.map(item => ({name:item.localName,content:Buffer.from('bytes').toString('base64')}));
+  const files = confluenceBundle(response,url,assets);
+  const markdown = Buffer.from(files[0].content,'base64').toString();
+  expect(files).toHaveLength(2);
+  expect(markdown).toContain('](https://jira.example.com/images/icons/issuetypes/epic.svg)');
+  expect(markdown).toContain('](https://confluence.example.com/images/icons/static.svg)');
+  expect(markdown).toContain('](https://other.example.com/download/attachments/456/remote.png)');
+  expect(markdown).toContain('](https://cdn.example.com/spec.pdf?version=2)');
+  for (const resource of plan.resources) expect(markdown).toContain(`](./assets/${resource.localName})`);
+  expect(markdown.indexOf('epic.svg')).toBeLessThan(markdown.indexOf('结尾'));
+  expect(() => confluenceBundle(response,url,[])).toThrow('附件数量');
+});

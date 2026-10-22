@@ -27,6 +27,17 @@ services:
       timeout: 3s
       retries: 10
 
+  rustfs:
+    image: rustfs/rustfs:latest
+    environment:
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:?RUSTFS_ACCESS_KEY required}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:?RUSTFS_SECRET_KEY required}
+    ports:
+      - "127.0.0.1:${RUSTFS_PORT:-9000}:9000"
+      - "127.0.0.1:${RUSTFS_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - rustfsdata:/data
+
   server:
     build: .
     depends_on:
@@ -34,6 +45,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rustfs:
+        condition: service_started
     environment:
       MYSQL_HOST: mysql
       MYSQL_PORT: "3306"
@@ -45,6 +58,13 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-redispassword}
       REPO_ROOT_DIR: /data/repo
       AGENT_CONFIG_DIR: /app/agents
+      CONFLUENCE_BASE_URL: ${CONFLUENCE_BASE_URL:-}
+      CONFLUENCE_COOKIE: ${CONFLUENCE_COOKIE:-}
+      RUSTFS_ENDPOINT: http://rustfs:9000
+      RUSTFS_REGION: ${RUSTFS_REGION:-us-east-1}
+      RUSTFS_BUCKET: ${RUSTFS_BUCKET:-}
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required}
       LLM_API_KEY: ${LLM_API_KEY:?LLM_API_KEY required}
       LLM_BASE_URL: ${LLM_BASE_URL:?LLM_BASE_URL required}
@@ -55,7 +75,10 @@ services:
     volumes:
       - repodata:/data/repo
       - ./agents:/app/agents:ro
+      - url-export-deps:/app/agents/skills/url-to-markdown/node_modules
 
 volumes:
   mysqldata:
   repodata:
+  url-export-deps:
+  rustfsdata:

@@ -1,0 +1,16 @@
+.git
+.env
+.env.*
+!.env.example
+**/node_modules
+**/output
+**/config.local.json
+**/cookies.local.json
+**/__pycache__
+.codegraph
+repo
+bin
+coverage.out
+dashboard/.next
+dashboard/test-results
+dashboard/playwright-report

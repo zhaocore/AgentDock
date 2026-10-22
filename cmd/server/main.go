@@ -28,6 +28,7 @@ import (
 	"github.com/zhaocore/dutybotgo/internal/api"
 	"github.com/zhaocore/dutybotgo/internal/config"
 	"github.com/zhaocore/dutybotgo/internal/store/mysql"
+	"github.com/zhaocore/dutybotgo/internal/store/rustfs"
 	"github.com/zhaocore/dutybotgo/internal/worker"
 )
 
@@ -77,6 +78,10 @@ func main() {
 		log.Fatalf("reset instance states: %v", err)
 	}
 
+	if err := mysql.ResetConfluenceTasks(ctx, db.DB); err != nil {
+		log.Fatalf("reset Confluence tasks: %v", err)
+	}
+
 	// Asynq 入队客户端
 	asynqClient := worker.NewClient(cfg.Redis.Addr, cfg.Redis.Password)
 	defer asynqClient.Close()
@@ -103,6 +108,22 @@ func main() {
 
 	// Asynq Worker（仓库克隆 / 同步 / 删除）
 	workerSrv := worker.NewServer(cfg.Redis.Addr, cfg.Redis.Password, db.DB, cfg.Repo.RootDir)
+
+	if cfg.RustFS.Endpoint != "" && cfg.RustFS.Region != "" && cfg.RustFS.Bucket != "" && cfg.RustFS.AccessKey != "" && cfg.RustFS.SecretKey != "" {
+		objects := rustfs.New(cfg.RustFS.Endpoint, cfg.RustFS.Region, cfg.RustFS.Bucket, cfg.RustFS.AccessKey, cfg.RustFS.SecretKey)
+		h.ConfluenceObjects = objects
+		h.ConfluenceLibrary = &worker.ConfluenceLibrary{DB: db.DB, Objects: objects}
+		if cfg.Confluence.BaseURL != "" && cfg.Confluence.Cookie != "" {
+			if err := worker.ValidateConfluenceURL(cfg.Confluence.BaseURL, cfg.Confluence.BaseURL+"/pages/viewpage.action?pageId=1"); err != nil {
+				log.Fatal(err)
+			}
+			workerSrv.Confluence = &worker.ConfluenceWorker{DB: db.DB, Objects: objects, Source: worker.NewConfluenceSource(cfg.Confluence, cfg.Agent.RootDir)}
+		} else {
+			log.Print("Confluence live export unavailable: configure CONFLUENCE_BASE_URL/COOKIE")
+		}
+	} else {
+		log.Print("Confluence library and export unavailable: configure RUSTFS_ENDPOINT/REGION/BUCKET/ACCESS_KEY/SECRET_KEY")
+	}
 
 	errCh := make(chan error, 2)
 	go func() {

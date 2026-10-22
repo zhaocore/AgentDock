@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const SESSION_COOKIE = 'dutybot_session';
 export const MAX_UPLOAD_BYTES = 101 * 1024 * 1024;
+export const CONFLUENCE_UPLOAD_BYTES = 10 * 1024 * 1024 * 1024;
 
 /** 只接受当前工作台使用的 dutybotGo 路径与方法。 */
 export function isAllowedDutybotRoute(
@@ -23,6 +24,10 @@ export function isAllowedDutybotRoute(
     '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
   const routes: Record<string, RegExp[]> = {
     GET: [
+      /^confluence-library(?:\/archive|\/archive-check)?$/,
+      /^confluence-library\/spaces\/[a-f0-9]{64}\/pages\/[0-9]+\/file$/,
+      /^confluence-tasks$/,
+      new RegExp(`^confluence-tasks/${uuid}(?:/tree|/pages/[0-9]+/file)?$`),
       /^auth\/me$/,
       /^health$/,
       /^repositories$/,
@@ -35,6 +40,10 @@ export function isAllowedDutybotRoute(
       new RegExp(`^api-tokens(?:/${uuid})?$`),
     ],
     POST: [
+      /^confluence-library\/imports$/,
+      new RegExp(`^confluence-library/imports/${uuid}/apply$`),
+      /^confluence-tasks$/,
+      new RegExp(`^confluence-tasks/${uuid}/(?:start|stop)$`),
       /^auth\/(?:login|register|change-password)$/,
       /^repositories$/,
       new RegExp(`^repositories/${uuid}\/sync$`),
