@@ -43,7 +43,7 @@ export function isAllowedDutybotRoute(
       /^confluence-library\/imports$/,
       new RegExp(`^confluence-library/imports/${uuid}/apply$`),
       /^confluence-tasks$/,
-      new RegExp(`^confluence-tasks/${uuid}/(?:start|stop)$`),
+      new RegExp(`^confluence-tasks/${uuid}/(?:start|stop|export)$`),
       /^auth\/(?:login|register|change-password)$/,
       /^repositories$/,
       new RegExp(`^repositories/${uuid}\/sync$`),

@@ -100,8 +100,11 @@ class ExportTests(unittest.TestCase):
             for i in ('1', '2')) + '</ul>'
         client = Mock(spec=Client)
         client.base = 'https://example.com'
-        client.get.side_effect = [html, json.dumps({'id': '1', 'title': 'Page 1', 'version': {'number': 3, 'when': '2026-10-20T10:00:00+08:00'}}),
-                                  json.dumps({'id': '2', 'title': 'Page 2', 'version': {'number': 1, 'when': '2026-10-19T10:00:00Z'}})]
+        responses = {
+            '1': {'id': '1', 'title': 'Page 1', 'version': {'number': 3, 'when': '2026-10-20T10:00:00+08:00'}},
+            '2': {'id': '2', 'title': 'Page 2', 'version': {'number': 1, 'when': '2026-10-19T10:00:00Z'}},
+        }
+        client.get.side_effect = lambda relative: html if relative.startswith('/tree') else json.dumps(responses[relative.split('/')[-1].split('?')[0]])
         settings = {'treeRequestId': '/tree', 'spaceKey': 'A', 'treePageId': '1', 'noRoot': 'true', 'rootPageId': '0'}
         started = datetime.now(timezone.utc)
         nodes = collect(client, settings)
@@ -110,7 +113,7 @@ class ExportTests(unittest.TestCase):
         for entry in nodes:
             self.assertTrue(started <= datetime.fromisoformat(entry['last_viewed_at']) <= finished)
             self.assertNotIn('modification_count', entry)
-        client.get.side_effect = [html, json.dumps({'id': '1', 'title': 'Page 1', 'version': {'number': 3}})]
+        responses['1']['version'] = {'number': 3}
         with self.assertRaisesRegex(ValueError, r'page_id=1 version.when'):
             collect(client, settings)
 

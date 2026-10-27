@@ -149,8 +149,10 @@ export const confluenceTaskSchema = z.object({
     'stopped',
     'failed',
     'completed',
+    'waiting',
+    'selecting',
   ]),
-  stage: z.enum(['tree', 'export']),
+  stage: z.enum(['tree', 'selection', 'markdown', 'export']),
   completed: z.number().int().nonnegative(),
   total: z.number().int().nonnegative(),
   error: z.string(),
@@ -173,6 +175,7 @@ const confluenceNodeSchema: z.ZodType<ConfluenceNode> = z.lazy(() =>
   }),
 );
 export const confluenceTreeSchema = z.object({
+  selected_node_id: z.string().nullable().optional(),
   nodes: z.array(confluenceNodeSchema),
   pages: z.array(
     z.object({

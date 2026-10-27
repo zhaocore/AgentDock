@@ -2,10 +2,39 @@ import { afterAll, expect, test } from "bun:test";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { capture, httpUrl, parseCookies, titleName } from "./main";
+import { chromium } from "playwright";
+import { capture, httpUrl, parseCookies, titleName, toMarkdown } from "./main";
 
 const root = await mkdtemp(path.join(tmpdir(), "url-markdown-test-"));
 const config = path.join(root, "cookies.json");
+
+test("rowspan=0 限于所在行组，合并表头展开，非法跨度明确失败", () => {
+  const markdown = toMarkdown('<table><thead><tr><th colspan="2">标题</th></tr></thead><tbody><tr><td rowspan="0">组一</td><td>A</td></tr><tr><td>B</td></tr></tbody><tbody><tr><td>组二</td><td>C</td></tr></tbody></table>');
+  expect(markdown).toContain('| 标题 |  |');
+  expect(markdown).toContain('| 组一 | A |');
+  expect(markdown).toContain('| 组一 | B |');
+  expect(markdown).toContain('| 组二 | C |');
+  expect(() => toMarkdown('<table><tr><th colspan="bad">标题</th></tr></table>')).toThrow('rowspan/colspan');
+});
+
+test("复杂表格完整保留结构，真实浏览器正常展示列表及代码缩进", async () => {
+  const html = '<table data-testid="structured-table"><thead><tr><th>说明</th></tr></thead><tbody><tr><td rowspan="2"><h3>信息</h3><ul><li>A</li><li>B</li></ul><pre data-testid="source-code"><code>type X = A | B;\n  run();</code></pre></td></tr><tr></tr></tbody></table>';
+  const markdown = toMarkdown(html);
+  expect(markdown).toContain('<table data-testid="structured-table">');
+  expect(markdown).toContain('<td rowspan="2">');
+  expect(markdown).toContain('<ul><li>A</li><li>B</li></ul>');
+  expect(markdown).toContain('type X = A | B;&#10;  run();');
+  expect(markdown).not.toContain('```<br>');
+  const browser = await chromium.launch({ channel: process.env.URL_BROWSER_CHANNEL || "chrome", headless: true,
+    ...(process.env.URL_CHROME_PATH ? { executablePath: process.env.URL_CHROME_PATH } : {}) });
+  try {
+    const page = await browser.newPage();
+    await page.setContent(markdown);
+    expect(await page.locator('[data-testid="structured-table"]').isVisible()).toBe(true);
+    expect(await page.locator('[data-testid="structured-table"] li').count()).toBe(2);
+    expect(await page.locator('[data-testid="source-code"]').textContent()).toBe('type X = A | B;\n  run();');
+  } finally { await browser.close(); }
+});
 await writeFile(config, JSON.stringify({ cookies: [{ domain: "127.0.0.1", cookie: "session=integration-secret; token=a=b" }] }));
 const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jGZkAAAAASUVORK5CYII=", "base64");
 let crossDomainCookie = "";
@@ -37,6 +66,7 @@ const server = Bun.serve({
         <picture><source srcset="/image.png"><img src="/image.png" alt="截图"></picture>
         <p>图片之后</p><img src="/image.png" alt="重复图片"><img src="/redirect" alt="跨域图">
         <a href="guide.pdf">附件</a><a href="../next">下一页</a><a href="#anchor">锚点</a>
+        <a href="resCors://enable localhost:4200/infiniteStage/remoteEntry.js">自定义链接</a><img src="https://[bad" alt="原引用">
         <audio src="/sound.mp3"></audio><video poster="/image.png"><source src="/movie.mp4"></video>
         <table><thead><tr><th>A</th></tr></thead><tbody><tr><td>B</td></tr></tbody></table>
         <pre><code>const x = 1;</code></pre></article>
@@ -74,6 +104,8 @@ test("真实浏览器：Cookie 鉴权、动态正文、资源同目录及原位�
   expect(markdown).not.toContain("integration-secret");
   expect(markdown).toContain(`[下一页](${base}/next)`);
   expect(markdown).toContain("[锚点](#anchor)");
+  expect(markdown).toContain("[自定义链接](<resCors://enable localhost:4200/infiniteStage/remoteEntry.js>)");
+  expect(markdown).toContain("![原引用](https://[bad)");
   expect(markdown).toContain("| A |");
   expect(markdown).toContain("```\nconst x = 1;\n```");
   expect(markdown.indexOf("图片之前")).toBeLessThan(markdown.indexOf("![截图]"));

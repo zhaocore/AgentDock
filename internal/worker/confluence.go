@@ -55,6 +55,31 @@ func ReadConfluenceTree(ctx context.Context, objects rustfs.Objects, task domain
 	return decodeTree(data)
 }
 
+// ReadConfluencePlan 旧任务沿用全量计划，新任务读取冻结范围，不修改原始树。
+func ReadConfluencePlan(ctx context.Context, objects rustfs.Objects, task domain.ConfluenceTask) (domain.ConfluenceTree, error) {
+	tree, err := ReadConfluenceTree(ctx, objects, task)
+	if err != nil || task.Stage != "markdown" {
+		return tree, err
+	}
+	data, err := objects.Get(ctx, ConfluencePrefix(task)+"selection.json")
+	if err != nil {
+		return tree, err
+	}
+	var selection domain.ConfluenceSelection
+	if err := json.Unmarshal(data, &selection); err != nil {
+		return tree, fmt.Errorf("decode Confluence selection: %w", err)
+	}
+	if selection.NodeID == nil {
+		return tree, fmt.Errorf("Confluence selection lacks node_id")
+	}
+	pages, err := domain.SelectConfluencePages(tree, *selection.NodeID)
+	if err != nil {
+		return tree, err
+	}
+	tree.Pages, tree.SelectedNodeID = pages, selection.NodeID
+	return tree, nil
+}
+
 func decodeTree(data []byte) (domain.ConfluenceTree, error) {
 	var tree domain.ConfluenceTree
 	if err := json.Unmarshal(data, &tree); err != nil {
@@ -139,7 +164,11 @@ func (w *ConfluenceWorker) Handle(ctx context.Context, t *asynq.Task) error {
 		}
 		return err
 	}
-	_, err = mysql.TransitionConfluenceTask(finishCtx, w.DB, task.ID, task.UserID, "running", "completed")
+	next := "completed"
+	if current.Stage == "selection" {
+		next = "waiting"
+	}
+	_, err = mysql.TransitionConfluenceTask(finishCtx, w.DB, task.ID, task.UserID, "running", next)
 	return err
 }
 
@@ -156,14 +185,12 @@ func (w *ConfluenceWorker) run(ctx context.Context, task domain.ConfluenceTask) 
 		if err = w.Objects.Put(ctx, ConfluencePrefix(task)+"tree.json", data, "application/json"); err != nil {
 			return err
 		}
-		if err = mysql.ProgressConfluenceTask(ctx, w.DB, task.ID, task.UserID, "export", 0, len(tree.Pages)); err != nil {
-			return err
-		}
-		task.Stage = "export"
-		task.Total = len(tree.Pages)
-		task.Completed = 0
+		return mysql.ProgressConfluenceTask(ctx, w.DB, task.ID, task.UserID, "selection", 0, len(tree.Pages))
 	}
-	tree, err := ReadConfluenceTree(ctx, w.Objects, task)
+	if task.Stage != "export" && task.Stage != "markdown" {
+		return fmt.Errorf("select a Confluence subtree before starting Markdown export")
+	}
+	tree, err := ReadConfluencePlan(ctx, w.Objects, task)
 	if err != nil {
 		return err
 	}
@@ -194,7 +221,7 @@ func (w *ConfluenceWorker) run(ctx context.Context, task domain.ConfluenceTask) 
 		if !foundMarkdown {
 			return fmt.Errorf("export lacks Markdown page_id=%s", page.ID)
 		}
-		if err = mysql.ProgressConfluenceTask(ctx, w.DB, task.ID, task.UserID, "export", index+1, len(tree.Pages)); err != nil {
+		if err = mysql.ProgressConfluenceTask(ctx, w.DB, task.ID, task.UserID, task.Stage, index+1, len(tree.Pages)); err != nil {
 			return err
 		}
 	}

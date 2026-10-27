@@ -23,15 +23,34 @@ function TreeNode({
   node,
   published,
   onSelect,
+  scopeID,
+  onScope,
+  canSelectScope,
 }: {
   node: ConfluenceNode;
   published: Set<string>;
   onSelect: (id: string) => void;
+  scopeID: string;
+  onScope: (node: ConfluenceNode) => void;
+  canSelectScope: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const choice = (
+    <input
+      type="radio"
+      name="confluence-scope"
+      aria-label={node.title}
+      data-testid={`confluence-scope-${node.id}`}
+      checked={scopeID === node.id}
+      disabled={!canSelectScope}
+      onChange={() => onScope(node)}
+      className="mr-2"
+    />
+  );
   if (!node.children.length)
     return (
       <li>
+        {choice}
         <button
           className="text-left py-1 disabled:text-muted-foreground hover:underline"
           data-testid={`confluence-page-${node.id}`}
@@ -44,6 +63,7 @@ function TreeNode({
     );
   return (
     <li>
+      {choice}
       <button
         className="text-left py-1"
         data-testid={`confluence-folder-${node.id}`}
@@ -60,6 +80,9 @@ function TreeNode({
               node={child}
               published={published}
               onSelect={onSelect}
+              scopeID={scopeID}
+              onScope={onScope}
+              canSelectScope={canSelectScope}
             />
           ))}
         </ul>
@@ -84,11 +107,14 @@ export function Confluence() {
     null,
   );
   const tree = useResource(
-    task.data?.stage === 'export' ? `/confluence-tasks/${id}/tree` : null,
+    task.data && task.data.stage !== 'tree'
+      ? `/confluence-tasks/${id}/tree`
+      : null,
     confluenceTreeSchema,
     null,
   );
   const [page, setPage] = useState('');
+  const [scope, setScope] = useState({ id: '', title: '' });
   const fileBase = `/confluence-tasks/${id}/pages/${page}/file`;
   const markdown = useResource(
     id && page ? `${fileBase}?name=page.md` : null,
@@ -101,6 +127,7 @@ export function Confluence() {
   const [auto, setAuto] = useState(true);
   useEffect(() => {
     setPage('');
+    setScope({ id: '', title: '' });
   }, [id]);
   const refreshTasks = tasks.refresh;
   const refreshTask = task.refresh;
@@ -121,7 +148,10 @@ export function Confluence() {
       ),
     [tree.data, task.data?.completed],
   );
-  const perform = async (path: string, body: { url: string } | null) => {
+  const perform = async (
+    path: string,
+    body: { url: string } | { node_id: string } | null,
+  ) => {
     setBusy(true);
     setError('');
     try {
@@ -130,6 +160,7 @@ export function Confluence() {
       setSelected(updated.id);
       task.refresh();
       tasks.refresh();
+      tree.refresh();
     } catch (cause) {
       setError(getErrorMessage(cause));
     } finally {
@@ -137,6 +168,10 @@ export function Confluence() {
     }
   };
   const active = task.data && ['queued', 'running'].includes(task.data.status);
+  const canSelectScope =
+    (task.data?.stage === 'selection' &&
+      ['waiting', 'stopped', 'failed'].includes(task.data.status)) ||
+    (task.data?.stage === 'markdown' && task.data.status === 'completed');
   return (
     <>
       <div className="gg-toolbar">
@@ -212,7 +247,9 @@ export function Confluence() {
             {t(
               task.data.stage === 'tree'
                 ? 'dutybot.confluenceTreeStage'
-                : 'dutybot.confluenceExportStage',
+                : task.data.stage === 'selection'
+                  ? 'dutybot.confluenceSelectionStage'
+                  : 'dutybot.confluenceExportStage',
             )}{' '}
             · {t(`dutybot.confluence_${task.data.status}`)}
           </p>
@@ -240,17 +277,18 @@ export function Confluence() {
               {t('dutybot.confluenceStop')}
             </Button>
           )}
-          {['stopped', 'failed'].includes(task.data.status) && (
-            <Button
-              data-testid="confluence-resume"
-              disabled={busy}
-              onClick={() =>
-                void perform(`/confluence-tasks/${id}/start`, null)
-              }
-            >
-              {t('dutybot.confluenceResume')}
-            </Button>
-          )}
+          {task.data.stage !== 'selection' &&
+            ['stopped', 'failed'].includes(task.data.status) && (
+              <Button
+                data-testid="confluence-resume"
+                disabled={busy}
+                onClick={() =>
+                  void perform(`/confluence-tasks/${id}/start`, null)
+                }
+              >
+                {t('dutybot.confluenceResume')}
+              </Button>
+            )}
         </div>
       )}
       <div className="grid gap-4 lg:grid-cols-[minmax(240px,1fr)_3fr]">
@@ -259,6 +297,41 @@ export function Confluence() {
           data-testid="confluence-tree"
         >
           <h2 className="font-semibold mb-2">{t('dutybot.confluenceFiles')}</h2>
+          {canSelectScope && tree.data && (
+            <div className="space-y-2 mb-3">
+              <p className="text-sm">{t('dutybot.confluenceSelectionHelp')}</p>
+              {scope.id && (
+                <p className="text-sm" data-testid="confluence-selected-scope">
+                  {scope.title}
+                </p>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  data-testid="confluence-export-all"
+                  disabled={busy}
+                  onClick={() =>
+                    void perform(`/confluence-tasks/${id}/export`, {
+                      node_id: '',
+                    })
+                  }
+                >
+                  {t('dutybot.confluenceExportAll')}
+                </Button>
+                <Button
+                  variant="outline"
+                  data-testid="confluence-export-selected"
+                  disabled={busy || !scope.id}
+                  onClick={() =>
+                    void perform(`/confluence-tasks/${id}/export`, {
+                      node_id: scope.id,
+                    })
+                  }
+                >
+                  {t('dutybot.confluenceExportSelected')}
+                </Button>
+              </div>
+            </div>
+          )}
           {tree.data && (
             <ul>
               {tree.data.nodes.map((node) => (
@@ -267,6 +340,14 @@ export function Confluence() {
                   node={node}
                   published={published}
                   onSelect={setPage}
+                  scopeID={
+                    (canSelectScope ? scope.id : tree.data?.selected_node_id) ??
+                    ''
+                  }
+                  onScope={(node) =>
+                    setScope({ id: node.id, title: node.title })
+                  }
+                  canSelectScope={Boolean(canSelectScope) && !busy}
                 />
               ))}
             </ul>

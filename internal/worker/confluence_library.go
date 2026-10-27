@@ -52,7 +52,7 @@ func (s *ConfluenceLibrary) Catalog(ctx context.Context, userID string) (domain.
 	}
 	sources := []source{}
 	for _, task := range tasks {
-		tree, err := ReadConfluenceTree(ctx, s.Objects, task)
+		tree, err := ReadConfluencePlan(ctx, s.Objects, task)
 		if err != nil {
 			return domain.ConfluenceLibrary{}, err
 		}

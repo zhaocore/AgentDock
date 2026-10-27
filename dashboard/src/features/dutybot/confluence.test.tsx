@@ -154,3 +154,109 @@ it('shows explicit service errors and allows manual refresh', async () => {
     expect(vi.mocked(api.get).mock.calls.length).toBeGreaterThan(before),
   );
 });
+
+it.each(['', '10', '1'])(
+  'waits for scope selection before exporting Markdown: %s',
+  async (nodeID) => {
+    let current = {
+      ...task,
+      stage: 'selection',
+      status: 'waiting',
+      completed: 0,
+    };
+    vi.mocked(api.get).mockImplementation(async (path) => ({
+      data:
+        path === '/confluence-tasks'
+          ? { data: [current] }
+          : path.endsWith('/tree')
+            ? tree
+            : current,
+    }));
+    vi.mocked(api.post).mockImplementation(async () => {
+      current = {
+        ...current,
+        stage: 'markdown',
+        status: 'queued',
+        total: nodeID === '1' ? 1 : 2,
+      };
+      return { data: current };
+    });
+    render(
+      <LocaleProvider>
+        <Confluence />
+      </LocaleProvider>,
+    );
+    await screen.findByTestId('confluence-export-all');
+    expect(api.post).not.toHaveBeenCalled();
+    expect(screen.getByTestId('confluence-progress').textContent).toContain(
+      '0/2',
+    );
+    if (nodeID) {
+      if (nodeID === '1')
+        fireEvent.click(screen.getByTestId('confluence-folder-10'));
+      fireEvent.click(screen.getByTestId(`confluence-scope-${nodeID}`));
+      fireEvent.click(screen.getByTestId('confluence-export-selected'));
+    } else {
+      expect(
+        (screen.getByTestId('confluence-export-selected') as HTMLButtonElement)
+          .disabled,
+      ).toBe(true);
+      fireEvent.click(screen.getByTestId('confluence-export-all'));
+    }
+    await waitFor(() =>
+      expect(api.post).toHaveBeenCalledWith(`/confluence-tasks/${id}/export`, {
+        node_id: nodeID,
+      }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByTestId('confluence-export-all')).toBeNull(),
+    );
+  },
+);
+
+it('allows a new leaf export after completion and switches to the next batch', async () => {
+  const nextID = '22222222-2222-2222-2222-222222222222';
+  let current = { ...task, stage: 'markdown', status: 'running', total: 1 };
+  const next = { ...current, id: nextID, status: 'queued', completed: 0 };
+  vi.mocked(api.get).mockImplementation(async (path) => ({
+    data:
+      path === '/confluence-tasks'
+        ? { data: [current, ...(current.id === nextID ? [] : [next])] }
+        : path.endsWith('/tree')
+          ? tree
+          : current,
+  }));
+  vi.mocked(api.post).mockImplementation(async () => {
+    current = next;
+    return { data: next };
+  });
+  render(
+    <LocaleProvider>
+      <Confluence />
+    </LocaleProvider>,
+  );
+  await screen.findByTestId('confluence-folder-10');
+  expect(screen.queryByTestId('confluence-export-selected')).toBeNull();
+  current = { ...current, status: 'completed' };
+  fireEvent.click(screen.getByTestId('confluence-refresh'));
+  await screen.findByTestId('confluence-export-all');
+  fireEvent.click(screen.getByTestId('confluence-folder-10'));
+  fireEvent.click(screen.getByTestId('confluence-scope-2'));
+  fireEvent.click(screen.getByTestId('confluence-export-selected'));
+  await waitFor(() =>
+    expect(api.post).toHaveBeenCalledWith(`/confluence-tasks/${id}/export`, {
+      node_id: '2',
+    }),
+  );
+  await waitFor(() =>
+    expect(
+      (screen.getByTestId('confluence-tasks') as HTMLSelectElement).value,
+    ).toBe(nextID),
+  );
+  await waitFor(() =>
+    expect(screen.getByTestId('confluence-progress').textContent).toContain(
+      '0/1',
+    ),
+  );
+  expect(screen.queryByTestId('confluence-export-selected')).toBeNull();
+});

@@ -112,6 +112,37 @@ func TestConfluenceLibraryLargeImportAndApply(t *testing.T) {
 	}
 }
 
+func TestConfluenceLibraryUsesSelectedPlan(t *testing.T) {
+	db, mock, _ := sqlmock.New()
+	defer db.Close()
+	objects := libraryObjects()
+	var tree domain.ConfluenceTree
+	if err := json.Unmarshal([]byte(libraryTreeFixture), &tree); err != nil {
+		t.Fatal(err)
+	}
+	node, page := tree.Nodes[0], tree.Pages[0]
+	node.ID, node.Title = "2", "Two"
+	page.ID, page.Title, page.Path = "2", "Two", "Root/Two"
+	tree.Nodes = append(tree.Nodes, node)
+	tree.Pages = append(tree.Pages, page)
+	data, err := json.Marshal(tree)
+	if err != nil {
+		t.Fatal(err)
+	}
+	objects.data["confluence/owner/task/tree.json"] = data
+	objects.data["confluence/owner/task/selection.json"] = []byte(`{"node_id":"2"}`)
+	rows := sqlmock.NewRows(taskColumns).AddRow("task", "owner", "https://example.com/page", "completed", "markdown", 1, 1, "", time.Now(), time.Now())
+	expectLibraryCatalog(mock, "owner", rows, sqlmock.NewRows(libraryImportColumns))
+	service := ConfluenceLibrary{DB: db, Objects: objects}
+	catalog, err := service.Catalog(context.Background(), "owner")
+	if err != nil || len(catalog.Spaces) != 1 || len(catalog.Spaces[0].Pages) != 1 || catalog.Spaces[0].Pages[0].ID != "2" {
+		t.Fatal(catalog, err)
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func (m *memoryObjects) List(_ context.Context, prefix string) ([]string, error) {
 	keys := []string{}
 	for key := range m.data {

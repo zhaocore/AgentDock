@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+from collections import deque
+from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 import json
@@ -150,16 +152,17 @@ class Client:
     def __init__(self, base: str, cookie: str):
         self.base = base
         self.cookie = cookie
-        self.opener = build_opener(NoRedirect())
 
     def get(self, relative: str) -> str:
         url = urljoin(self.base + "/", relative)
         if urlsplit(url).netloc != urlsplit(self.base).netloc or urlsplit(url).scheme != "https":
             raise ValueError("拒绝向其他实例或非 HTTPS 地址发送 Cookie")
+        # 每次调用独立构建 opener，避免并发请求共享可变处理器。
+        opener = build_opener(NoRedirect())
         for attempt in range(3):
             try:
                 request = Request(url, headers={"Cookie": self.cookie, "Accept": "application/json,text/html"})
-                with self.opener.open(request, timeout=30) as response:
+                with opener.open(request, timeout=30) as response:
                     return response.read().decode("utf-8")
             except HTTPError as error:
                 # 错误正文可能含登录信息，不写入日志。
@@ -218,21 +221,16 @@ def child_entries(html: str) -> list[tuple[str, str, bool]]:
 
 
 def collect(client: Client, settings: dict[str, str]) -> list[Node]:
-    """递归读取折叠节点，成功获取全部版本后返回完整树。"""
-    seen: set[str] = set()
+    """最多十个节点并行采集，全部成功后按原始顺序组装完整树。"""
 
-    def children(page_id: str) -> list[Node]:
+    def children(page_id: str) -> list[tuple[str, str, bool]]:
         endpoint = settings["treeRequestId"]
         params = {"hasRoot": "false" if page_id == "0" else "true", "spaceKey": settings["spaceKey"], "treeId": "0", "startDepth": "0", "mobile": "false", "treePageId": settings["treePageId"], "pageId": page_id}
         # 不传 ancestors，避免接口预先展开其他层级。
         html = client.get(endpoint + ("&" if "?" in endpoint else "?") + urlencode(params))
-        entries = child_entries(html)
-        return [page(identifier, title, expandable) for identifier, title, expandable in entries]
+        return child_entries(html)
 
-    def page(identifier: str, title: str, expandable: bool) -> Node:
-        if identifier in seen:
-            raise ValueError(f"树包含重复节点或循环 page_id={identifier}")
-        seen.add(identifier)
+    def page(identifier: str, title: str, expandable: bool) -> tuple[Node, list[tuple[str, str, bool]]]:
         data = object_value(json.loads(client.get(f"rest/api/content/{identifier}?expand=version")), "页面响应")
         version_data = object_value(data.get("version"), f"page_id={identifier} version")
         version = version_data.get("number")
@@ -240,13 +238,42 @@ def collect(client: Client, settings: dict[str, str]) -> list[Node]:
             raise ValueError(f"页面身份、标题或版本与树不一致 page_id={identifier}；抓取期间可能发生变更，请重新运行")
         last_modified_at = timestamp_value(version_data.get("when"), f"page_id={identifier} version.when")
         last_viewed_at = datetime.now(timezone.utc).isoformat()
-        return {"id": identifier, "title": title, "url": f"{client.base}/pages/viewpage.action?pageId={identifier}", "version": version, "last_viewed_at": last_viewed_at, "last_modified_at": last_modified_at, "children": children(identifier) if expandable else []}
+        result: Node = {"id": identifier, "title": title, "url": f"{client.base}/pages/viewpage.action?pageId={identifier}", "version": version, "last_viewed_at": last_viewed_at, "last_modified_at": last_modified_at, "children": []}
+        return result, children(identifier) if expandable else []
 
     if settings["noRoot"] == "true":
-        return children("0")
-    root_id = settings["rootPageId"]
-    data = object_value(json.loads(client.get(f"rest/api/content/{root_id}")), "根页面")
-    return [page(root_id, string_value(data.get("title"), "根标题"), True)]
+        roots = children("0")
+    else:
+        root_id = settings["rootPageId"]
+        data = object_value(json.loads(client.get(f"rest/api/content/{root_id}")), "根页面")
+        roots = [(root_id, string_value(data.get("title"), "根标题"), True)]
+    ready: deque[tuple[str, str, bool]] = deque(roots)
+    seen: set[str] = set()
+    nodes: dict[str, Node] = {}
+    child_ids: dict[str, list[str]] = {}
+    pending: dict[Future[tuple[Node, list[tuple[str, str, bool]]]], str] = {}
+    executor = ThreadPoolExecutor(max_workers=10)
+    try:
+        while ready or pending:
+            while ready and len(pending) < 10:
+                identifier, title, expandable = ready.popleft()
+                if identifier in seen:
+                    raise ValueError(f"树包含重复节点或循环 page_id={identifier}")
+                seen.add(identifier)
+                pending[executor.submit(page, identifier, title, expandable)] = identifier
+            completed, _ = wait(pending, return_when=FIRST_COMPLETED)
+            for future in completed:
+                identifier = pending.pop(future)
+                result, entries = future.result()
+                nodes[identifier] = result
+                child_ids[identifier] = [entry[0] for entry in entries]
+                ready.extend(entries)
+    finally:
+        executor.shutdown(wait=True, cancel_futures=True)
+    # 顺序只取原始接口结果，不取线程完成顺序；工作线程不等待子任务。
+    for identifier, identifiers in child_ids.items():
+        nodes[identifier]["children"] = [nodes[child] for child in identifiers]
+    return [nodes[entry[0]] for entry in roots]
 
 
 def flatten(nodes: object, parent: str | None) -> dict[str, IndexedNode]:

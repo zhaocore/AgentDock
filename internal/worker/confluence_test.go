@@ -89,8 +89,7 @@ func TestConfluenceRunCheckpointAndFailure(t *testing.T) {
 				source.tree = []byte(`{}`)
 			}
 			if mode == "fresh" {
-				mock.ExpectExec("UPDATE confluence_tasks SET stage").WithArgs("export", 0, 1, "task", "user").WillReturnResult(sqlmock.NewResult(0, 1))
-				mock.ExpectExec("UPDATE confluence_tasks SET stage").WithArgs("export", 1, 1, "task", "user").WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectExec("UPDATE confluence_tasks SET stage").WithArgs("selection", 0, 1, "task", "user").WillReturnResult(sqlmock.NewResult(0, 1))
 			}
 			worker := ConfluenceWorker{DB: db, Objects: objects, Source: source}
 			err = worker.run(context.Background(), task)
@@ -98,8 +97,8 @@ func TestConfluenceRunCheckpointAndFailure(t *testing.T) {
 			if (err == nil) != success {
 				t.Fatalf("mode %s: %v", mode, err)
 			}
-			if mode == "fresh" && string(objects.data["confluence/user/task/1/page.md"]) != "# Hello" {
-				t.Fatal("missing published page")
+			if mode == "fresh" && source.pages != 0 {
+				t.Fatal("tree generation exported Markdown before selection")
 			}
 			if mode == "resume" && source.pages != 0 {
 				t.Fatal("resume downloaded completed page")
@@ -158,6 +157,7 @@ func TestConfluenceHandleTransitions(t *testing.T) {
 func TestConfluenceSourcePageRealConverter(t *testing.T) {
 	image := append([]byte{137, 80, 78, 71}, bytes.Repeat([]byte("attachment"), 16*1024)...)
 	requests := 0
+	unavailableRequests := 0
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requests++
 		if r.Header.Get("Cookie") != "session=test" {
@@ -166,7 +166,14 @@ func TestConfluenceSourcePageRealConverter(t *testing.T) {
 		base := "https://" + r.Host
 		if strings.Contains(r.URL.Path, "/rest/api/") {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(map[string]any{"id": "1", "title": "One", "version": map[string]int{"number": 1}, "_links": map[string]string{"base": base}, "body": map[string]any{"view": map[string]string{"value": `<h1>Hello</h1><p>世界</p><img src="` + base + `/download/attachments/1/test.png"><img src="https://jira.example.com/images/icons/issuetypes/epic.svg">`}}})
+			json.NewEncoder(w).Encode(map[string]any{"id": "1", "title": "One", "version": map[string]int{"number": 1}, "_links": map[string]string{"base": base}, "body": map[string]any{"view": map[string]string{"value": `<h1>Hello</h1><p>世界</p><img src="` + base + `/download/attachments/1/test.png"><img src="https://jira.example.com/images/icons/issuetypes/epic.svg"><img src="/download/attachments/3214181943/image2026-6-8_1-45-2.png?version=2"><a href="/download/attachments/1/login.pdf">文档</a><img src="/download/attachments/1/unavailable.png"><p>结尾</p>`}}})
+		} else if strings.Contains(r.URL.Path, "image2026-") {
+			http.NotFound(w, r)
+		} else if strings.HasSuffix(r.URL.Path, "/login.pdf") {
+			w.Write([]byte("<!doctype html><html>login</html>"))
+		} else if strings.HasSuffix(r.URL.Path, "/unavailable.png") {
+			unavailableRequests++
+			w.WriteHeader(http.StatusServiceUnavailable)
 		} else {
 			w.Write(image)
 		}
@@ -192,12 +199,65 @@ func TestConfluenceSourcePageRealConverter(t *testing.T) {
 	if !strings.Contains(string(files[0].Content), "https://jira.example.com/images/icons/issuetypes/epic.svg") {
 		t.Fatal("external resource URL missing from Markdown")
 	}
-	if requests != 2 {
+	for _, resource := range []string{"/download/attachments/3214181943/image2026-6-8_1-45-2.png?version=2", "/download/attachments/1/login.pdf", "/download/attachments/1/unavailable.png"} {
+		if !strings.Contains(string(files[0].Content), "]("+server.URL+resource+")") {
+			t.Fatalf("failed resource original URL missing: %s", resource)
+		}
+	}
+	if !strings.Contains(string(files[0].Content), "结尾") || unavailableRequests != 3 {
+		t.Fatalf("body or retries lost: unavailable_requests=%d", unavailableRequests)
+	}
+	if requests != 7 {
 		t.Fatal(requests)
 	}
 	page.Version = 2
 	if _, err = source.Page(context.Background(), page); err == nil || !strings.Contains(err.Error(), "version changed") {
 		t.Fatal(err)
+	}
+}
+
+func TestConfluenceSourceUnavailableAttachmentsAndCancellation(t *testing.T) {
+	for _, scenario := range []string{"missing", "cancel", "page404"} {
+		t.Run(scenario, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if strings.Contains(r.URL.Path, "/rest/api/") && scenario != "page404" {
+					w.Write([]byte(`{"id":"1","title":"One","version":{"number":1},"_links":{"base":"https://` + r.Host + `"},"body":{"view":{"value":"<p>正文</p><img src=\"/download/attachments/1/missing.png\">"}}}`))
+					return
+				}
+				if scenario == "cancel" {
+					cancel()
+				}
+				http.NotFound(w, r)
+			}))
+			defer server.Close()
+			root, err := filepath.Abs("../../agents")
+			if err != nil {
+				t.Fatal(err)
+			}
+			source := NewConfluenceSource(config.ConfluenceConfig{BaseURL: server.URL, Cookie: "session=test"}, root)
+			source.HTTP = server.Client()
+			files, err := source.Page(ctx, domain.ConfluencePage{ID: "1", Title: "One", Version: 1, URL: server.URL + "/pages/viewpage.action?pageId=1"})
+			if scenario == "cancel" {
+				if !errors.Is(err, context.Canceled) {
+					t.Fatalf("expected cancellation, got %v", err)
+				}
+				return
+			}
+			if scenario == "page404" {
+				if err == nil || !strings.Contains(err.Error(), "status=404") || len(files) != 0 {
+					t.Fatalf("page error ignored: files=%d err=%v", len(files), err)
+				}
+				return
+			}
+			if err != nil || len(files) != 1 {
+				t.Fatalf("expected Markdown only: files=%d err=%v", len(files), err)
+			}
+			if !strings.Contains(string(files[0].Content), "]("+server.URL+"/download/attachments/1/missing.png)") || strings.Contains(string(files[0].Content), "./assets/") {
+				t.Fatal("missing attachment must retain original URL")
+			}
+		})
 	}
 }
 

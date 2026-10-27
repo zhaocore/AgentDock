@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -89,6 +90,106 @@ func TestConfluenceArchiveRoundTrip(t *testing.T) {
 	}
 	if directories < 6 {
 		t.Fatal("missing ancestor directories")
+	}
+}
+
+func TestConfluenceArchiveLargeManifestRoundTrip(t *testing.T) {
+	manifest, files := archiveFixture()
+	space := manifest.Spaces[0]
+	template := space.Pages[0]
+	space.Pages = nil
+	files = map[string][]byte{}
+	for index := 0; index < 1100; index++ {
+		page := template
+		page.ID = fmt.Sprint(index + 1)
+		page.URL = space.BaseURL + "/pages/viewpage.action?pageId=" + page.ID
+		page.Path = strings.Repeat("目录", 150) + "/" + page.ID
+		content := []byte(fmt.Sprintf("---\nconfluence_page_id: %q\nconfluence_version: %d\n---\n", page.ID, page.Version))
+		filename, err := ConfluenceArchivePath(space.ID, space.Key, page.Path, page.Title, "page.md")
+		if err != nil {
+			t.Fatal(err)
+		}
+		page.Files = []ConfluenceArchiveFile{{Name: "page.md", Path: filename, Size: int64(len(content)), SHA256: ConfluenceFileHash(content)}}
+		files[filename] = content
+		space.Pages = append(space.Pages, page)
+	}
+	manifest.Spaces = []ConfluenceArchiveSpace{space}
+	raw, err := json.Marshal(manifest)
+	if err != nil || len(raw) <= 2*1024*1024 {
+		t.Fatalf("fixture must exceed 2 MiB: bytes=%d error=%v", len(raw), err)
+	}
+	var buffer bytes.Buffer
+	if err := WriteConfluenceArchive(&buffer, manifest, files); err != nil {
+		t.Fatal(err)
+	}
+	restored, contents, err := ReadConfluenceArchive(buffer.Bytes())
+	if err != nil {
+		t.Fatal(err)
+	}
+	actual, err := json.Marshal(restored)
+	if err != nil || !bytes.Equal(raw, actual) || len(contents) != len(files) {
+		t.Fatalf("archive changed: files=%d error=%v", len(contents), err)
+	}
+	for filename, content := range files {
+		if !bytes.Equal(content, contents[filename]) {
+			t.Fatal("bytes changed", filename)
+		}
+	}
+}
+
+func TestConfluenceArchiveManyEntriesRoundTrip(t *testing.T) {
+	manifest, files := archiveFixture()
+	manifest.Spaces = manifest.Spaces[:1]
+	space := &manifest.Spaces[0]
+	page := &space.Pages[0]
+	files = map[string][]byte{page.Files[0].Path: files[page.Files[0].Path]}
+	page.Files = page.Files[:1]
+	content := []byte("attachment bytes")
+	for index := 0; index < 10000; index++ {
+		name := fmt.Sprintf("assets/asset-%024x.png", index)
+		filename, err := ConfluenceArchivePath(space.ID, space.Key, page.Path, page.Title, name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		page.Files = append(page.Files, ConfluenceArchiveFile{Name: name, Path: filename, Size: int64(len(content)), SHA256: ConfluenceFileHash(content)})
+		files[filename] = content
+	}
+	var buffer bytes.Buffer
+	if err := WriteConfluenceArchive(&buffer, manifest, files); err != nil {
+		t.Fatal(err)
+	}
+	reader, err := zip.NewReader(bytes.NewReader(buffer.Bytes()), int64(buffer.Len()))
+	if err != nil || len(reader.File) <= 10000 {
+		t.Fatalf("fixture must exceed 10000 entries: error=%v", err)
+	}
+	restored, contents, err := ReadConfluenceArchive(buffer.Bytes())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(restored.Spaces[0].Pages[0].Files) != len(files) || len(contents) != len(files) {
+		t.Fatal("archive lost entries")
+	}
+	for filename, original := range files {
+		if !bytes.Equal(original, contents[filename]) {
+			t.Fatal("bytes changed", filename)
+		}
+	}
+}
+
+func TestConfluenceArchiveRejectsExcessEntries(t *testing.T) {
+	var buffer bytes.Buffer
+	writer := zip.NewWriter(&buffer)
+	for index := 0; index <= ConfluenceEntryLimit; index++ {
+		if _, err := writer.CreateHeader(&zip.FileHeader{Name: fmt.Sprintf("directory-%d/", index), Method: zip.Store}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+	_, _, err := OpenConfluenceArchive(bytes.NewReader(buffer.Bytes()), int64(buffer.Len()))
+	if err == nil || !strings.Contains(err.Error(), fmt.Sprintf("exceeds %d entries", ConfluenceEntryLimit)) {
+		t.Fatalf("expected entry limit error, got %v", err)
 	}
 }
 

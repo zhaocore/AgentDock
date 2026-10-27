@@ -59,10 +59,35 @@ func TestConfluenceStore(t *testing.T) {
 		t.Fatal(err)
 	}
 	mock.ExpectExec("UPDATE confluence_tasks SET status='stopped'").WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectExec("UPDATE confluence_tasks SET status='waiting'").WillReturnResult(sqlmock.NewResult(0, 1))
 	if err = ResetConfluenceTasks(ctx, db); err != nil {
 		t.Fatal(err)
 	}
 	if err = mock.ExpectationsWereMet(); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestQueueConfluenceSelection(t *testing.T) {
+	for _, mode := range []string{"queued", "changed", "error"} {
+		db, mock, _ := sqlmock.New()
+		expect := mock.ExpectExec("UPDATE confluence_tasks SET status='queued', stage='markdown'").WithArgs(2, "task", "owner")
+		if mode == "error" {
+			expect.WillReturnError(errors.New("db down"))
+		} else {
+			rows := int64(1)
+			if mode == "changed" {
+				rows = 0
+			}
+			expect.WillReturnResult(sqlmock.NewResult(0, rows))
+		}
+		changed, err := QueueConfluenceSelection(context.Background(), db, "task", "owner", 2)
+		if changed != (mode == "queued") || (err != nil) != (mode == "error") {
+			t.Fatal(mode, changed, err)
+		}
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatal(err)
+		}
+		db.Close()
 	}
 }

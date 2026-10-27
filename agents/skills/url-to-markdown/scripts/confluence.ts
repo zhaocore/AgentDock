@@ -41,11 +41,19 @@ function readPage(text: string): Page {
 function pageDocument(page: Page): Document {
   const { document } = parseHTML(`<html><body>${page.html}</body></html>`);
   for (const node of document.querySelectorAll("script,style,noscript,template,colgroup,[data-macro-name=easy-heading-free]")) node.remove();
+  // 嵌入页面无法转为正文时保留原位入口，不递归读取外部内容。
+  for (const frame of document.querySelectorAll("iframe[src]")) {
+    const link = document.createElement("a");
+    link.setAttribute("href", frame.getAttribute("src")!);
+    link.textContent = "iframe";
+    frame.replaceWith(link);
+  }
   for (const image of document.querySelectorAll("img[data-image-src]")) {
     image.setAttribute("src", image.getAttribute("data-image-src")!);
   }
   for (const link of document.querySelectorAll("a[href]")) {
-    if (/\/download\/attachments\//.test(new URL(link.getAttribute("href")!, page.base).pathname)) link.setAttribute("download", "");
+    const source = URL.parse(link.getAttribute("href")!, page.base);
+    if (source && /\/download\/attachments\//.test(source.pathname)) link.setAttribute("download", "");
   }
   for (const macro of document.querySelectorAll('[data-macro-name="jira"]')) {
     const link = macro.querySelector("a.jira-issue-key");
@@ -58,9 +66,11 @@ function pageDocument(page: Page): Document {
   return document;
 }
 
-/** 仅规划当前实例附件，其他安全网页资源由 Markdown 保留原链接。 */
+/** 仅规划当前实例 HTTP(S) 附件，其余资源由 Markdown 保留原引用。 */
 function resourceRequest(url: string, base: string): ResourceRequest | null {
-  const source = httpUrl(url);
+  const source = new URL(url);
+  if (!["http:", "https:"].includes(source.protocol)) return null;
+  httpUrl(url);
   const match = source.pathname.match(/\/download\/(?:attachments|thumbnails)\/(\d+)\/([^/]+)$/);
   if (source.origin !== new URL(base).origin || !match) {
     return null;
@@ -111,27 +121,35 @@ function attachmentBytes(data: object, request: ResourceRequest): Buffer {
   return bytes;
 }
 
-/** 将已验证正文和下载资源转换为内存文件包，供 RustFS 后台接缝使用。 */
-export function confluenceBundle(pageResponse: string, url: string, assets: {name: string; content: string}[]): {name: string; content: string}[] {
+/** 复用源正文转换和本地附件名称映射，不读取或伪造附件字节。 */
+export function confluenceMarkdown(pageResponse: string, url: string, assetNames: string[]): string {
   const page = readPage(pageResponse);
   const plan = planConfluence(pageResponse, url);
   const document = pageDocument(page);
   const expected = new Set(plan.resources.map((item) => item.localName));
-  if (assets.length !== expected.size || new Set(assets.map((item) => item.name)).size !== expected.size) throw new Error("附件数量或名称重复");
-  for (const asset of assets) {
-    if (!expected.has(asset.name) || Buffer.from(asset.content, "base64").toString("base64") !== asset.content) throw new Error("附件名称或 base64 无效");
-  }
+  const available = new Set(assetNames);
+  if (available.size !== assetNames.length) throw new Error("附件名称重复");
+  for (const name of available) if (!expected.has(name)) throw new Error("附件名称无效");
   for (const ref of resources(document, page.base)) {
     const request = resourceRequest(ref.url, page.base);
-    ref.node.setAttribute(ref.attribute, request ? `./assets/${request.localName}` : ref.url);
+    ref.node.setAttribute(ref.attribute, request && available.has(request.localName) ? `./assets/${request.localName}` : ref.url);
   }
-  const markdown = toMarkdown(document.body.innerHTML);
+  return toMarkdown(document.body.innerHTML);
+}
+
+/** 将已验证正文和下载资源转换为内存文件包，供 RustFS 后台接缝使用。 */
+export function confluenceBundle(pageResponse: string, url: string, assets: {name: string; content: string}[]): {name: string; content: string}[] {
+  const page = readPage(pageResponse);
+  for (const asset of assets) {
+    if (Buffer.from(asset.content, "base64").toString("base64") !== asset.content) throw new Error("附件 base64 无效");
+  }
+  const markdown = confluenceMarkdown(pageResponse, url, assets.map(item => item.name));
   const emptyBody = !markdown.trim();
   if (emptyBody) {
     // 只认定源正文的空段落/换行，避免把宏或嵌入内容丢失当成空白页。
     const source = parseHTML(`<html><body>${page.html}</body></html>`).document.body;
     if (source.textContent.trim() || [...source.querySelectorAll("*")].some(node => !["p", "br"].includes(node.localName))) {
-      throw new Error(`Confluence 转换后正文为空 page_id=${page.id}；源页面包含未转换内容`);
+      throw new Error(`Confluence 转换后正文为空 page_id=${page.id} url=${url}；源页面包含未转换内容`);
     }
   }
   const metadata = ["---", `url: ${JSON.stringify(url)}`, `title: ${JSON.stringify(page.title)}`,

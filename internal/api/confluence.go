@@ -47,8 +47,49 @@ type CreateConfluenceTaskRequest struct {
 	URL string `json:"url" binding:"required"`
 }
 
+// SelectConfluenceExportRequest 空节点 ID 表示明确选择全部叶子页。
+type SelectConfluenceExportRequest struct {
+	NodeID *string `json:"node_id" binding:"required"`
+}
+
+// SelectConfluenceExport 目录就绪后选择子树，后台冻结范围并开始阶段二。
+// @Summary 选择 Confluence Markdown 导出范围
+// @Tags Confluence
+// @Security JWTAuth
+// @Accept json
+// @Produce json
+// @Param task_id path string true "任务 ID"
+// @Param body body SelectConfluenceExportRequest true "节点 ID；空字符串表示全部"
+// @Success 202 {object} domain.ConfluenceTask
+// @Router /confluence-tasks/{task_id}/export [post]
+func (h *Handler) SelectConfluenceExport(c *gin.Context) {
+	task, ok := h.confluenceTask(c)
+	if !ok {
+		return
+	}
+	var request SelectConfluenceExportRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(400, ErrorResponse{Error: err.Error()})
+		return
+	}
+	service := worker.ConfluenceWorker{DB: h.DB, Objects: h.ConfluenceObjects}
+	updated, err := service.SelectExport(c.Request.Context(), task, *request.NodeID, h.AsynqClient)
+	if err != nil {
+		status := 502
+		if errors.Is(err, worker.ErrInvalidConfluenceSelection) {
+			status = 400
+		}
+		if errors.Is(err, worker.ErrConfluenceSelectionUnavailable) {
+			status = 409
+		}
+		c.JSON(status, ErrorResponse{Error: err.Error()})
+		return
+	}
+	c.JSON(202, updated)
+}
+
 // CreateConfluenceTask 接受 URL 后立即入队，文档读取在 Worker 执行。
-// @Summary 开始 Confluence 两阶段导出
+// @Summary 生成 Confluence 目录树
 // @Tags Confluence
 // @Security JWTAuth
 // @Accept json
@@ -162,6 +203,10 @@ func (h *Handler) StartConfluenceTask(c *gin.Context) {
 	if !ok {
 		return
 	}
+	if task.Stage == "selection" {
+		c.JSON(409, ErrorResponse{Error: "select a subtree or export all pages before starting Markdown export"})
+		return
+	}
 	if task.Status != "stopped" && task.Status != "failed" {
 		c.JSON(409, ErrorResponse{Error: "only stopped/failed tasks can be resumed"})
 		return
@@ -202,7 +247,7 @@ func (h *Handler) ConfluenceTree(c *gin.Context) {
 		c.JSON(409, ErrorResponse{Error: "page tree is not ready"})
 		return
 	}
-	tree, err := worker.ReadConfluenceTree(c.Request.Context(), h.ConfluenceObjects, task)
+	tree, err := worker.ReadConfluencePlan(c.Request.Context(), h.ConfluenceObjects, task)
 	if err != nil {
 		c.JSON(502, ErrorResponse{Error: err.Error()})
 		return
@@ -231,11 +276,11 @@ func (h *Handler) ConfluenceFile(c *gin.Context) {
 		c.JSON(400, ErrorResponse{Error: "invalid page ID or export filename"})
 		return
 	}
-	if task.Stage == "tree" {
+	if task.Stage != "export" && task.Stage != "markdown" {
 		c.JSON(404, ErrorResponse{Error: "page not exported"})
 		return
 	}
-	tree, err := worker.ReadConfluenceTree(c.Request.Context(), h.ConfluenceObjects, task)
+	tree, err := worker.ReadConfluencePlan(c.Request.Context(), h.ConfluenceObjects, task)
 	if err != nil {
 		c.JSON(502, ErrorResponse{Error: err.Error()})
 		return

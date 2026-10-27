@@ -198,6 +198,7 @@ func TestSharedPresetsMySQL(t *testing.T) {
 		}
 		return response
 	}
+	t.Run("ConfluenceSelection", func(t *testing.T) { runConfluenceSelectionIntegration(t, db) })
 	t.Run("ConfluenceLibraryZIP", func(t *testing.T) {
 		sourceUser, targetUser := uuid.NewString(), uuid.NewString()
 		for _, user := range []string{sourceUser, targetUser} {

@@ -171,6 +171,13 @@ definitions:
     - email
     - password
     type: object
+  api.SelectConfluenceExportRequest:
+    properties:
+      node_id:
+        type: string
+    required:
+    - node_id
+    type: object
   api.SendMessageRequest:
     properties:
       content:
@@ -419,6 +426,8 @@ definitions:
         items:
           $ref: '#/definitions/domain.ConfluencePage'
         type: array
+      selected_node_id:
+        type: string
       snapshot:
         $ref: '#/definitions/domain.ConfluenceSnapshotInfo'
     type: object
@@ -702,7 +711,7 @@ paths:
             $ref: '#/definitions/domain.ConfluenceTask'
       security:
       - JWTAuth: []
-      summary: 开始 Confluence 两阶段导出
+      summary: 生成 Confluence 目录树
       tags:
       - Confluence
   /confluence-tasks/{task_id}:
@@ -723,6 +732,34 @@ paths:
       security:
       - JWTAuth: []
       summary: 查询导出进度
+      tags:
+      - Confluence
+  /confluence-tasks/{task_id}/export:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 任务 ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      - description: 节点 ID；空字符串表示全部
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.SelectConfluenceExportRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/domain.ConfluenceTask'
+      security:
+      - JWTAuth: []
+      summary: 选择 Confluence Markdown 导出范围
       tags:
       - Confluence
   /confluence-tasks/{task_id}/pages/{page_id}/file:

@@ -83,6 +83,7 @@ func NewRouter(h *Handler) *gin.Engine {
 		writes.POST("/confluence-library/imports/:import_id/apply", h.ApplyConfluenceImport)
 		writes.POST("/confluence-tasks", h.CreateConfluenceTask)
 		writes.POST("/confluence-tasks/:task_id/start", h.StartConfluenceTask)
+		writes.POST("/confluence-tasks/:task_id/export", h.SelectConfluenceExport)
 		writes.POST("/confluence-tasks/:task_id/stop", h.StopConfluenceTask)
 		writes.POST("/repositories", h.CreateRepository)
 		writes.POST("/repositories/:repo_id/sync", h.SyncRepository)

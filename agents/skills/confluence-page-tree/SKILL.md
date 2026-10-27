@@ -59,7 +59,7 @@ diff 以稳定页面 ID 匹配，包含：
 
 已通过 Chrome Bridge 检查 Shopee Confluence 7.13.7：`.plugin_pagetree` 的 hidden inputs 提供 `treeRequestId`、`spaceKey`、`noRoot`、`rootPageId`；标题位于 `.plugin_pagetree_children_span`，ID 为 `childrenspan<pageId>-<treeId>`。`naturalchildren.action` 返回一层有序 `ul/li`，`data-type=toggle` 标记可展开节点。版本及最后修改时间读取 `/rest/api/content/<id>?expand=version` 的 `version.number`、`version.when`。
 
-脚本按上述接口递归请求；大空间耗时与节点数有关。网络错误、429/5xx 最多尝试三次并警告，401/403、登录跳转、HTML 结构或 JSON 校验失败直接终止。不要将空页面、错误页面或部分树当成功结果。错误输出不包含 Cookie 或原始响应正文。
+脚本以最多 10 个节点并行读取元数据和折叠子目录，完成顺序不影响原始父子层级及 position 顺序；工作线程不递归等待子任务。每次请求使用独立 HTTP opener，避免线程间共享处理器。大空间耗时与节点数、远程延迟和重试有关。网络错误、429/5xx 最多尝试三次并警告，401/403、登录跳转、HTML 结构或 JSON 校验失败直接终止。不要将空页面、错误页面或部分树当成功结果。错误输出不包含 Cookie 或原始响应正文。
 
 `.export.lock` 防止同目录并发导出；进程被强制终止后，仅确认没有正在运行的导出进程时清理遗留锁。已有 `latest.json` 损坏时先检查并保留原件，不静默重建基线。
 

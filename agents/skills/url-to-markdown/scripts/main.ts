@@ -113,14 +113,14 @@ function mimeExtension(mime: string): string {
   return extensions[mime] || "";
 }
 
-/** 提取正文资源，普通链接转为绝对地址，保留锚点。 */
+/** 提取正文资源，普通链接转为绝对地址，锚点和不可解析引用保留原值。 */
 export function resources(document: Document, base: string): Resource[] {
   const result: Resource[] = [];
   for (const node of document.querySelectorAll("img,video,audio,source,track,object,embed,a")) {
     const attribute = node.tagName === "A" ? "href" : node.tagName === "OBJECT" ? "data" : "src";
     const raw = node.getAttribute(attribute);
-    if (raw && !raw.startsWith("#")) {
-      const url = new URL(raw, base);
+    const url = raw && !raw.startsWith("#") ? URL.parse(raw, base) : null;
+    if (url) {
       const isResource = node.tagName !== "A" || node.hasAttribute("download") || attachments.test(url.pathname);
       if (isResource) {
         url.hash = "";
@@ -132,15 +132,74 @@ export function resources(document: Document, base: string): Resource[] {
       }
     }
     const poster = node.getAttribute("poster");
-    if (poster) result.push({ node, attribute: "poster", url: new URL(poster, base).href });
+    const posterUrl = poster ? URL.parse(poster, base) : null;
+    if (posterUrl) result.push({ node, attribute: "poster", url: posterUrl.href });
   }
   return result;
 }
 
-/** 将媒体作为原位 Markdown 链接保留，避免转换器丢弃下载引用。 */
+/** 复杂单元格无法用 GFM 行内语法无损表示，保留完整 HTML 表格。 */
+function needsHtmlTable(table: Element): boolean {
+  return [...table.querySelectorAll("table,pre,ul,ol,blockquote,h1,h2,h3,h4,h5,h6")].some(node => node !== table)
+    || table.querySelectorAll("thead tr").length > 1;
+}
+
+/** 展开简单表格合并单元格，跨行内容重复保留，跨列覆盖位置留空。 */
+function expandTableSpans(html: string): string {
+  const { document } = parseHTML(`<html><body>${html}</body></html>`);
+  for (const node of document.querySelectorAll("colgroup")) node.remove();
+  for (const table of [...document.querySelectorAll("table")].reverse()) {
+    if (needsHtmlTable(table)) continue;
+    const rows = [...table.querySelectorAll("tr")].filter(row => row.closest("table") === table);
+    const grid: (Element | null)[][] = rows.map(() => []);
+    rows.forEach((row, rowIndex) => {
+      let column = 0;
+      for (const cell of [...row.children].filter(node => ["th", "td"].includes(node.localName))) {
+        while (grid[rowIndex][column] !== undefined) column++;
+        const height = Number(cell.getAttribute("rowspan") ?? "1");
+        const width = Number(cell.getAttribute("colspan") ?? "1");
+        if (!Number.isSafeInteger(height) || height < 0 || !Number.isSafeInteger(width) || width < 1 || width > 1000) {
+          throw new Error("表格 rowspan/colspan 必须为合法整数，colspan 范围为 1 至 1000");
+        }
+        const remaining = rows.slice(rowIndex).filter(other => other.parentElement === row.parentElement).length;
+        const span = height === 0 ? remaining : Math.min(height, remaining);
+        for (let down = 0; down < span; down++) {
+          for (let right = 0; right < width; right++) {
+            if (grid[rowIndex + down][column + right] !== undefined) throw new Error("表格合并单元格位置重叠，无法展开");
+            grid[rowIndex + down][column + right] = right === 0 ? cell : null;
+          }
+        }
+        column += width;
+      }
+    });
+    const columns = grid.reduce((maximum, row) => Math.max(maximum, row.length), 0);
+    rows.forEach((row, rowIndex) => row.replaceChildren(...Array.from({ length: columns }, (_, column) => {
+      const source = grid[rowIndex][column];
+      const cell = source ? source.cloneNode(true) as Element : document.createElement(row.parentElement?.localName === "thead" ? "th" : "td");
+      cell.removeAttribute("rowspan");
+      cell.removeAttribute("colspan");
+      return cell;
+    })));
+  }
+  return document.body.innerHTML;
+}
+
+/** 保留表格行列关系及媒体原位链接，避免转换器丢失合并信息或下载引用。 */
 export function toMarkdown(html: string): string {
   const converter = new TurndownService({ headingStyle: "atx", codeBlockStyle: "fenced", bulletListMarker: "-" });
   converter.use(gfm);
+  converter.addRule("structuredTable", {
+    filter: node => node.nodeName === "TABLE" && needsHtmlTable(node as Element),
+    replacement: (_content, node) => `\n\n${(node as Element).outerHTML.replace(/\r?\n/g, "&#10;")}\n\n`,
+  });
+  // GFM 每行必须完整，段落和换行不能将单元格拆成多行。
+  converter.addRule("tableCell", {
+    filter: ["th", "td"],
+    replacement: (content, node) => {
+      const cell = content.trim().replace(/\s*\n+\s*/g, "<br>").replace(/\|/g, "\\|");
+      return `${node.previousElementSibling ? " " : "| "}${cell} |`;
+    },
+  });
   converter.addRule("media", {
     filter: ["video", "audio", "source", "track", "object", "embed"],
     replacement: (content, node) => {
@@ -150,7 +209,7 @@ export function toMarkdown(html: string): string {
       return `\n\n${poster ? `![poster](${poster})\n\n` : ""}${src ? `[${media.tagName.toLowerCase()}](${src})` : ""}${content}\n\n`;
     },
   });
-  return converter.turndown(html);
+  return converter.turndown(expandTableSpans(html));
 }
 
 /** 浏览器渲染后导出标题目录、同名 Markdown 与 assets；失败清理本次目录。 */

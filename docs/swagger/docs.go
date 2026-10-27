@@ -272,7 +272,7 @@ const docTemplate = `{
                 "tags": [
                     "Confluence"
                 ],
-                "summary": "开始 Confluence 两阶段导出",
+                "summary": "生成 Confluence 目录树",
                 "parameters": [
                     {
                         "description": "Confluence 页面地址",
@@ -320,6 +320,51 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ConfluenceTask"
+                        }
+                    }
+                }
+            }
+        },
+        "/confluence-tasks/{task_id}/export": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Confluence"
+                ],
+                "summary": "选择 Confluence Markdown 导出范围",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "任务 ID",
+                        "name": "task_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "节点 ID；空字符串表示全部",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.SelectConfluenceExportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
                         "schema": {
                             "$ref": "#/definitions/domain.ConfluenceTask"
                         }
@@ -1755,6 +1800,17 @@ const docTemplate = `{
                 }
             }
         },
+        "api.SelectConfluenceExportRequest": {
+            "type": "object",
+            "required": [
+                "node_id"
+            ],
+            "properties": {
+                "node_id": {
+                    "type": "string"
+                }
+            }
+        },
         "api.SendMessageRequest": {
             "type": "object",
             "required": [
@@ -2131,6 +2187,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/domain.ConfluencePage"
                     }
+                },
+                "selected_node_id": {
+                    "type": "string"
                 },
                 "snapshot": {
                     "$ref": "#/definitions/domain.ConfluenceSnapshotInfo"

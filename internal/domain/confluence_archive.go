@@ -18,12 +18,12 @@ import (
 
 // ZIP 导入同时限制压缩大小、展开大小、文件大小与条目数。
 const (
-	ConfluenceZIPLimit            = 10 * 1024 * 1024 * 1024
-	ConfluenceExportZIPLimit      = 10 * 1024 * 1024 * 1024
-	ConfluenceExportExpandedLimit = 50 * 1024 * 1024 * 1024
-	ConfluenceExpandedLimit       = 50 * 1024 * 1024 * 1024
-	ConfluenceFileLimit           = 64 * 1024 * 1024
-	ConfluenceEntryLimit          = 10000
+	ConfluenceZIPLimit            = 100 * 1024 * 1024 * 1024
+	ConfluenceExportZIPLimit      = 100 * 1024 * 1024 * 1024
+	ConfluenceExportExpandedLimit = 500 * 1024 * 1024 * 1024
+	ConfluenceExpandedLimit       = 500 * 1024 * 1024 * 1024
+	ConfluenceFileLimit           = 640 * 1024 * 1024
+	ConfluenceEntryLimit          = 1000000
 	ConfluenceManifestName        = "confluence-library.json"
 )
 
@@ -194,7 +194,7 @@ func OpenConfluenceArchive(input io.ReaderAt, size int64) (ConfluenceArchiveMani
 		return manifest, nil, fmt.Errorf("read ZIP: %w", err)
 	}
 	if len(reader.File) > ConfluenceEntryLimit {
-		return manifest, nil, fmt.Errorf("ZIP exceeds %d entries", ConfluenceEntryLimit)
+		return manifest, nil, fmt.Errorf("ZIP exceeds %d entries (files, directories and manifest): got %d; import a smaller archive", ConfluenceEntryLimit, len(reader.File))
 	}
 	files := map[string]*zip.File{}
 	seen := map[string]bool{}
@@ -215,8 +215,8 @@ func OpenConfluenceArchive(input io.ReaderAt, size int64) (ConfluenceArchiveMani
 		files[file.Name] = file
 	}
 	metadata, ok := files[ConfluenceManifestName]
-	if !ok || metadata.UncompressedSize64 > 2*1024*1024 {
-		return manifest, nil, fmt.Errorf("ZIP requires confluence-library.json manifest (maximum 2 MiB)")
+	if !ok {
+		return manifest, nil, fmt.Errorf("ZIP requires confluence-library.json manifest")
 	}
 	raw, err := ReadConfluenceArchiveEntry(metadata)
 	if err != nil {
@@ -281,8 +281,8 @@ func StreamConfluenceArchive(output io.Writer, manifest ConfluenceArchiveManifes
 	if err != nil {
 		return err
 	}
-	if len(raw) > 2*1024*1024 {
-		return fmt.Errorf("manifest exceeds 2 MiB; export a smaller directory")
+	if len(raw) > ConfluenceFileLimit {
+		return fmt.Errorf("manifest exceeds %d MiB (size %d bytes); export a smaller directory", ConfluenceFileLimit/(1024*1024), len(raw))
 	}
 	writer := zip.NewWriter(output)
 	entry, err := writer.Create(ConfluenceManifestName)
@@ -313,7 +313,7 @@ func StreamConfluenceArchive(output io.Writer, manifest ConfluenceArchiveManifes
 					if !directories[directory] {
 						entries++
 						if entries > ConfluenceEntryLimit {
-							return fmt.Errorf("ZIP exceeds entry limit; export a smaller directory")
+							return fmt.Errorf("ZIP exceeds %d entries (files, directories and manifest); export a smaller directory", ConfluenceEntryLimit)
 						}
 						if _, err = writer.Create(directory); err != nil {
 							return err
@@ -323,7 +323,7 @@ func StreamConfluenceArchive(output io.Writer, manifest ConfluenceArchiveManifes
 				}
 				entries++
 				if entries > ConfluenceEntryLimit {
-					return fmt.Errorf("ZIP exceeds entry limit; export a smaller directory")
+					return fmt.Errorf("ZIP exceeds %d entries (files, directories and manifest); export a smaller directory", ConfluenceEntryLimit)
 				}
 				header := &zip.FileHeader{Name: file.Path, Method: zip.Deflate, Modified: page.ModifiedAt.UTC()}
 				header.SetMode(0600)

@@ -183,10 +183,15 @@ func (s *ConfluenceSource) Page(ctx context.Context, page domain.ConfluencePage)
 	for _, resource := range plan.Resources {
 		content, err := s.get(ctx, resource.URL)
 		if err != nil {
-			return nil, err
+			if ctx.Err() != nil {
+				return nil, ctx.Err()
+			}
+			slog.Warn("Confluence attachment unavailable; preserving original link", "page_id", page.ID, "resource_name", resource.LocalName, "error", err)
+			continue
 		}
 		if bytes.HasPrefix(bytes.ToLower(bytes.TrimSpace(content)), []byte("<!doctype html")) || bytes.HasPrefix(bytes.ToLower(bytes.TrimSpace(content)), []byte("<html")) {
-			return nil, fmt.Errorf("Confluence attachment returned HTML name=%s", resource.LocalName)
+			slog.Warn("Confluence attachment returned HTML; preserving original link", "page_id", page.ID, "resource_name", resource.LocalName)
+			continue
 		}
 		assets = append(assets, ExportFile{Name: resource.LocalName, Content: content})
 	}
