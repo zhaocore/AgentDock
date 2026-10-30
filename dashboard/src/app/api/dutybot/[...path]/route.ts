@@ -43,7 +43,9 @@ async function proxy(
       ? CONFLUENCE_UPLOAD_BYTES
       : path.at(-1) === 'documents'
         ? MAX_UPLOAD_BYTES
-        : 16 * 1024;
+        : path[0] === 'crawl-tasks'
+          ? 64 * 1024
+          : 16 * 1024;
   const length = request.headers.get('content-length');
   if (length && (!/^\d+$/.test(length) || Number(length) > limit))
     return NextResponse.json(
@@ -133,4 +135,4 @@ async function proxy(
   });
 }
 
-export { proxy as GET, proxy as POST, proxy as DELETE };
+export { proxy as GET, proxy as POST, proxy as PUT, proxy as DELETE };

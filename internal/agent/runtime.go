@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/tmc/langchaingo/llms"
@@ -28,8 +29,9 @@ type Runtime interface {
 
 // LangChainRuntime 基于 langchaingo 的 OpenAI 兼容运行时。
 type LangChainRuntime struct {
-	apiKey  string
-	baseURL string
+	apiKey     string
+	baseURL    string
+	httpClient *http.Client
 }
 
 // NewLangChainRuntime 创建 langchaingo 运行时。
@@ -47,6 +49,9 @@ func (r *LangChainRuntime) Build(_ context.Context, agent domain.Agent) (Executo
 	}
 	if r.baseURL != "" {
 		opts = append(opts, openai.WithBaseURL(r.baseURL))
+	}
+	if r.httpClient != nil {
+		opts = append(opts, openai.WithHTTPClient(r.httpClient))
 	}
 	model, err := openai.New(opts...)
 	if err != nil {
@@ -131,7 +136,7 @@ func (e *langchainExecutor) Execute(ctx context.Context, history []domain.Messag
 		return "", nil, fmt.Errorf("agent generate returned no choices")
 	}
 	choice := resp.Choices[0]
-	meta := map[string]any{"generations": len(resp.Choices)}
+	meta := map[string]any{"generations": len(resp.Choices), "finish_reason": choice.StopReason}
 	if choice.GenerationInfo != nil {
 		// openaiclient 在 GenerationInfo 内携带 token 用量等原始信息
 		meta["generation_info"] = choice.GenerationInfo

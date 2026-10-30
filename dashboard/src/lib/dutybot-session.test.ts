@@ -12,6 +12,23 @@ afterEach(() => vi.unstubAllEnvs());
 describe('dutybotGo session boundaries', () => {
   it('only proxies explicit methods and paths', () => {
     const id = '11111111-1111-1111-1111-111111111111';
+    expect(isAllowedDutybotRoute('GET', ['crawl-profiles'])).toBe(true);
+    expect(isAllowedDutybotRoute('GET', ['crawl-tasks', id, 'runs'])).toBe(
+      true,
+    );
+    expect(isAllowedDutybotRoute('POST', ['crawl-tasks', id, 'runs'])).toBe(
+      true,
+    );
+    expect(isAllowedDutybotRoute('PUT', ['crawl-tasks', id])).toBe(true);
+    expect(isAllowedDutybotRoute('GET', ['crawl-runs', id, 'report'])).toBe(
+      true,
+    );
+    expect(isAllowedDutybotRoute('PUT', ['crawl-profiles', 'docs'])).toBe(
+      false,
+    );
+    expect(isAllowedDutybotRoute('GET', ['crawl-runs', 'bad', 'report'])).toBe(
+      false,
+    );
     // 仓库：列表 / 详情 / 同步 / 删除
     expect(isAllowedDutybotRoute('GET', ['repositories'])).toBe(true);
     expect(isAllowedDutybotRoute('GET', ['repositories', id])).toBe(true);

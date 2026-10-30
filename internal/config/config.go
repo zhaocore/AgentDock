@@ -12,15 +12,16 @@ import (
 
 // Config 是应用全部配置的聚合结构体。
 type Config struct {
-	Server     ServerConfig
-	Database   DatabaseConfig
-	Redis      RedisConfig
-	Repo       RepoConfig
-	Agent      AgentConfig
-	LLM        LLMConfig
-	Confluence ConfluenceConfig
-	RustFS     RustFSConfig
-	Auth       AuthConfig
+	Server        ServerConfig
+	Database      DatabaseConfig
+	Redis         RedisConfig
+	Repo          RepoConfig
+	Agent         AgentConfig
+	LLM           LLMConfig
+	Confluence    ConfluenceConfig
+	RustFS        RustFSConfig
+	Auth          AuthConfig
+	CrawlProfiles []CrawlProfile
 }
 
 // ServerConfig HTTP 服务配置。
@@ -181,9 +182,14 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("invalid AUTH_TOKEN_EXPIRY: %w", err)
 	}
 
+	profiles, err := ParseCrawlProfiles(viper.GetString("CRAWL_PROFILES"))
+	if err != nil {
+		return nil, err
+	}
 	cfg := &Config{
-		Confluence: ConfluenceConfig{BaseURL: strings.TrimRight(viper.GetString("CONFLUENCE_BASE_URL"), "/"), Cookie: viper.GetString("CONFLUENCE_COOKIE")},
-		RustFS:     RustFSConfig{Endpoint: viper.GetString("RUSTFS_ENDPOINT"), Region: viper.GetString("RUSTFS_REGION"), Bucket: viper.GetString("RUSTFS_BUCKET"), AccessKey: viper.GetString("RUSTFS_ACCESS_KEY"), SecretKey: viper.GetString("RUSTFS_SECRET_KEY")},
+		CrawlProfiles: profiles,
+		Confluence:    ConfluenceConfig{BaseURL: strings.TrimRight(viper.GetString("CONFLUENCE_BASE_URL"), "/"), Cookie: viper.GetString("CONFLUENCE_COOKIE")},
+		RustFS:        RustFSConfig{Endpoint: viper.GetString("RUSTFS_ENDPOINT"), Region: viper.GetString("RUSTFS_REGION"), Bucket: viper.GetString("RUSTFS_BUCKET"), AccessKey: viper.GetString("RUSTFS_ACCESS_KEY"), SecretKey: viper.GetString("RUSTFS_SECRET_KEY")},
 		Server: ServerConfig{
 			Host:     viper.GetString("SERVER_HOST"),
 			Port:     viper.GetString("SERVER_PORT"),

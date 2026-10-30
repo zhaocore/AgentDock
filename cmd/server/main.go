@@ -17,11 +17,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
+	"github.com/hibiken/asynq"
 	"github.com/redis/go-redis/v9"
 
 	"github.com/zhaocore/dutybotgo/internal/agent"
@@ -81,10 +84,15 @@ func main() {
 	if err := mysql.ResetConfluenceTasks(ctx, db.DB); err != nil {
 		log.Fatalf("reset Confluence tasks: %v", err)
 	}
+	if err := mysql.ResetCrawlRuns(ctx, db.DB); err != nil {
+		log.Fatalf("reset crawl runs: %v", err)
+	}
 
 	// Asynq 入队客户端
 	asynqClient := worker.NewClient(cfg.Redis.Addr, cfg.Redis.Password)
 	defer asynqClient.Close()
+	crawlInspector := asynq.NewInspector(asynq.RedisClientOpt{Addr: cfg.Redis.Addr, Password: cfg.Redis.Password})
+	defer crawlInspector.Close()
 
 	// Agent 运行时与实例管理器
 	runtime := agent.NewLangChainRuntime(cfg.LLM.APIKey, cfg.LLM.BaseURL)
@@ -108,9 +116,50 @@ func main() {
 
 	// Asynq Worker（仓库克隆 / 同步 / 删除）
 	workerSrv := worker.NewServer(cfg.Redis.Addr, cfg.Redis.Password, db.DB, cfg.Repo.RootDir)
+	var crawlScheduler *asynq.Scheduler
+	var crawlDispatcher *asynq.Server
 
 	if cfg.RustFS.Endpoint != "" && cfg.RustFS.Region != "" && cfg.RustFS.Bucket != "" && cfg.RustFS.AccessKey != "" && cfg.RustFS.SecretKey != "" {
 		objects := rustfs.New(cfg.RustFS.Endpoint, cfg.RustFS.Region, cfg.RustFS.Bucket, cfg.RustFS.AccessKey, cfg.RustFS.SecretKey)
+		crawl := &worker.CrawlWorker{DB: db.DB, Objects: objects, Source: worker.NewBrowserCrawlSource(cfg.Agent.RootDir), Reporter: agent.NewReporter(agent.NewReportRuntime(cfg.LLM.APIKey, cfg.LLM.BaseURL)), Profiles: cfg.CrawlProfiles, Client: asynqClient, Inspector: crawlInspector}
+		h.Crawl = crawl
+		if len(cfg.CrawlProfiles) > 0 {
+			workerSrv.Crawl = crawl
+			var err error
+			crawlDispatcher, err = worker.StartCrawlDispatcher(cfg.Redis.Addr, cfg.Redis.Password, crawl, time.Now)
+			if err != nil {
+				log.Fatal(err)
+			}
+			zone, err := time.LoadLocation("Asia/Shanghai")
+			if err != nil {
+				log.Fatal(err)
+			}
+			crawlScheduler = asynq.NewScheduler(asynq.RedisClientOpt{Addr: cfg.Redis.Addr, Password: cfg.Redis.Password}, &asynq.SchedulerOpts{Location: zone, PostEnqueueFunc: func(_ *asynq.TaskInfo, err error) {
+				if err != nil {
+					slog.Error("crawl schedule enqueue failed", "error", err)
+				}
+			}})
+			if _, err = crawlScheduler.Register("0 9 * * *", asynq.NewTask(worker.TypeCrawlDispatch, nil), asynq.Queue(worker.CrawlControlQueue), asynq.MaxRetry(0), asynq.Timeout(time.Minute)); err != nil {
+				log.Fatal(err)
+			}
+			if err = crawlScheduler.Start(); err != nil {
+				log.Fatal(err)
+			}
+			go func() {
+				timer := time.NewTicker(30 * time.Second)
+				defer timer.Stop()
+				for {
+					select {
+					case <-ctx.Done():
+						return
+					case <-timer.C:
+						if err := crawl.RecoverDispatch(ctx); err != nil {
+							slog.Error("crawl dispatch recovery failed", "error", err)
+						}
+					}
+				}
+			}()
+		}
 		h.ConfluenceObjects = objects
 		h.ConfluenceLibrary = &worker.ConfluenceLibrary{DB: db.DB, Objects: objects}
 		if cfg.Confluence.BaseURL != "" && cfg.Confluence.Cookie != "" {
@@ -148,13 +197,23 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
+	var runErr error
 	select {
 	case err := <-errCh:
-		log.Fatalf("server error: %v", err)
+		runErr = err
 	case sig := <-quit:
 		log.Printf("received signal %v, shutting down", sig)
-		cancel()
-		instances.ShutdownAll()
-		workerSrv.Shutdown()
+	}
+	cancel()
+	if crawlScheduler != nil {
+		crawlScheduler.Shutdown()
+	}
+	if crawlDispatcher != nil {
+		crawlDispatcher.Shutdown()
+	}
+	instances.ShutdownAll()
+	workerSrv.Shutdown()
+	if runErr != nil {
+		log.Fatalf("server error: %v", runErr)
 	}
 }

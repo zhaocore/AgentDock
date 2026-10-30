@@ -1,6 +1,26 @@
 import type { Shape } from '../dict-shape';
 
 const en = {
+  crawl: 'Scheduled reports',
+  crawlSchedule:
+    'Daily at 09:00 Asia/Shanghai. Each run saves an independent report.',
+  crawlNoProfile:
+    'No authorized login profile. Ask the deployer to configure this source.',
+  crawlEdit: 'Edit task',
+  crawlCreate: 'Create task',
+  crawlName: 'Task name',
+  crawlChoose: 'Select…',
+  crawlProfile: 'Login profile',
+  crawlURLs: 'Page URLs (one per line, up to 20)',
+  crawlEnabled: 'Automatic daily run enabled',
+  crawlDisabled: 'Automatic daily run disabled',
+  crawlDisable: 'Disable daily run',
+  crawlSave: 'Save task',
+  crawlTasks: 'Tasks',
+  crawlRun: 'Run now',
+  crawlReport: 'View report',
+  crawlDownload: 'Download Markdown',
+
   confluenceLibrary: 'Confluence library',
   libraryExportAll: 'Export all ZIP',
   libraryImport: 'Import ZIP',
@@ -162,6 +182,24 @@ const en = {
   close: 'Close',
 };
 const zh: Shape<typeof en> = {
+  crawl: '定时采集报告',
+  crawlSchedule: '每天北京时间 09:00 执行，每轮保存独立报告。',
+  crawlNoProfile: '尚无获授权的登录配置，请部署者配置目标来源。',
+  crawlEdit: '编辑任务',
+  crawlCreate: '创建任务',
+  crawlName: '任务名称',
+  crawlChoose: '请选择…',
+  crawlProfile: '登录配置',
+  crawlURLs: '页面 URL（每行一个，最多 20 个）',
+  crawlEnabled: '启用每日自动运行',
+  crawlDisabled: '已停用每日自动运行',
+  crawlDisable: '停用每日运行',
+  crawlSave: '保存任务',
+  crawlTasks: '任务列表',
+  crawlRun: '立即执行',
+  crawlReport: '查看报告',
+  crawlDownload: '下载 Markdown',
+
   confluenceLibrary: 'Confluence 文件库',
   libraryExportAll: '导出全部 ZIP',
   libraryImport: '导入 ZIP',

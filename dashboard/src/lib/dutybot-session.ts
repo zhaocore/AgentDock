@@ -24,6 +24,10 @@ export function isAllowedDutybotRoute(
     '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
   const routes: Record<string, RegExp[]> = {
     GET: [
+      /^crawl-profiles$/,
+      /^crawl-tasks$/,
+      new RegExp(`^crawl-tasks/${uuid}(?:/runs)?$`),
+      new RegExp(`^crawl-runs/${uuid}/report$`),
       /^confluence-library(?:\/archive|\/archive-check)?$/,
       /^confluence-library\/spaces\/[a-f0-9]{64}\/pages\/[0-9]+\/file$/,
       /^confluence-tasks$/,
@@ -40,6 +44,8 @@ export function isAllowedDutybotRoute(
       new RegExp(`^api-tokens(?:/${uuid})?$`),
     ],
     POST: [
+      /^crawl-tasks$/,
+      new RegExp(`^crawl-tasks/${uuid}/runs$`),
       /^confluence-library\/imports$/,
       new RegExp(`^confluence-library/imports/${uuid}/apply$`),
       /^confluence-tasks$/,
@@ -53,6 +59,7 @@ export function isAllowedDutybotRoute(
       new RegExp(`^sessions/${uuid}\/messages$`),
       /^api-tokens$/,
     ],
+    PUT: [new RegExp(`^crawl-tasks/${uuid}$`)],
     DELETE: [
       new RegExp(`^repositories/${uuid}$`),
       new RegExp(`^agents/${uuid}$`),

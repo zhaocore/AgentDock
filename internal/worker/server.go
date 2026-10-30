@@ -71,6 +71,7 @@ func enqueueRepoTask(ctx context.Context, client Enqueuer, taskType, repoID, loc
 
 // Server Asynq worker 服务。
 type Server struct {
+	Crawl      *CrawlWorker
 	srv        *asynq.Server
 	db         *sql.DB
 	rootDir    string
@@ -89,6 +90,9 @@ func NewServer(addr, password string, db *sql.DB, rootDir string) *Server {
 // Start 注册处理器并启动 worker（阻塞）。
 func (s *Server) Start() error {
 	mux := asynq.NewServeMux()
+	if s.Crawl != nil {
+		mux.HandleFunc(TypeCrawlRun, s.Crawl.Handle)
+	}
 	if s.Confluence != nil {
 		mux.HandleFunc(TypeConfluenceExport, s.Confluence.Handle)
 	}

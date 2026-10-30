@@ -28,6 +28,7 @@ import { getErrorMessage } from '@/lib/error-message';
 import { Notice } from './ui';
 
 const navigation = [
+  ['crawl', 'dutybot.crawl', Boxes],
   ['repositories', 'dutybot.repositories', Boxes],
   ['confluence', 'dutybot.confluence', Boxes],
   ['confluence-library', 'dutybot.confluenceLibrary', Boxes],

@@ -29,6 +29,7 @@ type InstanceManager interface {
 
 // Handler 持有所有外部依赖，供 API 处理器使用。
 type Handler struct {
+	Crawl             *worker.CrawlWorker
 	ConfluenceObjects rustfs.Objects
 	ConfluenceLibrary *worker.ConfluenceLibrary
 	Config            *config.Config
@@ -79,6 +80,9 @@ func NewRouter(h *Handler) *gin.Engine {
 	// 写操作（API 令牌要求 can_write）
 	writes := authed.Group("", RequireTokenWrite())
 	{
+		writes.POST("/crawl-tasks", h.CreateCrawlTask)
+		writes.PUT("/crawl-tasks/:task_id", h.UpdateCrawlTask)
+		writes.POST("/crawl-tasks/:task_id/runs", h.RunCrawlTask)
 		writes.POST("/confluence-library/imports", h.PreviewConfluenceImport)
 		writes.POST("/confluence-library/imports/:import_id/apply", h.ApplyConfluenceImport)
 		writes.POST("/confluence-tasks", h.CreateConfluenceTask)
@@ -100,6 +104,11 @@ func NewRouter(h *Handler) *gin.Engine {
 	}
 	{
 		authed.GET("/confluence-library", h.GetConfluenceLibrary)
+		authed.GET("/crawl-profiles", h.CrawlProfiles)
+		authed.GET("/crawl-tasks", h.ListCrawlTasks)
+		authed.GET("/crawl-tasks/:task_id", h.GetCrawlTask)
+		authed.GET("/crawl-tasks/:task_id/runs", h.ListCrawlRuns)
+		authed.GET("/crawl-runs/:run_id/report", h.CrawlReport)
 		authed.GET("/confluence-library/archive", h.ExportConfluenceLibrary)
 		authed.GET("/confluence-library/archive-check", h.CheckConfluenceArchive)
 		authed.GET("/confluence-library/spaces/:space_id/pages/:page_id/file", h.ConfluenceLibraryFile)

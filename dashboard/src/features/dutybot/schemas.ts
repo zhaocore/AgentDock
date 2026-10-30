@@ -1,5 +1,36 @@
 import { z } from 'zod';
 
+/** 爬虫任务与运行只暴露元数据，凭据由部署者维护。 */
+export const crawlTaskSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  agent_id: z.string().uuid(),
+  profile_id: z.string(),
+  urls: z.array(z.string().url()),
+  enabled: z.boolean(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+export type CrawlTask = z.infer<typeof crawlTaskSchema>;
+export const crawlTaskListSchema = z.object({ data: z.array(crawlTaskSchema) });
+export const crawlProfileListSchema = z.object({
+  data: z.array(z.object({ id: z.string(), origin: z.string().url() })),
+});
+export const crawlRunSchema = z.object({
+  id: z.string().uuid(),
+  task_id: z.string().uuid(),
+  task: crawlTaskSchema,
+  trigger: z.enum(['manual', 'scheduled']),
+  status: z.enum(['queued', 'running', 'succeeded', 'failed', 'skipped']),
+  stage: z.string(),
+  completed: z.number().int(),
+  total: z.number().int(),
+  error: z.string(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+export const crawlRunListSchema = z.object({ data: z.array(crawlRunSchema) });
+
 export const userSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),

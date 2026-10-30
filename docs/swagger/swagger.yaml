@@ -43,6 +43,30 @@ definitions:
     - new_password
     - old_password
     type: object
+  api.CrawlTaskRequest:
+    properties:
+      agent_id:
+        type: string
+      enabled:
+        type: boolean
+      name:
+        maxLength: 200
+        type: string
+      profile_id:
+        type: string
+      urls:
+        items:
+          type: string
+        maxItems: 20
+        minItems: 1
+        type: array
+    required:
+    - agent_id
+    - enabled
+    - name
+    - profile_id
+    - urls
+    type: object
   api.CreateAPITokenRequest:
     properties:
       can_write:
@@ -430,6 +454,52 @@ definitions:
         type: string
       snapshot:
         $ref: '#/definitions/domain.ConfluenceSnapshotInfo'
+    type: object
+  domain.CrawlRun:
+    properties:
+      completed:
+        type: integer
+      created_at:
+        type: string
+      error:
+        type: string
+      id:
+        type: string
+      stage:
+        type: string
+      status:
+        type: string
+      task:
+        $ref: '#/definitions/domain.CrawlTask'
+      task_id:
+        type: string
+      total:
+        type: integer
+      trigger:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  domain.CrawlTask:
+    properties:
+      agent_id:
+        type: string
+      created_at:
+        type: string
+      enabled:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+      profile_id:
+        type: string
+      updated_at:
+        type: string
+      urls:
+        items:
+          type: string
+        type: array
     type: object
   domain.MCPServerConfig:
     properties:
@@ -852,6 +922,156 @@ paths:
       summary: 查看完整导出目录
       tags:
       - Confluence
+  /crawl-profiles:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+      security:
+      - JWTAuth: []
+      summary: 爬虫登录配置
+      tags:
+      - Crawl
+  /crawl-runs/{run_id}/report:
+    get:
+      parameters:
+      - description: 运行 ID
+        in: path
+        name: run_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - JWTAuth: []
+      summary: 读取或下载采集报告
+      tags:
+      - Crawl
+  /crawl-tasks:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/domain.CrawlTask'
+                type: array
+            type: object
+      security:
+      - JWTAuth: []
+      summary: 爬虫任务列表
+      tags:
+      - Crawl
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 任务配置
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.CrawlTaskRequest'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.CrawlTask'
+      security:
+      - JWTAuth: []
+      summary: 创建爬虫任务
+      tags:
+      - Crawl
+  /crawl-tasks/{task_id}:
+    get:
+      parameters:
+      - description: 任务 ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.CrawlTask'
+      security:
+      - JWTAuth: []
+      summary: 爬虫任务详情
+      tags:
+      - Crawl
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 任务 ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      - description: 任务配置
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.CrawlTaskRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.CrawlTask'
+      security:
+      - JWTAuth: []
+      summary: 编辑爬虫任务
+      tags:
+      - Crawl
+  /crawl-tasks/{task_id}/runs:
+    get:
+      parameters:
+      - description: 任务 ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/domain.CrawlRun'
+                type: array
+            type: object
+      security:
+      - JWTAuth: []
+      summary: 爬虫运行历史
+      tags:
+      - Crawl
+    post:
+      parameters:
+      - description: 任务 ID
+        in: path
+        name: task_id
+        required: true
+        type: string
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/domain.CrawlRun'
+      security:
+      - JWTAuth: []
+      summary: 执行爬虫任务
+      tags:
+      - Crawl
   /v1/agents:
     get:
       description: 同步部署配置并返回公共预设与当前用户的私有 Agent。

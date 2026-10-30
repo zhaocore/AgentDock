@@ -69,6 +69,10 @@ Compose 包含 `rustfs` 服务和持久卷 `rustfsdata`。先填写 `RUSTFS_ACCE
 服务通过内存管道运行已有技能采集和转换函数；文档、附件及完整树仅存 RustFS，任务进度存 MySQL。独立 CLI 仍使用原本地输出。原生部署需 Python 3.10+、Bun 和 `bun install --cwd agents/skills/url-to-markdown --frozen-lockfile`；Docker 镜像包含依赖。若宿主挂载 agents，请保留 compose 的依赖卷。未配置导出服务时，其他功能照常运行，导出 API 返回 503。
 
 
+## 定时采集报告
+
+入口 `/dashboard/crawl`，配置和验收边界见 [需求第 15 节](docs/REQUIREMENTS.md#15-定时爬虫与-agent-报告-部分实现)。原生部署在安装技能依赖后，还须运行 `bun agents/skills/url-to-markdown/node_modules/playwright/cli.js install chromium` 安装对应浏览器；Linux 同时安装浏览器系统依赖（`install --with-deps chromium`）。Docker 镜像已包含 Debian、时区数据与对应 Chromium；建议使用 Docker Buildx/BuildKit 构建（`docker buildx build --load -t dutybot:local .`），当前旧版 legacy 引擎存在快照错误。登录配置使用 `.env.example` 的 `CRAWL_PROFILES`，正文就绪元素由部署者按真实站点确定；配置修改后重启服务。
+
 ## Confluence 文件库
 
 打开 `/dashboard/confluence-library`，按 Space 查看历史任务已导出的目录、Markdown 与附件。可下载整库 ZIP，或选择 Space/子目录后导出；未完成任务中已成功导出的页面也会汇入文件库。
