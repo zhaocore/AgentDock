@@ -7,6 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/url"
+	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,6 +18,7 @@ import (
 	"github.com/zhaocore/dutybotgo/internal/domain"
 	"github.com/zhaocore/dutybotgo/internal/store/mysql"
 	"github.com/zhaocore/dutybotgo/internal/store/rustfs"
+	"github.com/zhaocore/dutybotgo/internal/telemetry"
 )
 
 const TypeCrawlRun = "crawl:run"
@@ -32,13 +36,14 @@ type CrawlInspector interface {
 
 // CrawlWorker 编排数据库、浏览器和模型接缝。
 type CrawlWorker struct {
-	DB        *sql.DB
-	Objects   rustfs.Objects
-	Source    CrawlSource
-	Reporter  CrawlReporter
-	Profiles  []config.CrawlProfile
-	Client    Enqueuer
-	Inspector CrawlInspector
+	Concurrency config.ConcurrencyConfig
+	DB          *sql.DB
+	Objects     rustfs.Objects
+	Source      CrawlSource
+	Reporter    CrawlReporter
+	Profiles    []config.CrawlProfile
+	Client      Enqueuer
+	Inspector   CrawlInspector
 }
 type crawlPayload struct {
 	ID     string `json:"id"`
@@ -58,7 +63,7 @@ func (w *CrawlWorker) Dispatch(ctx context.Context, id, user, trigger, slot stri
 		return r, nil
 	}
 	if err = w.enqueue(ctx, r); err != nil {
-		record := mysql.FinishCrawlRun(ctx, w.DB, r.ID, user, "failed", "queue enqueue failed")
+		record := crawlDB(ctx, func() error { return mysql.FinishCrawlRun(ctx, w.DB, r.ID, user, "failed", "queue enqueue failed") })
 		return r, errors.Join(fmt.Errorf("enqueue crawl: %w", err), record)
 	}
 	return mysql.GetCrawlRun(ctx, w.DB, r.ID, user)
@@ -98,11 +103,15 @@ func (w *CrawlWorker) RecoverDispatch(ctx context.Context) error {
 		case missing && r.Status == "queued":
 			err = w.enqueue(ctx, r)
 		case missing:
-			err = mysql.FinishCrawlRun(ctx, w.DB, r.ID, r.UserID, "failed", "crawl execution message is missing")
+			err = crawlDB(ctx, func() error {
+				return mysql.FinishCrawlRun(ctx, w.DB, r.ID, r.UserID, "failed", "crawl execution message is missing")
+			})
 		case inspectErr != nil:
 			err = inspectErr
 		case info.State == asynq.TaskStateArchived || info.State == asynq.TaskStateCompleted:
-			err = mysql.FinishCrawlRun(ctx, w.DB, r.ID, r.UserID, "failed", "crawl queue message ended before run was finalized")
+			err = crawlDB(ctx, func() error {
+				return mysql.FinishCrawlRun(ctx, w.DB, r.ID, r.UserID, "failed", "crawl queue message ended before run was finalized")
+			})
 		default:
 			err = nil
 		}
@@ -155,21 +164,38 @@ func (w *CrawlWorker) Handle(ctx context.Context, t *asynq.Task) error {
 	if err != nil || !started {
 		return err
 	}
-	if err = w.execute(ctx, r); err != nil {
-		recordCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
-		defer cancel()
-		return errors.Join(err, mysql.FinishCrawlRun(recordCtx, w.DB, r.ID, r.UserID, "failed", err.Error()))
+	ctx, recorder := telemetry.New(ctx, r.ID, r.UserID, r.TaskID, r.CreatedAt, w.Concurrency)
+	err = w.saveMetrics(ctx, r, "running")
+	if err == nil {
+		err = w.execute(ctx, r)
 	}
-	return nil
+	status := "succeeded"
+	if recorder.Snapshot("running").Counters["pages_needs_cookie"] > 0 {
+		status = "partial"
+	}
+	if err != nil {
+		status = "failed"
+		if ctx.Err() != nil {
+			status = "canceled"
+		}
+		recordCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		err = errors.Join(err, crawlDB(recordCtx, func() error { return mysql.FinishCrawlRun(recordCtx, w.DB, r.ID, r.UserID, "failed", err.Error()) }))
+		cancel()
+	}
+	recordCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
+	defer cancel()
+	return errors.Join(err, w.saveMetrics(recordCtx, r, status))
 }
 
-// execute 加工本轮冻结任务，报告对象完整写入后发布成功记录。
-func (w *CrawlWorker) execute(ctx context.Context, r domain.CrawlRun) error {
-	p, err := config.CrawlAccess(w.Profiles, r.UserID, r.Task.ProfileID, r.Task.URLs)
+// execute 加工本轮冻结任务，报告对象写入后发布完整或部分结果。
+func (w *CrawlWorker) execute(ctx context.Context, r domain.CrawlRun) (resultErr error) {
+	p, err := config.CrawlTaskProfiles(w.Profiles, r.Task)
 	if err != nil {
 		return err
 	}
+	started := time.Now()
 	a, err := mysql.GetAgent(ctx, w.DB, r.Task.AgentID, r.UserID)
+	telemetry.Measure(ctx, "database_read", started, err)
 	if err != nil {
 		return fmt.Errorf("crawl Agent unavailable: %w", err)
 	}
@@ -181,31 +207,54 @@ func (w *CrawlWorker) execute(ctx context.Context, r domain.CrawlRun) error {
 	if err != nil {
 		return err
 	}
-	if err = w.Objects.Put(ctx, CrawlPrefix(r)+"agent.json", snapshot, "application/json"); err != nil {
+	if err = w.putCrawlObject(ctx, CrawlPrefix(r)+"agent.json", snapshot, "application/json"); err != nil {
 		return err
 	}
-	pages, err := w.capture(ctx, r, p)
+	started = time.Now()
+	pages, issues, completed, err := w.capture(ctx, r, p)
+	telemetry.Measure(ctx, "capture_phase", started, err)
 	if err != nil {
 		return err
 	}
-	if err = mysql.CrawlProgress(ctx, w.DB, r.ID, r.UserID, "report", len(pages)); err != nil {
+	if err = w.saveMetrics(ctx, r, "running"); err != nil {
 		return err
 	}
-	report, err := w.Reporter.Generate(ctx, a, pages)
-	if err != nil {
-		return fmt.Errorf("crawl report failed: %w", err)
+	if err = crawlDB(ctx, func() error { return mysql.CrawlProgress(ctx, w.DB, r.ID, r.UserID, "report", completed) }); err != nil {
+		return err
+	}
+	report := ""
+	if len(pages) > 0 {
+		started = time.Now()
+		report, err = w.Reporter.Generate(ctx, a, pages)
+		telemetry.Measure(ctx, "report_phase", started, err)
+		if err != nil {
+			return fmt.Errorf("crawl report failed: %w", err)
+		}
+		if report == "" {
+			return fmt.Errorf("crawl report is empty")
+		}
+	}
+	status, reason := "succeeded", ""
+	if len(issues) > 0 {
+		status, reason = "partial", fmt.Sprintf("%d pages require Cookie or login review; see report", len(issues))
+		report = cookieReviewReport(issues) + "\n\n" + report
 	}
 	if report == "" {
 		return fmt.Errorf("crawl report is empty")
 	}
-	if err = mysql.CrawlProgress(ctx, w.DB, r.ID, r.UserID, "publish", len(pages)); err != nil {
+	if err = w.saveMetrics(ctx, r, "running"); err != nil {
 		return err
 	}
-	if err = w.Objects.Put(ctx, CrawlPrefix(r)+"report.md", []byte(report), "text/markdown; charset=utf-8"); err != nil {
+	publication := time.Now()
+	defer func() { telemetry.Measure(ctx, "publish_phase", publication, resultErr) }()
+	if err = crawlDB(ctx, func() error { return mysql.CrawlProgress(ctx, w.DB, r.ID, r.UserID, "publish", completed) }); err != nil {
+		return err
+	}
+	if err = w.putCrawlObject(ctx, CrawlPrefix(r)+"report.md", []byte(report), "text/markdown; charset=utf-8"); err != nil {
 		return err
 	}
 	for attempt := 0; attempt < 3; attempt++ {
-		err = mysql.FinishCrawlRun(ctx, w.DB, r.ID, r.UserID, "succeeded", "")
+		err = crawlDB(ctx, func() error { return mysql.FinishCrawlRun(ctx, w.DB, r.ID, r.UserID, status, reason) })
 		if err == nil {
 			return nil
 		}
@@ -214,69 +263,175 @@ func (w *CrawlWorker) execute(ctx context.Context, r domain.CrawlRun) error {
 	return fmt.Errorf("publish crawl report record: %w", err)
 }
 
-// capture 保留输入顺序，任一页面失败取消余下采集；共享接缝另有总并发上限。
-func (w *CrawlWorker) capture(ctx context.Context, r domain.CrawlRun, p config.CrawlProfile) ([]domain.CrawlPage, error) {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	pages := make([]domain.CrawlPage, len(r.Task.URLs))
-	jobs := make(chan int)
-	var group sync.WaitGroup
-	var mu sync.Mutex
-	var first error
-	completed := 0
-	for worker := 0; worker < min(3, len(pages)); worker++ {
-		group.Go(func() {
-			for index := range jobs {
-				page, err := w.Source.Capture(ctx, p, r.Task.URLs[index])
-				if err == nil && page.URL != r.Task.URLs[index] {
-					err = fmt.Errorf("crawl source URL mismatch")
-				}
-				if err == nil {
-					data, encodeErr := json.Marshal(page)
-					err = encodeErr
-					if err == nil {
-						err = w.Objects.Put(ctx, fmt.Sprintf("%spages/%d.json", CrawlPrefix(r), index), data, "application/json")
-					}
-				}
-				mu.Lock()
-				status, reason := "captured", ""
-				if err != nil {
-					status, reason = "failed", err.Error()
-				}
-				recordCtx, stop := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
-				recordErr := mysql.RecordCrawlPage(recordCtx, w.DB, r.ID, r.UserID, domain.CrawlPageProgress{Position: index, Title: page.Title, Status: status, Error: reason})
-				stop()
-				if err == nil {
-					err = recordErr
-				}
-				if err == nil {
-					pages[index] = page
-					completed++
-					err = mysql.CrawlProgress(ctx, w.DB, r.ID, r.UserID, "capture", completed)
-				}
-				if err != nil && first == nil {
-					first = fmt.Errorf("crawl page %d: %w", index+1, err)
-					cancel()
-				}
-				mu.Unlock()
-			}
-		})
+// crawlVisit 记录单轮广度优先队列中的剩余跳数。
+type crawlVisit struct {
+	URL  string
+	Hops int
+}
+
+// crawlCookieIssue 只保存 URL 和判断依据，不保存任何凭据。
+type crawlCookieIssue struct {
+	URL      string `json:"url"`
+	Origin   string `json:"origin"`
+	FinalURL string `json:"final_url"`
+	Code     string `json:"code"`
+	Status   int    `json:"status"`
+}
+
+// cookieReviewReport 将异常清单直接附在报告中，避免模型遗漏失败来源。
+func cookieReviewReport(issues []crawlCookieIssue) string {
+	var report strings.Builder
+	report.WriteString("# 部分完成：需要补充 Cookie 或检查登录权限\n\n以下页面未进入正文报告；403、重定向或就绪超时仅表示疑似登录／权限问题，请核对来源后补充配置并重新执行。\n")
+	for _, issue := range issues {
+		data, _ := json.Marshal(issue)
+		report.WriteString("\n```json\n" + string(data) + "\n```\n")
 	}
-loop:
-	for i := range pages {
-		select {
-		case jobs <- i:
-		case <-ctx.Done():
-			break loop
+	return report.String()
+}
+
+// recordCrawlPage 即使采集已取消也保存受控结果，不丢失原始失败原因。
+func (w *CrawlWorker) recordCrawlPage(ctx context.Context, r domain.CrawlRun, page domain.CrawlPageProgress) error {
+	recordCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+	defer cancel()
+	err := crawlDB(recordCtx, func() error {
+		return mysql.RecordCrawlPage(recordCtx, w.DB, r.ID, r.UserID, page)
+	})
+	telemetry.Count(ctx, "pages_"+page.Status, 1)
+	return err
+}
+
+// capture 按层发现链接并保持输入顺序；跨域页面使用独立登录配置，单轮 URL 只访问一次。
+func (w *CrawlWorker) capture(ctx context.Context, r domain.CrawlRun, profiles []config.CrawlProfile) ([]domain.CrawlPage, []crawlCookieIssue, int, error) {
+	if w.Concurrency.Task < 1 || w.Concurrency.Task > 64 {
+		return nil, nil, 0, fmt.Errorf("crawl task concurrency must be between 1 and 64")
+	}
+	pattern, err := regexp.Compile(r.Task.IncludePattern)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	queue := []crawlVisit{}
+	seen := map[string]bool{}
+	for _, raw := range r.Task.URLs {
+		address, err := domain.NormalizeCrawlURL(raw)
+		if err != nil {
+			return nil, nil, 0, err
+		}
+		if !seen[address] {
+			seen[address] = true
+			queue = append(queue, crawlVisit{address, r.Task.Hops})
 		}
 	}
-	close(jobs)
-	group.Wait()
-	if first != nil {
-		return nil, first
+	pages := []domain.CrawlPage{}
+	issues := []crawlCookieIssue{}
+	completed := 0
+	total := r.Total
+	for start := 0; start < len(queue); {
+		end := min(start+w.Concurrency.Task, len(queue))
+		results := make([]domain.CrawlPage, end-start)
+		failures := make([]error, end-start)
+		batchCtx, cancel := context.WithCancel(ctx)
+		fatal := -1
+		var first sync.Once
+		var group sync.WaitGroup
+		for index := start; index < end; index++ {
+			group.Go(func() {
+				target, _ := url.Parse(queue[index].URL)
+				profile := config.CrawlProfile{Origin: target.Scheme + "://" + target.Host}
+				for _, candidate := range profiles {
+					if candidate.Origin == profile.Origin {
+						profile = candidate
+						break
+					}
+				}
+				started := time.Now()
+				results[index-start], failures[index-start] = w.Source.Capture(batchCtx, profile, queue[index].URL)
+				if failures[index-start] == nil && results[index-start].URL != queue[index].URL {
+					failures[index-start] = fmt.Errorf("crawl source URL mismatch")
+				}
+				telemetry.Measure(ctx, "page_capture", started, failures[index-start])
+				var login *CrawlCaptureError
+				if failures[index-start] != nil && (!errors.As(failures[index-start], &login) || !login.NeedsCookieReview()) {
+					first.Do(func() {
+						fatal = index
+						cancel()
+					})
+				}
+			})
+		}
+		group.Wait()
+		cancel()
+		if fatal >= 0 {
+			captureErr := failures[fatal-start]
+			recordErr := w.recordCrawlPage(ctx, r, domain.CrawlPageProgress{Position: fatal, Title: results[fatal-start].Title, Status: "failed", Error: captureErr.Error()})
+			return pages, issues, completed, fmt.Errorf("crawl page %s: %w", queue[fatal].URL, errors.Join(captureErr, recordErr))
+		}
+		for index := start; index < end; index++ {
+			visit, page, captureErr := queue[index], results[index-start], failures[index-start]
+			status, reason := "captured", ""
+			var login *CrawlCaptureError
+			if captureErr != nil && errors.As(captureErr, &login) && login.NeedsCookieReview() {
+				target, _ := url.Parse(visit.URL)
+				issues = append(issues, crawlCookieIssue{URL: visit.URL, Origin: target.Scheme + "://" + target.Host, FinalURL: login.FinalURL, Code: login.Code, Status: login.Status})
+				status, reason = "needs_cookie", captureErr.Error()
+			} else if page.Skipped {
+				status = "skipped"
+			}
+			if recordErr := w.recordCrawlPage(ctx, r, domain.CrawlPageProgress{Position: index, Title: page.Title, Status: status, Error: reason}); recordErr != nil {
+				return pages, issues, completed, fmt.Errorf("crawl page %s: %w", visit.URL, recordErr)
+			}
+			if status == "needs_cookie" {
+				data, err := json.Marshal(issues)
+				if err != nil {
+					return pages, issues, completed, err
+				}
+				if err = w.putCrawlObject(ctx, CrawlPrefix(r)+"cookie-issues.json", data, "application/json"); err != nil {
+					return pages, issues, completed, err
+				}
+			}
+			if status == "captured" {
+				data, err := json.Marshal(page)
+				if err != nil {
+					return pages, issues, completed, err
+				}
+				if err = w.putCrawlObject(ctx, fmt.Sprintf("%spages/%d.json", CrawlPrefix(r), index), data, "application/json"); err != nil {
+					return pages, issues, completed, err
+				}
+				telemetry.Count(ctx, "markdown_chars", int64(len([]rune(page.Markdown))))
+				format := page.Format
+				if format == "" {
+					format = "html"
+				}
+				telemetry.Count(ctx, "documents_"+format, 1)
+				pages = append(pages, page)
+				if visit.Hops > 0 {
+					for _, raw := range page.Links {
+						address, err := domain.NormalizeCrawlURL(raw)
+						if err != nil {
+							continue
+						}
+						if seen[address] || !pattern.MatchString(address) {
+							continue
+						}
+						if len(queue) >= domain.MaxCrawlPages {
+							return pages, issues, completed, fmt.Errorf("crawl exceeds limit of %d unique candidate pages", domain.MaxCrawlPages)
+						}
+						seen[address] = true
+						queue = append(queue, crawlVisit{address, visit.Hops - 1})
+					}
+				}
+			}
+			completed++
+			if len(queue) != total {
+				err = crawlDB(ctx, func() error { return mysql.CrawlCaptureProgress(ctx, w.DB, r.ID, r.UserID, completed, len(queue)) })
+				total = len(queue)
+			} else {
+				err = crawlDB(ctx, func() error { return mysql.CrawlProgress(ctx, w.DB, r.ID, r.UserID, "capture", completed) })
+			}
+			if err != nil {
+				return pages, issues, completed, err
+			}
+		}
+		start = end
 	}
-	if err := ctx.Err(); err != nil {
-		return nil, err
-	}
-	return pages, nil
+	return pages, issues, completed, ctx.Err()
 }

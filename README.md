@@ -73,6 +73,8 @@ Compose 包含 `rustfs` 服务和持久卷 `rustfsdata`。先填写 `RUSTFS_ACCE
 
 入口 `/dashboard/crawl`，配置和验收边界见 [需求第 15 节](docs/REQUIREMENTS.md#15-定时爬虫与-agent-报告-部分实现)。原生部署在安装技能依赖后，还须运行 `bun agents/skills/url-to-markdown/node_modules/playwright/cli.js install chromium` 安装对应浏览器；Linux 同时安装浏览器系统依赖（`install --with-deps chromium`）。Docker 镜像已包含 Debian、时区数据与对应 Chromium；建议使用 Docker Buildx/BuildKit 构建（`docker buildx build --load -t dutybot:local .`），当前旧版 legacy 引擎存在快照错误。登录配置使用 `.env.example` 的 `CRAWL_PROFILES`，正文就绪元素由部署者按真实站点确定；配置修改后重启服务。
 
+并发环境变量、逐轮持久指标、日志提取和瓶颈判断见 [采集性能说明](docs/CRAWL_PERFORMANCE.md)。默认保持 Worker 4、全局／单轮抓取 3、整份报告 1；重启生效。
+
 ## Confluence 文件库
 
 打开 `/dashboard/confluence-library`，按 Space 查看历史任务已导出的目录、Markdown 与附件。可下载整库 ZIP，或选择 Space/子目录后导出；未完成任务中已成功导出的页面也会汇入文件库。

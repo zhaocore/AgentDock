@@ -20,7 +20,7 @@ import (
 const crawlAPIID = "11111111-1111-1111-1111-111111111111"
 
 func crawlAPITaskRows() *sqlmock.Rows {
-	return sqlmock.NewRows([]string{"id", "user_id", "name", "agent_id", "profile_id", "urls", "enabled", "created_at", "updated_at"}).AddRow(crawlAPIID, "owner", "Daily", crawlAPIID, "docs", `["https://docs.example/page"]`, true, time.Now(), time.Now())
+	return sqlmock.NewRows([]string{"id", "user_id", "name", "agent_id", "profile_id", "urls", "enabled", "profile_ids", "hops", "include_pattern", "created_at", "updated_at"}).AddRow(crawlAPIID, "owner", "Daily", crawlAPIID, "docs", `["https://docs.example/page"]`, true, "[]", 0, "", time.Now(), time.Now())
 }
 func crawlAPIRunRows(status string) *sqlmock.Rows {
 	snapshot, _ := json.Marshal(domain.CrawlTask{ID: crawlAPIID, AgentID: crawlAPIID, ProfileID: "docs", URLs: []string{"https://docs.example/page"}})
@@ -31,7 +31,7 @@ func crawlAPIAgentRows() *sqlmock.Rows {
 }
 
 func TestCrawlAPI(t *testing.T) {
-	for _, mode := range []string{"profiles", "unconfigured", "list", "get", "missing", "bad-id", "bad-body", "blank", "denied", "create", "edit", "run", "busy", "runs", "report", "not-published", "object-failure", "list-failure"} {
+	for _, mode := range []string{"profiles", "unconfigured", "list", "get", "missing", "bad-id", "bad-body", "blank", "denied", "bad-hops", "bad-pattern", "denied-extra", "create", "edit", "run", "busy", "runs", "report", "partial-report", "not-published", "object-failure", "list-failure"} {
 		t.Run(mode, func(t *testing.T) {
 			db, mock, _ := sqlmock.New()
 			defer db.Close()
@@ -49,6 +49,15 @@ func TestCrawlAPI(t *testing.T) {
 			}
 			if mode == "denied" {
 				body = strings.Replace(body, "docs\"", "other\"", 1)
+			}
+			if mode == "bad-hops" {
+				body = strings.Replace(body, `"enabled":true`, `"enabled":true,"hops":6`, 1)
+			}
+			if mode == "bad-pattern" {
+				body = strings.Replace(body, `"enabled":true`, `"enabled":true,"include_pattern":"["`, 1)
+			}
+			if mode == "denied-extra" {
+				body = strings.Replace(body, `"enabled":true`, `"enabled":true,"profile_ids":["private"]`, 1)
 			}
 			c.Request = httptest.NewRequest("POST", "/", strings.NewReader(body))
 			c.Request.Header.Set("Content-Type", "application/json")
@@ -82,7 +91,7 @@ func TestCrawlAPI(t *testing.T) {
 				c.Params[0].Value = "bad"
 				h.GetCrawlTask(c)
 				expected = 400
-			case "bad-body", "blank", "denied":
+			case "bad-body", "blank", "denied", "bad-hops", "bad-pattern", "denied-extra":
 				h.CreateCrawlTask(c)
 				expected = 400
 			case "create", "edit":
@@ -125,8 +134,11 @@ func TestCrawlAPI(t *testing.T) {
 				mock.ExpectQuery("SELECT .*crawl_tasks").WillReturnRows(crawlAPITaskRows())
 				mock.ExpectQuery("SELECT .*crawl_runs").WithArgs(crawlAPIID, "owner").WillReturnRows(crawlAPIRunRows("running"))
 				h.ListCrawlRuns(c)
-			case "report", "not-published", "object-failure":
+			case "report", "partial-report", "not-published", "object-failure":
 				status := "succeeded"
+				if mode == "partial-report" {
+					status = "partial"
+				}
 				if mode == "not-published" {
 					status = "failed"
 					expected = 409
@@ -213,4 +225,63 @@ func TestCrawlDisableUnavailableConfig(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestCrawlMarkdownDownload 验证完整原文下载的 owner、采集阶段和模型失败边界。
+func TestCrawlMarkdownDownload(t *testing.T) {
+	for _, mode := range []string{"published", "model-failed", "capturing", "other-user", "object-error"} {
+		t.Run(mode, func(t *testing.T) {
+			db, mock, _ := sqlmock.New()
+			defer db.Close()
+			h := &Handler{DB: db, Crawl: &worker.CrawlWorker{DB: db, Objects: &apiCrawlMarkdownObjects{failure: mode == "object-error"}}}
+			out := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(out)
+			c.Set("user_id", "owner")
+			c.Params = gin.Params{{Key: "run_id", Value: crawlAPIID}}
+			c.Request = httptest.NewRequest("GET", "/", nil)
+			query := mock.ExpectQuery("SELECT .*crawl_runs").WithArgs(crawlAPIID, "owner")
+			want := 200
+			if mode == "other-user" {
+				query.WillReturnError(sql.ErrNoRows)
+				want = 404
+			} else {
+				status, stage := "succeeded", "published"
+				if mode == "model-failed" {
+					status, stage = "failed", "report"
+				}
+				if mode == "capturing" {
+					status, stage = "running", "capture"
+					want = 409
+				}
+				snapshot, _ := json.Marshal(domain.CrawlTask{URLs: []string{"https://feed.example/rss.xml"}})
+				query.WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "task_id", "snapshot", "trigger_type", "status", "stage", "completed", "total", "error", "created_at", "updated_at"}).AddRow(crawlAPIID, "owner", "task", snapshot, "manual", status, stage, 1, 1, "", time.Now(), time.Now()))
+				if mode != "capturing" {
+					mock.ExpectQuery("SELECT p.position FROM crawl_pages").WithArgs(crawlAPIID, "owner").WillReturnRows(sqlmock.NewRows([]string{"position"}).AddRow(0))
+				}
+			}
+			if mode == "object-error" {
+				want = 502
+			}
+			h.CrawlMarkdown(c)
+			if out.Code != want {
+				t.Fatal(out.Code, out.Body.String())
+			}
+			if want == 200 && (!strings.Contains(out.Body.String(), "RSS 完整内容") || out.Header().Get("X-Content-Type-Options") != "nosniff" || !strings.Contains(out.Header().Get("Content-Disposition"), "sources-")) {
+				t.Fatal(out.Header(), out.Body.String())
+			}
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
+
+type apiCrawlMarkdownObjects struct{ failure bool }
+
+func (o *apiCrawlMarkdownObjects) Put(context.Context, string, []byte, string) error { return nil }
+func (o *apiCrawlMarkdownObjects) Get(context.Context, string) ([]byte, error) {
+	if o.failure {
+		return nil, errors.New("object unavailable")
+	}
+	return json.Marshal(domain.CrawlPage{URL: "https://feed.example/rss.xml", Title: "RSS", CapturedAt: time.Now(), Markdown: "RSS 完整内容", Format: "rss"})
 }

@@ -14,7 +14,7 @@ import (
 )
 
 func crawlTaskRows() *sqlmock.Rows {
-	return sqlmock.NewRows(strings.Split(crawlTaskColumns, ",")).AddRow("task", "owner", "Daily", "agent", "profile", `["https://docs.example/a"]`, true, time.Now(), time.Now())
+	return sqlmock.NewRows(strings.Split(crawlTaskColumns, ",")).AddRow("task", "owner", "Daily", "agent", "profile", `["https://docs.example/a"]`, true, "[]", 0, "", time.Now(), time.Now())
 }
 func crawlRunRows(status string) *sqlmock.Rows {
 	snapshot, _ := json.Marshal(domain.CrawlTask{ID: "task", UserID: "owner", URLs: []string{"https://docs.example/a"}})
@@ -189,7 +189,7 @@ func TestCrawlStoreReadFailures(t *testing.T) {
 	if _, err := UnfinishedCrawlRuns(ctx, db); err == nil {
 		t.Fatal("missing error")
 	}
-	mock.ExpectQuery("SELECT .*crawl_tasks").WillReturnRows(sqlmock.NewRows(strings.Split(crawlTaskColumns, ",")).AddRow("task", "owner", "Daily", "a", "p", "{", true, time.Now(), time.Now()))
+	mock.ExpectQuery("SELECT .*crawl_tasks").WillReturnRows(sqlmock.NewRows(strings.Split(crawlTaskColumns, ",")).AddRow("task", "owner", "Daily", "a", "p", "{", true, "[]", 0, "", time.Now(), time.Now()))
 	if _, err := GetCrawlTask(ctx, db, "task", "owner"); err == nil {
 		t.Fatal("invalid JSON accepted")
 	}
@@ -216,6 +216,46 @@ func TestCrawlPublicationTerminalState(t *testing.T) {
 			err = FinishCrawlRun(context.Background(), db, "run", "owner", "succeeded", "")
 			if (status == "failed") != (err != nil) {
 				t.Fatal("unexpected publication result", status, err)
+			}
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
+
+// TestCrawlCapturedPositions 校验原文读取按用户过滤，保留位置顺序和数据库错误。
+func TestCrawlCapturedPositions(t *testing.T) {
+	for _, mode := range []string{"captured", "empty", "query-error", "scan-error", "rows-error"} {
+		t.Run(mode, func(t *testing.T) {
+			db, mock, _ := sqlmock.New()
+			defer db.Close()
+			query := mock.ExpectQuery("SELECT p.position FROM crawl_pages p JOIN crawl_runs r ON r.id=p.run_id WHERE r.id=\\? AND r.user_id=\\? AND p.status='captured' ORDER BY p.position LIMIT 101").WithArgs("run", "owner")
+			rows := sqlmock.NewRows([]string{"position"})
+			switch mode {
+			case "captured":
+				rows.AddRow(0).AddRow(2)
+			case "query-error":
+				query.WillReturnError(errors.New("database unavailable"))
+			case "scan-error":
+				rows.AddRow("invalid")
+			case "rows-error":
+				rows.AddRow(0).RowError(0, errors.New("read interrupted"))
+			}
+			if mode != "query-error" {
+				query.WillReturnRows(rows)
+			}
+			positions, err := CrawlCapturedPositions(context.Background(), db, "run", "owner")
+			if mode == "captured" {
+				if err != nil || len(positions) != 2 || positions[1] != 2 {
+					t.Fatal(positions, err)
+				}
+			} else if mode == "empty" {
+				if err != nil || len(positions) != 0 {
+					t.Fatal(positions, err)
+				}
+			} else if err == nil {
+				t.Fatal("database failure hidden")
 			}
 			if err := mock.ExpectationsWereMet(); err != nil {
 				t.Fatal(err)

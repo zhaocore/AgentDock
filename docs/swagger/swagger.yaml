@@ -49,11 +49,23 @@ definitions:
         type: string
       enabled:
         type: boolean
+      hops:
+        maximum: 5
+        minimum: 0
+        type: integer
+      include_pattern:
+        maxLength: 2048
+        type: string
       name:
         maxLength: 200
         type: string
       profile_id:
         type: string
+      profile_ids:
+        items:
+          type: string
+        maxItems: 100
+        type: array
       urls:
         items:
           type: string
@@ -64,7 +76,6 @@ definitions:
     - agent_id
     - enabled
     - name
-    - profile_id
     - urls
     type: object
   api.CreateAPITokenRequest:
@@ -488,12 +499,20 @@ definitions:
         type: string
       enabled:
         type: boolean
+      hops:
+        type: integer
       id:
+        type: string
+      include_pattern:
         type: string
       name:
         type: string
       profile_id:
         type: string
+      profile_ids:
+        items:
+          type: string
+        type: array
       updated_at:
         type: string
       urls:
@@ -932,6 +951,24 @@ paths:
       security:
       - JWTAuth: []
       summary: 爬虫登录配置
+      tags:
+      - Crawl
+  /crawl-runs/{run_id}/markdown:
+    get:
+      parameters:
+      - description: 运行 ID
+        in: path
+        name: run_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - JWTAuth: []
+      summary: 下载完整采集 Markdown
       tags:
       - Crawl
   /crawl-runs/{run_id}/report:

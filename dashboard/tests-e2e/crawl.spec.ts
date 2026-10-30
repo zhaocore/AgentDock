@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 
 /** 浏览器交互契约；真实采集与队列由后端独立集成验证。 */
 test('creates and edits a daily task, runs and downloads a report', async ({
@@ -21,7 +22,13 @@ test('creates and edits a daily task, runs and downloads a report', async ({
     name: 'Daily',
     agent_id: id,
     profile_id: 'docs',
-    urls: ['https://docs.example/page'],
+    profile_ids: ['other'],
+    hops: 2,
+    include_pattern: '/child',
+    urls: [
+      'https://feed.quanwenrss.com/feed/eeo-chanye-qiche.xml',
+      'https://feed.quanwenrss.com/feed/eeo-kuaixun.xml',
+    ],
     enabled: true,
     created_at: '2026-10-30T01:00:00Z',
     updated_at: '2026-10-30T01:00:00Z',
@@ -31,11 +38,11 @@ test('creates and edits a daily task, runs and downloads a report', async ({
     task_id: id,
     task,
     trigger: 'manual',
-    status: 'succeeded',
+    status: 'partial',
     stage: 'published',
     completed: 1,
     total: 1,
-    error: '',
+    error: '1 page requires Cookie review',
     created_at: task.created_at,
     updated_at: task.updated_at,
   };
@@ -54,7 +61,10 @@ test('creates and edits a daily task, runs and downloads a report', async ({
         json: {
           data: unavailable
             ? []
-            : [{ id: 'docs', origin: 'https://docs.example' }],
+            : [
+                { id: 'docs', origin: 'https://docs.example' },
+                { id: 'other', origin: 'https://other.example' },
+              ],
         },
       });
     if (path.endsWith('/agents'))
@@ -82,6 +92,14 @@ test('creates and edits a daily task, runs and downloads a report', async ({
           has_more: false,
         },
       });
+    if (path.endsWith('/markdown'))
+      return route.fulfill({
+        body: '# 经观·快讯\n\n## 1. 完整条目\n\n全部原文内容',
+        contentType: 'text/plain',
+        headers: {
+          'content-disposition': `attachment; filename="sources-${id}.md"`,
+        },
+      });
     if (path.endsWith('/report'))
       return route.fulfill({
         body: '# Controlled report\n\nVerified fact',
@@ -107,6 +125,9 @@ test('creates and edits a daily task, runs and downloads a report', async ({
           name: 'Daily',
           agent_id: id,
           profile_id: 'docs',
+          profile_ids: ['other'],
+          hops: 2,
+          include_pattern: '/child',
           urls: task.urls,
           enabled: true,
         });
@@ -124,10 +145,16 @@ test('creates and edits a daily task, runs and downloads a report', async ({
   await page.getByTestId('crawl-name').fill('Daily');
   await page.getByTestId('crawl-agent').selectOption(id);
   await page.getByTestId('crawl-profile').selectOption('docs');
-  await page.getByTestId('crawl-urls').fill(task.urls[0]);
+  await page.getByTestId('crawl-urls').fill(task.urls.join('\n'));
+  await expect(page.getByTestId('crawl-hops')).toHaveValue('0');
+  await page.getByTestId('crawl-hops').fill('2');
+  await page.getByTestId('crawl-pattern').fill('/child');
+  await page.getByTestId('crawl-extra-profiles').selectOption(['other']);
   await page.getByTestId('crawl-save').click();
   await expect(page.getByTestId('crawl-edit')).toBeVisible();
   await page.getByTestId('crawl-edit').click();
+  await expect(page.getByTestId('crawl-hops')).toHaveValue('2');
+  await expect(page.getByTestId('crawl-pattern')).toHaveValue('/child');
   await page.getByTestId('crawl-enabled').uncheck();
   await page.getByTestId('crawl-save').click();
   await page.getByTestId('crawl-run').click();
@@ -136,6 +163,13 @@ test('creates and edits a daily task, runs and downloads a report', async ({
   const download = page.waitForEvent('download');
   await page.getByTestId(`crawl-download-${id}`).click();
   expect((await download).suggestedFilename()).toBe(`report-${id}.md`);
+  const sourceDownload = page.waitForEvent('download');
+  await page.getByTestId(`crawl-source-${id}`).click();
+  const fullSource = await sourceDownload;
+  expect(fullSource.suggestedFilename()).toBe(`sources-${id}.md`);
+  expect(await readFile((await fullSource.path())!, 'utf8')).toContain(
+    '全部原文内容',
+  );
   unavailable = true;
   await page.reload();
   await expect(page.getByTestId('crawl-no-profile')).toBeVisible();
@@ -149,6 +183,9 @@ test('creates and edits a daily task, runs and downloads a report', async ({
     name: task.name,
     agent_id: id,
     profile_id: 'docs',
+    profile_ids: task.profile_ids,
+    hops: task.hops,
+    include_pattern: task.include_pattern,
     urls: task.urls,
     enabled: false,
   });

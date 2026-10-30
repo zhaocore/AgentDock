@@ -79,10 +79,10 @@ type Server struct {
 }
 
 // NewServer 创建 worker 服务。
-func NewServer(addr, password string, db *sql.DB, rootDir string) *Server {
+func NewServer(addr, password string, db *sql.DB, rootDir string, concurrency int) *Server {
 	srv := asynq.NewServer(
 		asynq.RedisClientOpt{Addr: addr, Password: password},
-		asynq.Config{Concurrency: 4, Queues: map[string]int{"default": 10}},
+		asynq.Config{Concurrency: concurrency, Queues: map[string]int{"default": 10}},
 	)
 	return &Server{srv: srv, db: db, rootDir: rootDir}
 }

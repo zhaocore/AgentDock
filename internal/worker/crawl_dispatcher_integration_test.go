@@ -30,7 +30,7 @@ func TestCrawlControlQueue(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer db.Close()
-	mock.ExpectQuery("SELECT .*crawl_tasks WHERE enabled=TRUE").WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "name", "agent_id", "profile_id", "urls", "enabled", "created_at", "updated_at"}))
+	mock.ExpectQuery("SELECT .*crawl_tasks WHERE enabled=TRUE").WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "name", "agent_id", "profile_id", "urls", "enabled", "profile_ids", "hops", "include_pattern", "created_at", "updated_at"}))
 	control, err := StartCrawlDispatcher(addr, "", &CrawlWorker{DB: db}, func() time.Time { return time.Date(2026, 10, 30, 1, 0, 0, 0, time.UTC) })
 	if err != nil {
 		t.Fatal(err)
@@ -128,7 +128,7 @@ func TestCrawlArchivedRecovery(t *testing.T) {
 			defer client.Close()
 			inspector := asynq.NewInspector(asynq.RedisClientOpt{Addr: addr})
 			defer inspector.Close()
-			w := &CrawlWorker{DB: db, Client: client, Inspector: inspector}
+			w := &CrawlWorker{DB: db, Objects: &crawlTestObjects{}, Client: client, Inspector: inspector}
 			server := asynq.NewServer(asynq.RedisClientOpt{Addr: addr}, asynq.Config{Concurrency: 1})
 			mux := asynq.NewServeMux()
 			mux.HandleFunc(TypeCrawlRun, w.Handle)

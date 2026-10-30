@@ -23,7 +23,14 @@ const task = {
   name: 'Daily',
   agent_id: id,
   profile_id: 'docs',
-  urls: ['https://docs.example/page'],
+  profile_ids: ['other'],
+  hops: 2,
+  include_pattern: '/child',
+  urls: [
+    'https://docs.example/page',
+    'https://feed.quanwenrss.com/feed/eeo-chanye-qiche.xml',
+    'https://feed.quanwenrss.com/feed/eeo-kuaixun.xml',
+  ],
   enabled: true,
   created_at: '2026-10-30T01:00:00Z',
   updated_at: '2026-10-30T01:00:00Z',
@@ -33,11 +40,11 @@ const run = {
   task_id: id,
   task,
   trigger: 'manual',
-  status: 'succeeded',
+  status: 'partial',
   stage: 'published',
   completed: 1,
   total: 1,
-  error: '',
+  error: '1 page requires Cookie review',
   created_at: task.created_at,
   updated_at: task.updated_at,
 };
@@ -47,7 +54,12 @@ function setup() {
       path === '/crawl-tasks'
         ? { data: [task] }
         : path === '/crawl-profiles'
-          ? { data: [{ id: 'docs', origin: 'https://docs.example' }] }
+          ? {
+              data: [
+                { id: 'docs', origin: 'https://docs.example' },
+                { id: 'other', origin: 'https://other.example' },
+              ],
+            }
           : path.startsWith('/agents')
             ? {
                 data: [
@@ -97,14 +109,29 @@ it('creates, edits and manually runs task; previews safe report and downloads', 
     target: { value: 'docs' },
   });
   fireEvent.change(screen.getByTestId('crawl-urls'), {
-    target: { value: 'https://docs.example/page' },
+    target: { value: task.urls.join('\n') },
   });
+  expect((screen.getByTestId('crawl-hops') as HTMLInputElement).value).toBe(
+    '0',
+  );
+  fireEvent.change(screen.getByTestId('crawl-hops'), {
+    target: { value: '2' },
+  });
+  fireEvent.change(screen.getByTestId('crawl-pattern'), {
+    target: { value: '/child' },
+  });
+  const extra = screen.getByTestId('crawl-extra-profiles') as HTMLSelectElement;
+  extra.options[1].selected = true;
+  fireEvent.change(extra);
   fireEvent.submit(screen.getByTestId('crawl-form'));
   await waitFor(() =>
     expect(api.post).toHaveBeenCalledWith('/crawl-tasks', {
       name: 'Daily',
       agent_id: id,
       profile_id: 'docs',
+      profile_ids: ['other'],
+      hops: 2,
+      include_pattern: '/child',
       urls: task.urls,
       enabled: true,
     }),
@@ -115,6 +142,12 @@ it('creates, edits and manually runs task; previews safe report and downloads', 
     ).toBe(false),
   );
   fireEvent.click(screen.getByTestId('crawl-edit'));
+  expect((screen.getByTestId('crawl-hops') as HTMLInputElement).value).toBe(
+    '2',
+  );
+  expect((screen.getByTestId('crawl-pattern') as HTMLInputElement).value).toBe(
+    '/child',
+  );
   fireEvent.click(screen.getByTestId('crawl-enabled'));
   fireEvent.submit(screen.getByTestId('crawl-form'));
   await waitFor(() =>
@@ -134,6 +167,9 @@ it('creates, edits and manually runs task; previews safe report and downloads', 
   );
   fireEvent.click(screen.getByTestId(`crawl-open-${id}`));
   const article = await screen.findByTestId('crawl-report');
+  expect(screen.getByTestId(`crawl-source-${id}`).getAttribute('href')).toBe(
+    `/api/dutybot/crawl-runs/${id}/markdown`,
+  );
   expect(article.textContent).toContain('Fact');
   expect(article.querySelector('script')).toBeNull();
   expect(article.querySelector('img')).toBeNull();
@@ -178,8 +214,42 @@ it('disables existing task when Agent and login profile are unavailable', async 
       name: task.name,
       agent_id: task.agent_id,
       profile_id: task.profile_id,
+      profile_ids: task.profile_ids,
+      hops: task.hops,
+      include_pattern: task.include_pattern,
       urls: task.urls,
       enabled: false,
     }),
   );
+});
+
+it('keeps full source download available after Agent report failure', async () => {
+  const view = setup();
+  view.unmount();
+  const get = vi.mocked(api.get).getMockImplementation()!;
+  vi.mocked(api.get).mockImplementation(async (path, options) =>
+    path.endsWith('/runs')
+      ? {
+          data: {
+            data: [
+              {
+                ...run,
+                status: 'failed',
+                stage: 'report',
+                error: 'Agent unavailable',
+              },
+            ],
+          },
+        }
+      : get(path, options),
+  );
+  render(
+    <LocaleProvider>
+      <Crawl />
+    </LocaleProvider>,
+  );
+  expect(
+    (await screen.findByTestId(`crawl-source-${id}`)).getAttribute('href'),
+  ).toContain('/markdown');
+  expect(screen.queryByTestId(`crawl-open-${id}`)).toBeNull();
 });

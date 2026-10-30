@@ -36,6 +36,7 @@ import (
 )
 
 func main() {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, nil)))
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("load config: %v", err)
@@ -114,52 +115,52 @@ func main() {
 		},
 	}
 
+	slog.Info("worker concurrency configured", "limits", cfg.Concurrency)
+
 	// Asynq Worker（仓库克隆 / 同步 / 删除）
-	workerSrv := worker.NewServer(cfg.Redis.Addr, cfg.Redis.Password, db.DB, cfg.Repo.RootDir)
+	workerSrv := worker.NewServer(cfg.Redis.Addr, cfg.Redis.Password, db.DB, cfg.Repo.RootDir, cfg.Concurrency.Worker)
 	var crawlScheduler *asynq.Scheduler
 	var crawlDispatcher *asynq.Server
 
 	if cfg.RustFS.Endpoint != "" && cfg.RustFS.Region != "" && cfg.RustFS.Bucket != "" && cfg.RustFS.AccessKey != "" && cfg.RustFS.SecretKey != "" {
 		objects := rustfs.New(cfg.RustFS.Endpoint, cfg.RustFS.Region, cfg.RustFS.Bucket, cfg.RustFS.AccessKey, cfg.RustFS.SecretKey)
-		crawl := &worker.CrawlWorker{DB: db.DB, Objects: objects, Source: worker.NewBrowserCrawlSource(cfg.Agent.RootDir), Reporter: agent.NewReporter(agent.NewReportRuntime(cfg.LLM.APIKey, cfg.LLM.BaseURL)), Profiles: cfg.CrawlProfiles, Client: asynqClient, Inspector: crawlInspector}
+		crawl := &worker.CrawlWorker{Concurrency: cfg.Concurrency, DB: db.DB, Objects: objects, Source: worker.NewBrowserCrawlSource(cfg.Agent.RootDir, cfg.Concurrency.Capture), Reporter: agent.NewReporter(agent.NewReportRuntime(cfg.LLM.APIKey, cfg.LLM.BaseURL), cfg.Concurrency.Report), Profiles: cfg.CrawlProfiles, Client: asynqClient, Inspector: crawlInspector}
 		h.Crawl = crawl
-		if len(cfg.CrawlProfiles) > 0 {
-			workerSrv.Crawl = crawl
-			var err error
-			crawlDispatcher, err = worker.StartCrawlDispatcher(cfg.Redis.Addr, cfg.Redis.Password, crawl, time.Now)
+		workerSrv.Crawl = crawl
+		var err error
+		crawlDispatcher, err = worker.StartCrawlDispatcher(cfg.Redis.Addr, cfg.Redis.Password, crawl, time.Now)
+		if err != nil {
+			log.Fatal(err)
+		}
+		zone, err := time.LoadLocation("Asia/Shanghai")
+		if err != nil {
+			log.Fatal(err)
+		}
+		crawlScheduler = asynq.NewScheduler(asynq.RedisClientOpt{Addr: cfg.Redis.Addr, Password: cfg.Redis.Password}, &asynq.SchedulerOpts{Location: zone, PostEnqueueFunc: func(_ *asynq.TaskInfo, err error) {
 			if err != nil {
-				log.Fatal(err)
+				slog.Error("crawl schedule enqueue failed", "error", err)
 			}
-			zone, err := time.LoadLocation("Asia/Shanghai")
-			if err != nil {
-				log.Fatal(err)
-			}
-			crawlScheduler = asynq.NewScheduler(asynq.RedisClientOpt{Addr: cfg.Redis.Addr, Password: cfg.Redis.Password}, &asynq.SchedulerOpts{Location: zone, PostEnqueueFunc: func(_ *asynq.TaskInfo, err error) {
-				if err != nil {
-					slog.Error("crawl schedule enqueue failed", "error", err)
-				}
-			}})
-			if _, err = crawlScheduler.Register("0 9 * * *", asynq.NewTask(worker.TypeCrawlDispatch, nil), asynq.Queue(worker.CrawlControlQueue), asynq.MaxRetry(0), asynq.Timeout(time.Minute)); err != nil {
-				log.Fatal(err)
-			}
-			if err = crawlScheduler.Start(); err != nil {
-				log.Fatal(err)
-			}
-			go func() {
-				timer := time.NewTicker(30 * time.Second)
-				defer timer.Stop()
-				for {
-					select {
-					case <-ctx.Done():
-						return
-					case <-timer.C:
-						if err := crawl.RecoverDispatch(ctx); err != nil {
-							slog.Error("crawl dispatch recovery failed", "error", err)
-						}
+		}})
+		if _, err = crawlScheduler.Register("0 9 * * *", asynq.NewTask(worker.TypeCrawlDispatch, nil), asynq.Queue(worker.CrawlControlQueue), asynq.MaxRetry(0), asynq.Timeout(time.Minute)); err != nil {
+			log.Fatal(err)
+		}
+		if err = crawlScheduler.Start(); err != nil {
+			log.Fatal(err)
+		}
+		go func() {
+			timer := time.NewTicker(30 * time.Second)
+			defer timer.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-timer.C:
+					if err := crawl.RecoverDispatch(ctx); err != nil {
+						slog.Error("crawl dispatch recovery failed", "error", err)
 					}
 				}
-			}()
-		}
+			}
+		}()
 		h.ConfluenceObjects = objects
 		h.ConfluenceLibrary = &worker.ConfluenceLibrary{DB: db.DB, Objects: objects}
 		if cfg.Confluence.BaseURL != "" && cfg.Confluence.Cookie != "" {

@@ -47,6 +47,9 @@ export function Crawl() {
   const [name, setName] = useState('');
   const [agentID, setAgentID] = useState('');
   const [profileID, setProfileID] = useState('');
+  const [profileIDs, setProfileIDs] = useState<string[]>([]);
+  const [hops, setHops] = useState(0);
+  const [includePattern, setIncludePattern] = useState('');
   const [urls, setURLs] = useState('');
   const [enabled, setEnabled] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -58,6 +61,9 @@ export function Crawl() {
     setName(task.name);
     setAgentID(task.agent_id);
     setProfileID(task.profile_id);
+    setProfileIDs(task.profile_ids);
+    setHops(task.hops);
+    setIncludePattern(task.include_pattern);
     setURLs(task.urls.join('\n'));
     setEnabled(task.enabled);
   }
@@ -70,6 +76,9 @@ export function Crawl() {
         name,
         agent_id: agentID,
         profile_id: profileID,
+        profile_ids: profileIDs,
+        hops,
+        include_pattern: includePattern,
         urls: urls
           .split('\n')
           .map((value) => value.trim())
@@ -84,6 +93,10 @@ export function Crawl() {
       setEditing('');
       setName('');
       setURLs('');
+      setHops(0);
+      setIncludePattern('');
+      setProfileIDs([]);
+      setProfileID('');
       tasks.refresh();
     } catch (cause) {
       setError(getErrorMessage(cause));
@@ -115,6 +128,9 @@ export function Crawl() {
             name: task.name,
             agent_id: task.agent_id,
             profile_id: task.profile_id,
+            profile_ids: task.profile_ids,
+            hops: task.hops,
+            include_pattern: task.include_pattern,
             urls: task.urls,
             enabled: false,
           })
@@ -187,9 +203,8 @@ export function Crawl() {
             className="gg-select w-full"
             value={profileID}
             onChange={(event) => setProfileID(event.target.value)}
-            required
           >
-            <option value="">{t('dutybot.crawlChoose')}</option>
+            <option value="">{t('dutybot.crawlAnonymous')}</option>
             {profiles.data?.data.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.id} — {p.origin}
@@ -198,15 +213,72 @@ export function Crawl() {
           </select>
         </label>
         <label>
+          {t('dutybot.crawlExtraProfiles')}
+          <select
+            data-testid="crawl-extra-profiles"
+            className="gg-select w-full"
+            multiple
+            value={profileIDs}
+            onChange={(event) =>
+              setProfileIDs(
+                Array.from(
+                  event.target.selectedOptions,
+                  (option) => option.value,
+                ),
+              )
+            }
+          >
+            {profiles.data?.data.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.id} — {p.origin}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          {t('dutybot.crawlHops')}
+          <Input
+            data-testid="crawl-hops"
+            type="number"
+            min={0}
+            max={5}
+            step={1}
+            value={hops}
+            required
+            onChange={(event) => setHops(event.target.valueAsNumber)}
+          />
+        </label>
+        <label>
+          {t('dutybot.crawlPattern')}
+          <Input
+            data-testid="crawl-pattern"
+            maxLength={2048}
+            value={includePattern}
+            onChange={(event) => setIncludePattern(event.target.value)}
+          />
+        </label>
+        <p className="text-sm text-muted-foreground">
+          {t('dutybot.crawlLimits')}
+        </p>
+        <label>
           {t('dutybot.crawlURLs')}
           <textarea
             data-testid="crawl-urls"
+            placeholder={
+              'https://feed.quanwenrss.com/feed/eeo-chanye-qiche.xml\nhttps://feed.quanwenrss.com/feed/eeo-kuaixun.xml'
+            }
             className="gg-select w-full min-h-32"
             value={urls}
             onChange={(event) => setURLs(event.target.value)}
             required
           />
         </label>
+        <p
+          className="text-sm text-muted-foreground"
+          data-testid="crawl-rss-hint"
+        >
+          {t('dutybot.crawlRSSHint')}
+        </p>
         <label>
           <input
             data-testid="crawl-enabled"
@@ -217,11 +289,7 @@ export function Crawl() {
           {t('dutybot.crawlEnabled')}
         </label>
         <div className="flex gap-2">
-          <Button
-            data-testid="crawl-save"
-            type="submit"
-            disabled={busy || !profiles.data?.data.length}
-          >
+          <Button data-testid="crawl-save" type="submit" disabled={busy}>
             {t('dutybot.crawlSave')}
           </Button>
           {editing && (
@@ -233,6 +301,10 @@ export function Crawl() {
                 setEditing('');
                 setName('');
                 setURLs('');
+                setHops(0);
+                setIncludePattern('');
+                setProfileIDs([]);
+                setProfileID('');
               }}
             >
               {t('dutybot.close')}
@@ -313,15 +385,26 @@ export function Crawl() {
             data-testid={`crawl-run-${run.id}`}
           >
             <p>
-              {run.created_at} · {run.trigger} · {run.status} · {run.stage} ·{' '}
-              {run.completed}/{run.total}
+              {run.created_at} · {run.trigger} ·{' '}
+              {run.status === 'partial'
+                ? t('dutybot.crawlPartial')
+                : run.status}{' '}
+              · {run.stage} · {run.completed}/{run.total}
             </p>
             {run.error && (
               <p role="alert" className="text-red-600">
                 {run.error}
               </p>
             )}
-            {run.status === 'succeeded' && (
+            {['report', 'publish', 'published'].includes(run.stage) && (
+              <a
+                data-testid={`crawl-source-${run.id}`}
+                href={`/api/dutybot/crawl-runs/${run.id}/markdown`}
+              >
+                {t('dutybot.crawlSourceDownload')}
+              </a>
+            )}
+            {['succeeded', 'partial'].includes(run.status) && (
               <div className="flex gap-3">
                 <Button
                   variant="outline"

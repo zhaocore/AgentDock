@@ -28,7 +28,7 @@ func TestCrawlConfiguredLLM(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
-	report, err := NewReporter(NewReportRuntime(cfg.LLM.APIKey, cfg.LLM.BaseURL)).Generate(ctx, domain.Agent{Name: "采集测试", Model: cfg.LLM.Model, SystemPrompt: "用简短中文整理来源事实，不推测。"}, []domain.CrawlPage{{URL: "https://example.com/controlled-test", Title: "公开测试材料", CapturedAt: time.Now().UTC(), Markdown: "这是公开的合成测试材料。系统每日北京时间09:00生成采集报告。抓取并发上限为3。"}})
+	report, err := NewReporter(NewReportRuntime(cfg.LLM.APIKey, cfg.LLM.BaseURL), 1).Generate(ctx, domain.Agent{Name: "采集测试", Model: cfg.LLM.Model, SystemPrompt: "用简短中文整理来源事实，不推测。"}, []domain.CrawlPage{{URL: "https://example.com/controlled-test", Title: "公开测试材料", CapturedAt: time.Now().UTC(), Markdown: "这是公开的合成测试材料。系统每日北京时间09:00生成采集报告。抓取并发上限为3。"}})
 	if err != nil {
 		t.Fatal(err)
 	}

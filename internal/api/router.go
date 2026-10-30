@@ -109,6 +109,7 @@ func NewRouter(h *Handler) *gin.Engine {
 		authed.GET("/crawl-tasks/:task_id", h.GetCrawlTask)
 		authed.GET("/crawl-tasks/:task_id/runs", h.ListCrawlRuns)
 		authed.GET("/crawl-runs/:run_id/report", h.CrawlReport)
+		authed.GET("/crawl-runs/:run_id/markdown", h.CrawlMarkdown)
 		authed.GET("/confluence-library/archive", h.ExportConfluenceLibrary)
 		authed.GET("/confluence-library/archive-check", h.CheckConfluenceArchive)
 		authed.GET("/confluence-library/spaces/:space_id/pages/:page_id/file", h.ConfluenceLibraryFile)

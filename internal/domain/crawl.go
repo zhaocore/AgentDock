@@ -4,15 +4,18 @@ import "time"
 
 // CrawlTask 是当前用户的每日采集配置，登录凭据只保存引用。
 type CrawlTask struct {
-	ID        string    `json:"id"`
-	UserID    string    `json:"-"`
-	Name      string    `json:"name"`
-	AgentID   string    `json:"agent_id"`
-	ProfileID string    `json:"profile_id"`
-	URLs      []string  `json:"urls"`
-	Enabled   bool      `json:"enabled"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID             string    `json:"id"`
+	UserID         string    `json:"-"`
+	Name           string    `json:"name"`
+	AgentID        string    `json:"agent_id"`
+	ProfileID      string    `json:"profile_id"`
+	ProfileIDs     []string  `json:"profile_ids"`
+	Hops           int       `json:"hops"`
+	IncludePattern string    `json:"include_pattern"`
+	URLs           []string  `json:"urls"`
+	Enabled        bool      `json:"enabled"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 // CrawlRun 冻结任务配置，每轮报告独立发布。
@@ -37,6 +40,10 @@ type CrawlPage struct {
 	Title      string    `json:"title"`
 	CapturedAt time.Time `json:"captured_at"`
 	Markdown   string    `json:"markdown"`
+	FinalURL   string    `json:"final_url"`
+	Links      []string  `json:"links"`
+	Skipped    bool      `json:"skipped"`
+	Format     string    `json:"format"`
 }
 
 // CrawlPageProgress 是不包含正文的页面执行记录。

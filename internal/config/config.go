@@ -22,6 +22,7 @@ type Config struct {
 	RustFS        RustFSConfig
 	Auth          AuthConfig
 	CrawlProfiles []CrawlProfile
+	Concurrency   ConcurrencyConfig
 }
 
 // ServerConfig HTTP 服务配置。
@@ -186,7 +187,12 @@ func Load() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	concurrency, err := loadConcurrency()
+	if err != nil {
+		return nil, err
+	}
 	cfg := &Config{
+		Concurrency:   concurrency,
 		CrawlProfiles: profiles,
 		Confluence:    ConfluenceConfig{BaseURL: strings.TrimRight(viper.GetString("CONFLUENCE_BASE_URL"), "/"), Cookie: viper.GetString("CONFLUENCE_COOKIE")},
 		RustFS:        RustFSConfig{Endpoint: viper.GetString("RUSTFS_ENDPOINT"), Region: viper.GetString("RUSTFS_REGION"), Bucket: viper.GetString("RUSTFS_BUCKET"), AccessKey: viper.GetString("RUSTFS_ACCESS_KEY"), SecretKey: viper.GetString("RUSTFS_SECRET_KEY")},

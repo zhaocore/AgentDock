@@ -539,6 +539,36 @@ const docTemplate = `{
                 }
             }
         },
+        "/crawl-runs/{run_id}/markdown": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "tags": [
+                    "Crawl"
+                ],
+                "summary": "下载完整采集 Markdown",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "运行 ID",
+                        "name": "run_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/crawl-runs/{run_id}/report": {
             "get": {
                 "security": [
@@ -1861,7 +1891,6 @@ const docTemplate = `{
                 "agent_id",
                 "enabled",
                 "name",
-                "profile_id",
                 "urls"
             ],
             "properties": {
@@ -1871,12 +1900,28 @@ const docTemplate = `{
                 "enabled": {
                     "type": "boolean"
                 },
+                "hops": {
+                    "type": "integer",
+                    "maximum": 5,
+                    "minimum": 0
+                },
+                "include_pattern": {
+                    "type": "string",
+                    "maxLength": 2048
+                },
                 "name": {
                     "type": "string",
                     "maxLength": 200
                 },
                 "profile_id": {
                     "type": "string"
+                },
+                "profile_ids": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "urls": {
                     "type": "array",
@@ -2528,7 +2573,13 @@ const docTemplate = `{
                 "enabled": {
                     "type": "boolean"
                 },
+                "hops": {
+                    "type": "integer"
+                },
                 "id": {
+                    "type": "string"
+                },
+                "include_pattern": {
                     "type": "string"
                 },
                 "name": {
@@ -2536,6 +2587,12 @@ const docTemplate = `{
                 },
                 "profile_id": {
                     "type": "string"
+                },
+                "profile_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "updated_at": {
                     "type": "string"

@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/zhaocore/dutybotgo/internal/telemetry"
 )
 
 // reportTransport 对模型临时错误有限重试，避免服务错误正文泄露采集内容。
@@ -27,11 +29,18 @@ func (t reportTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 			}
 			copy.Body = body
 		}
+		started := time.Now()
 		response, err := t.base.RoundTrip(copy)
 		status := 0
 		if response != nil {
 			status = response.StatusCode
 		}
+		telemetry.Count(req.Context(), fmt.Sprintf("model_http_status_%d", status), 1)
+		measurementErr := err
+		if err == nil && (status < 200 || status >= 300) {
+			measurementErr = fmt.Errorf("provider status %d", status)
+		}
+		telemetry.Measure(req.Context(), "model_http_headers", started, measurementErr)
 		if err == nil && status >= 200 && status < 300 {
 			return response, nil
 		}
@@ -45,8 +54,12 @@ func (t reportTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		if attempt == 2 || (err == nil && status != 429 && status < 500) {
 			return nil, last
 		}
-		slog.Warn("retry report provider", "attempt", attempt+1, "status", status)
-		if err = reportDelay(req.Context(), time.Duration(attempt+1)*time.Second); err != nil {
+		telemetry.Count(req.Context(), "model_retries", 1)
+		slog.Warn("retry report provider", "run_id", telemetry.RunID(req.Context()), "attempt", attempt+1, "status", status)
+		backoff := time.Now()
+		err = reportDelay(req.Context(), time.Duration(attempt+1)*time.Second)
+		telemetry.Measure(req.Context(), "model_backoff", backoff, err)
+		if err != nil {
 			return nil, err
 		}
 	}

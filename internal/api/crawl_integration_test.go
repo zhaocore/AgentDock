@@ -24,6 +24,7 @@ import (
 	"github.com/zhaocore/dutybotgo/internal/domain"
 	"github.com/zhaocore/dutybotgo/internal/store/mysql"
 	"github.com/zhaocore/dutybotgo/internal/store/rustfs"
+	"github.com/zhaocore/dutybotgo/internal/telemetry"
 	"github.com/zhaocore/dutybotgo/internal/worker"
 )
 
@@ -64,6 +65,34 @@ func TestCrawlEndToEnd(t *testing.T) {
 	}
 	var expired atomic.Bool
 	var active, peak atomic.Int32
+	other := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Cookie") != "other=second-origin" {
+			w.WriteHeader(403)
+			return
+		}
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprint(w, `<html><head><title>Other origin</title></head><body><main data-ready="yes">Other fact<a href="/grand">Grand</a></main></body></html>`)
+	}))
+	defer other.Close()
+	public := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Cookie") != "" {
+			t.Error("Cookie leaked to anonymous origin")
+			w.WriteHeader(403)
+			return
+		}
+		if r.URL.Path == "/auth" {
+			w.WriteHeader(403)
+			return
+		}
+		if r.URL.Path == "/binary" {
+			w.Header().Set("Content-Type", "application/pdf")
+			fmt.Fprint(w, "binary")
+			return
+		}
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprint(w, `<html><head><title>Public</title></head><body><main>Public fact</main></body></html>`)
+	}))
+	defer public.Close()
 	source := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if expired.Load() || r.Header.Get("Cookie") != "session=crawl-test" {
 			w.WriteHeader(401)
@@ -78,8 +107,17 @@ func TestCrawlEndToEnd(t *testing.T) {
 			}
 		}
 		time.Sleep(80 * time.Millisecond)
+		if r.URL.Path == "/rss" {
+			w.Header().Set("Content-Type", "application/rss+xml; charset=utf-8")
+			fmt.Fprintf(w, `<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>RSS 完整订阅</title><item><title>全部正文</title><link>https://news.example/article</link><content:encoded><![CDATA[<p>%s</p><p>全文末尾标记</p>]]></content:encoded></item></channel></rss>`, strings.Repeat("长文", 14000))
+			return
+		}
 		w.Header().Set("Content-Type", "text/html")
-		fmt.Fprintf(w, `<html><head><title>Source %s</title></head><body><main data-ready="yes"><h1>Controlled facts</h1><p>fact %s</p></main></body></html>`, r.URL.Path, r.URL.Path)
+		links := ""
+		if r.URL.Path == "/recursive" {
+			links = fmt.Sprintf(`<a href="%s/child">Child</a><a href="%s/child#again">Duplicate</a><a href="%s/public">Public</a><a href="%s/auth">Needs Cookie</a><a href="%s/binary">PDF</a>`, other.URL, other.URL, public.URL, public.URL, public.URL)
+		}
+		fmt.Fprintf(w, `<html><head><title>Source %s</title></head><body><main data-ready="yes"><h1>Controlled facts</h1><p>fact %s</p>%s</main></body></html>`, r.URL.Path, r.URL.Path, links)
 	}))
 	defer source.Close()
 	model := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -122,7 +160,7 @@ const browser=await chromium.launch();let result;try{const context=await browser
 	inspector := asynq.NewInspector(asynq.RedisClientOpt{Addr: redisAddr})
 	defer inspector.Close()
 	objects := rustfs.New(endpoint, "us-east-1", "dutybot-crawl-test-"+uuid.NewString(), "crawltestkey", "crawl-test-secret-only")
-	crawl := &worker.CrawlWorker{DB: db, Objects: objects, Source: worker.NewBrowserCrawlSource(root), Reporter: agent.NewReporter(agent.NewReportRuntime("test-key", model.URL)), Profiles: []config.CrawlProfile{{ID: "source", Origin: source.URL, Cookie: "session=crawl-test", UserIDs: []string{u1}, ReadySelector: "[data-ready=yes]"}}, Client: queue, Inspector: inspector}
+	crawl := &worker.CrawlWorker{Concurrency: config.ConcurrencyConfig{Worker: 4, Capture: 3, Task: 3, Report: 1}, DB: db, Objects: objects, Source: worker.NewBrowserCrawlSource(root, 3), Reporter: agent.NewReporter(agent.NewReportRuntime("test-key", model.URL), 1), Profiles: []config.CrawlProfile{{ID: "source", Origin: source.URL, Cookie: "session=crawl-test", UserIDs: []string{u1}, ReadySelector: "[data-ready=yes]"}, {ID: "other", Origin: other.URL, Cookie: "other=second-origin", UserIDs: []string{u1}, ReadySelector: "[data-ready=yes]"}}, Client: queue, Inspector: inspector}
 	h := &Handler{DB: db, Crawl: crawl, Config: &config.Config{Server: config.ServerConfig{BasePath: "/v1"}, Auth: config.AuthConfig{JWTSecret: "crawl-test-jwt", RateLimit: 10000, TokenExpiry: time.Hour}}}
 	router := NewRouter(h)
 	call := func(user, method, path, body string, want int) *httptest.ResponseRecorder {
@@ -197,6 +235,64 @@ const browser=await chromium.launch();let result;try{const context=await browser
 		t.Fatal("run timeout", id, want)
 	}
 	waitRun(run.ID, "succeeded")
+	recursiveBody, _ := json.Marshal(CrawlTaskRequest{Name: "Recursive", AgentID: aID, ProfileIDs: []string{"source", "other"}, Hops: 2, URLs: []string{source.URL + "/recursive", source.URL + "/recursive#again"}, Enabled: boolPtr(false)})
+	var recursiveTask domain.CrawlTask
+	if err = json.Unmarshal(call(u1, "POST", "/crawl-tasks", string(recursiveBody), 201).Body.Bytes(), &recursiveTask); err != nil {
+		t.Fatal(err)
+	}
+	var recursiveRun domain.CrawlRun
+	if err = json.Unmarshal(call(u1, "POST", "/crawl-tasks/"+recursiveTask.ID+"/runs", "", 202).Body.Bytes(), &recursiveRun); err != nil {
+		t.Fatal(err)
+	}
+	waitRun(recursiveRun.ID, "partial")
+	recursiveResult, err := mysql.GetCrawlRun(ctx, db, recursiveRun.ID, u1)
+	if err != nil || recursiveResult.Total != 6 || recursiveResult.Completed != 6 || recursiveResult.Task.Hops != 2 || len(recursiveResult.Task.ProfileIDs) != 2 {
+		t.Fatal(recursiveResult, err)
+	}
+	recursiveReport := call(u1, "GET", "/crawl-runs/"+recursiveRun.ID+"/report", "", 200).Body.String()
+	if !strings.Contains(recursiveReport, public.URL+"/auth") || !strings.Contains(recursiveReport, "403") {
+		t.Fatal(recursiveReport)
+	}
+	call(u2, "GET", "/crawl-runs/"+recursiveRun.ID+"/report", "", 404)
+	rssBody, _ := json.Marshal(CrawlTaskRequest{Name: "RSS", AgentID: aID, ProfileID: "source", URLs: []string{source.URL + "/rss"}, Enabled: boolPtr(false)})
+	var rssTask domain.CrawlTask
+	if err = json.Unmarshal(call(u1, "POST", "/crawl-tasks", string(rssBody), 201).Body.Bytes(), &rssTask); err != nil {
+		t.Fatal(err)
+	}
+	var rssRun domain.CrawlRun
+	if err = json.Unmarshal(call(u1, "POST", "/crawl-tasks/"+rssTask.ID+"/runs", "", 202).Body.Bytes(), &rssRun); err != nil {
+		t.Fatal(err)
+	}
+	waitRun(rssRun.ID, "succeeded")
+	// 终态数据库发布略早于指标落盘，等待真实 Worker 完成终结快照。
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		data, readErr := objects.Get(ctx, worker.CrawlPrefix(domain.CrawlRun{ID: rssRun.ID, UserID: u1})+"metrics.json")
+		var snapshot telemetry.Snapshot
+		if readErr != nil {
+			t.Fatal(readErr)
+		}
+		if err := json.Unmarshal(data, &snapshot); err != nil {
+			t.Fatal(err)
+		}
+		if snapshot.Status == "succeeded" {
+			if snapshot.UserID != u1 || snapshot.RunID != rssRun.ID || snapshot.Counters["documents_rss"] != 1 || snapshot.Timings["browser_attempt"].Count != 1 || snapshot.Timings["model_call"].Count < 2 || snapshot.Concurrency.Task != 3 {
+				t.Fatal(snapshot)
+			}
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("metrics not finalized", snapshot)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+
+	full := call(u1, "GET", "/crawl-runs/"+rssRun.ID+"/markdown", "", 200)
+	if len([]rune(full.Body.String())) < 28000 || !strings.Contains(full.Body.String(), "全文末尾标记") || !strings.Contains(full.Header().Get("Content-Disposition"), "sources-") {
+		t.Fatal("RSS source incomplete", full.Body.Len())
+	}
+	call(u2, "GET", "/crawl-runs/"+rssRun.ID+"/markdown", "", 404)
+
 	report := call(u1, "GET", "/crawl-runs/"+run.ID+"/report?download=1", "", 200)
 	for _, url := range urls {
 		if !strings.Contains(report.Body.String(), url) {
@@ -238,8 +334,8 @@ const browser=await chromium.launch();let result;try{const context=await browser
 	if err = json.Unmarshal(response.Body.Bytes(), &failed); err != nil {
 		t.Fatal(err)
 	}
-	waitRun(failed.ID, "failed")
-	call(u1, "GET", "/crawl-runs/"+failed.ID+"/report", "", 409)
+	waitRun(failed.ID, "partial")
+	call(u1, "GET", "/crawl-runs/"+failed.ID+"/report", "", 200)
 	call(u1, "GET", "/crawl-runs/"+run.ID+"/report", "", 200)
 	expired.Store(false)
 	scheduler := asynq.NewScheduler(asynq.RedisClientOpt{Addr: redisAddr}, &asynq.SchedulerOpts{})

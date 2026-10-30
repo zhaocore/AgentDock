@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"net/netip"
 	"net/url"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/zhaocore/dutybotgo/internal/domain"
 )
 
 // CrawlProfile 由部署者授权给指定用户，仅对精确 HTTPS 来源注入 Cookie。
@@ -19,6 +21,49 @@ type CrawlProfile struct {
 	Cookie        string   `json:"cookie"`
 	UserIDs       []string `json:"user_ids"`
 	ReadySelector string   `json:"ready_selector"`
+}
+
+// CrawlTaskProfiles 校验冻结任务及全部凭据引用，不按目标域名扩大凭据授权。
+func CrawlTaskProfiles(profiles []CrawlProfile, task domain.CrawlTask) ([]CrawlProfile, error) {
+	if task.Hops < 0 || task.Hops > 5 || len(task.URLs) < 1 || len(task.URLs) > 20 || len(task.IncludePattern) > 2048 {
+		return nil, fmt.Errorf("crawl requires 1–20 seed URLs, hops between 0 and 5, and pattern at most 2048 bytes")
+	}
+	if _, err := regexp.Compile(task.IncludePattern); err != nil {
+		return nil, fmt.Errorf("invalid crawl include_pattern: %w", err)
+	}
+	for _, raw := range task.URLs {
+		if _, err := domain.NormalizeCrawlURL(raw); err != nil {
+			return nil, err
+		}
+	}
+	ids := append([]string{}, task.ProfileIDs...)
+	if task.ProfileID != "" && !slices.Contains(ids, task.ProfileID) {
+		ids = append(ids, task.ProfileID)
+	}
+	if len(ids) > 100 {
+		return nil, fmt.Errorf("crawl allows at most 100 login profiles")
+	}
+	selected := []CrawlProfile{}
+	origins := map[string]bool{}
+	for _, id := range ids {
+		found := false
+		for _, profile := range profiles {
+			if profile.ID != id || !slices.Contains(profile.UserIDs, task.UserID) {
+				continue
+			}
+			if origins[profile.Origin] {
+				return nil, fmt.Errorf("crawl requires one login profile per origin")
+			}
+			origins[profile.Origin] = true
+			selected = append(selected, profile)
+			found = true
+			break
+		}
+		if !found {
+			return nil, fmt.Errorf("crawl login profile is unavailable or not authorized for this user")
+		}
+	}
+	return selected, nil
 }
 
 // ParseCrawlProfiles 校验部署配置，不将凭据值拼入错误。

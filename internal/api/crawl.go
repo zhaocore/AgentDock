@@ -18,17 +18,20 @@ import (
 
 // CrawlTaskRequest 描述任务配置，凭据值不通过用户 API 提交。
 type CrawlTaskRequest struct {
-	Name      string   `json:"name" binding:"required,max=200"`
-	AgentID   string   `json:"agent_id" binding:"required,uuid"`
-	ProfileID string   `json:"profile_id" binding:"required"`
-	URLs      []string `json:"urls" binding:"required,min=1,max=20"`
-	Enabled   *bool    `json:"enabled" binding:"required"`
+	Name           string   `json:"name" binding:"required,max=200"`
+	AgentID        string   `json:"agent_id" binding:"required,uuid"`
+	ProfileID      string   `json:"profile_id"`
+	ProfileIDs     []string `json:"profile_ids" binding:"max=100"`
+	Hops           int      `json:"hops" binding:"min=0,max=5"`
+	IncludePattern string   `json:"include_pattern" binding:"max=2048"`
+	URLs           []string `json:"urls" binding:"required,min=1,max=20"`
+	Enabled        *bool    `json:"enabled" binding:"required"`
 }
 
 // crawlReady 缺少采集或存储配置时返回明确的功能不可用状态。
 func (h *Handler) crawlReady(c *gin.Context) bool {
 	if h.Crawl == nil {
-		c.JSON(503, ErrorResponse{Error: "crawl requires CRAWL_PROFILES and RustFS configuration"})
+		c.JSON(503, ErrorResponse{Error: "crawl requires RustFS configuration"})
 		return false
 	}
 	return true
@@ -138,7 +141,7 @@ func (h *Handler) UpdateCrawlTask(c *gin.Context) {
 		return
 	}
 	// 仅停用原配置不需要已失效的执行权限，其他编辑仍完整校验。
-	if t.Enabled || t.Name != current.Name || t.AgentID != current.AgentID || t.ProfileID != current.ProfileID || !slices.Equal(t.URLs, current.URLs) {
+	if t.Enabled || t.Name != current.Name || t.AgentID != current.AgentID || t.ProfileID != current.ProfileID || !slices.Equal(t.URLs, current.URLs) || !slices.Equal(t.ProfileIDs, current.ProfileIDs) || t.Hops != current.Hops || t.IncludePattern != current.IncludePattern {
 		if !h.crawlTaskAccess(c, t) {
 			return
 		}
@@ -158,7 +161,7 @@ func (h *Handler) bindCrawlTask(c *gin.Context, id string) (domain.CrawlTask, bo
 	}
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 64*1024)
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(400, ErrorResponse{Error: "crawl task requires name, agent_id, profile_id, 1–20 URLs and enabled"})
+		c.JSON(400, ErrorResponse{Error: "crawl task requires name, agent_id, 1–20 URLs, enabled, hops 0–5 and valid profile_ids"})
 		return domain.CrawlTask{}, false
 	}
 	user := c.GetString("user_id")
@@ -166,12 +169,12 @@ func (h *Handler) bindCrawlTask(c *gin.Context, id string) (domain.CrawlTask, bo
 		c.JSON(400, ErrorResponse{Error: "crawl task name cannot be blank"})
 		return domain.CrawlTask{}, false
 	}
-	return domain.CrawlTask{ID: id, UserID: user, Name: strings.TrimSpace(request.Name), AgentID: request.AgentID, ProfileID: request.ProfileID, URLs: request.URLs, Enabled: *request.Enabled}, true
+	return domain.CrawlTask{ID: id, UserID: user, Name: strings.TrimSpace(request.Name), AgentID: request.AgentID, ProfileID: request.ProfileID, ProfileIDs: append([]string{}, request.ProfileIDs...), Hops: request.Hops, IncludePattern: request.IncludePattern, URLs: request.URLs, Enabled: *request.Enabled}, true
 }
 
 // crawlTaskAccess 校验来源授权与 Agent 可访问性。
 func (h *Handler) crawlTaskAccess(c *gin.Context, task domain.CrawlTask) bool {
-	if _, err := config.CrawlAccess(h.Crawl.Profiles, task.UserID, task.ProfileID, task.URLs); err != nil {
+	if _, err := config.CrawlTaskProfiles(h.Crawl.Profiles, task); err != nil {
 		c.JSON(400, ErrorResponse{Error: err.Error()})
 		return false
 	}
@@ -217,7 +220,7 @@ func (h *Handler) RunCrawlTask(c *gin.Context) {
 		crawlError(c, err)
 		return
 	}
-	if _, err = config.CrawlAccess(h.Crawl.Profiles, t.UserID, t.ProfileID, t.URLs); err != nil {
+	if _, err = config.CrawlTaskProfiles(h.Crawl.Profiles, t); err != nil {
 		c.JSON(400, ErrorResponse{Error: err.Error()})
 		return
 	}
@@ -269,7 +272,7 @@ func (h *Handler) CrawlReport(c *gin.Context) {
 		crawlError(c, err)
 		return
 	}
-	if r.Status != "succeeded" {
+	if r.Status != "succeeded" && r.Status != "partial" {
 		c.JSON(409, ErrorResponse{Error: "crawl report is not published"})
 		return
 	}
@@ -285,4 +288,36 @@ func (h *Handler) CrawlReport(c *gin.Context) {
 		c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="report-%s.md"`, r.ID))
 	}
 	c.Data(200, "text/plain; charset=utf-8", data)
+}
+
+// CrawlMarkdown 下载完整采集文档，Agent 失败不影响已完成的原文转换。
+// @Summary 下载完整采集 Markdown
+// @Tags Crawl
+// @Security JWTAuth
+// @Param run_id path string true "运行 ID"
+// @Success 200 {string} string
+// @Router /crawl-runs/{run_id}/markdown [get]
+func (h *Handler) CrawlMarkdown(c *gin.Context) {
+	if !h.crawlReady(c) || !validateID(c, c.Param("run_id"), "run_id") {
+		return
+	}
+	r, err := mysql.GetCrawlRun(c.Request.Context(), h.DB, c.Param("run_id"), c.GetString("user_id"))
+	if err != nil {
+		crawlError(c, err)
+		return
+	}
+	if r.Stage != "report" && r.Stage != "publish" && r.Stage != "published" {
+		c.JSON(409, ErrorResponse{Error: "crawl document capture is not complete"})
+		return
+	}
+	document, err := h.Crawl.SourceMarkdown(c.Request.Context(), r)
+	if err != nil {
+		crawlError(c, err)
+		return
+	}
+	c.Header("Cache-Control", "private, no-store")
+	c.Header("X-Content-Type-Options", "nosniff")
+	c.Header("Content-Security-Policy", "default-src 'none'; sandbox")
+	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="sources-%s.md"`, r.ID))
+	c.Data(200, "text/plain; charset=utf-8", []byte(document))
 }

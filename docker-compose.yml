@@ -60,6 +60,10 @@ services:
       AGENT_CONFIG_DIR: /app/agents
       CONFLUENCE_BASE_URL: ${CONFLUENCE_BASE_URL:-}
       CONFLUENCE_COOKIE: ${CONFLUENCE_COOKIE:-}
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
+      CRAWL_CAPTURE_CONCURRENCY: ${CRAWL_CAPTURE_CONCURRENCY:-3}
+      CRAWL_TASK_CONCURRENCY: ${CRAWL_TASK_CONCURRENCY:-3}
+      CRAWL_REPORT_CONCURRENCY: ${CRAWL_REPORT_CONCURRENCY:-1}
       CRAWL_PROFILES: ${CRAWL_PROFILES:-[]}
       RUSTFS_ENDPOINT: http://rustfs:9000
       RUSTFS_REGION: ${RUSTFS_REGION:-us-east-1}
@@ -73,6 +77,11 @@ services:
       SERVER_MODE: release
     ports:
       - "${SERVER_PORT:-8080}:8080"
+    logging:
+      driver: local
+      options:
+        max-size: "20m"
+        max-file: "5"
     volumes:
       - repodata:/data/repo
       - ./agents:/app/agents:ro

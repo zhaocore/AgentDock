@@ -15,19 +15,22 @@ import (
 var ErrCrawlBusy = errors.New("crawl task already queued or running")
 var ErrCrawlDuplicate = errors.New("crawl scheduled slot already dispatched")
 
-const crawlTaskColumns = `id,user_id,name,agent_id,profile_id,urls,enabled,created_at,updated_at`
+const crawlTaskColumns = `id,user_id,name,agent_id,profile_id,urls,enabled,profile_ids,hops,include_pattern,created_at,updated_at`
 const crawlRunColumns = `id,user_id,task_id,snapshot,trigger_type,status,stage,completed,total,error,created_at,updated_at`
 
 // scanCrawlTask 解析受限配置，拒绝损坏的数据库 JSON。
 func scanCrawlTask(row interface{ Scan(...any) error }) (domain.CrawlTask, error) {
 	var t domain.CrawlTask
-	var urls []byte
-	err := row.Scan(&t.ID, &t.UserID, &t.Name, &t.AgentID, &t.ProfileID, &urls, &t.Enabled, &t.CreatedAt, &t.UpdatedAt)
+	var urls, profiles []byte
+	err := row.Scan(&t.ID, &t.UserID, &t.Name, &t.AgentID, &t.ProfileID, &urls, &t.Enabled, &profiles, &t.Hops, &t.IncludePattern, &t.CreatedAt, &t.UpdatedAt)
 	if err != nil {
 		return t, err
 	}
 	if err = json.Unmarshal(urls, &t.URLs); err != nil {
 		return t, fmt.Errorf("decode crawl URLs: %w", err)
+	}
+	if err = json.Unmarshal(profiles, &t.ProfileIDs); err != nil {
+		return t, fmt.Errorf("decode crawl profile IDs: %w", err)
 	}
 	return t, nil
 }
@@ -38,7 +41,11 @@ func CreateCrawlTask(ctx context.Context, db *sql.DB, t domain.CrawlTask) error 
 	if err != nil {
 		return err
 	}
-	_, err = db.ExecContext(ctx, `INSERT INTO crawl_tasks (id,user_id,name,agent_id,profile_id,urls,enabled) VALUES (?,?,?,?,?,?,?)`, t.ID, t.UserID, t.Name, t.AgentID, t.ProfileID, urls, t.Enabled)
+	profiles, err := json.Marshal(append([]string{}, t.ProfileIDs...))
+	if err != nil {
+		return err
+	}
+	_, err = db.ExecContext(ctx, `INSERT INTO crawl_tasks (id,user_id,name,agent_id,profile_id,urls,enabled,profile_ids,hops,include_pattern) VALUES (?,?,?,?,?,?,?,?,?,?)`, t.ID, t.UserID, t.Name, t.AgentID, t.ProfileID, urls, t.Enabled, profiles, t.Hops, t.IncludePattern)
 	return err
 }
 
@@ -48,7 +55,11 @@ func UpdateCrawlTask(ctx context.Context, db *sql.DB, t domain.CrawlTask) error 
 	if err != nil {
 		return err
 	}
-	r, err := db.ExecContext(ctx, `UPDATE crawl_tasks SET name=?,agent_id=?,profile_id=?,urls=?,enabled=? WHERE id=? AND user_id=?`, t.Name, t.AgentID, t.ProfileID, urls, t.Enabled, t.ID, t.UserID)
+	profiles, err := json.Marshal(append([]string{}, t.ProfileIDs...))
+	if err != nil {
+		return err
+	}
+	r, err := db.ExecContext(ctx, `UPDATE crawl_tasks SET name=?,agent_id=?,profile_id=?,urls=?,enabled=?,profile_ids=?,hops=?,include_pattern=? WHERE id=? AND user_id=?`, t.Name, t.AgentID, t.ProfileID, urls, t.Enabled, profiles, t.Hops, t.IncludePattern, t.ID, t.UserID)
 	if err != nil {
 		return err
 	}
@@ -165,6 +176,7 @@ func scanCrawlRun(row interface{ Scan(...any) error }) (domain.CrawlRun, error) 
 		return r, fmt.Errorf("decode crawl snapshot: %w", err)
 	}
 	r.Task.UserID = r.UserID
+	r.Task.ProfileIDs = append([]string{}, r.Task.ProfileIDs...)
 	return r, nil
 }
 
@@ -223,9 +235,9 @@ func CrawlProgress(ctx context.Context, db *sql.DB, id, user, stage string, comp
 	return nil
 }
 
-// FinishCrawlRun 完整报告写入后才能标记成功；失败同时释放唯一占用。
+// FinishCrawlRun 报告写入后才能发布完整或部分结果；终态释放唯一占用。
 func FinishCrawlRun(ctx context.Context, db *sql.DB, id, user, status, reason string) error {
-	result, err := db.ExecContext(ctx, `UPDATE crawl_runs SET status=?,error=?,stage=IF(?='succeeded','published',stage) WHERE id=? AND user_id=? AND status IN ('queued','running')`, status, reason, status, id, user)
+	result, err := db.ExecContext(ctx, `UPDATE crawl_runs SET status=?,error=?,stage=IF(? IN ('succeeded','partial'),'published',stage) WHERE id=? AND user_id=? AND status IN ('queued','running')`, status, reason, status, id, user)
 	if err != nil {
 		return err
 	}
@@ -274,4 +286,34 @@ func UnfinishedCrawlRuns(ctx context.Context, db *sql.DB) ([]domain.CrawlRun, er
 		list = append(list, r)
 	}
 	return list, rows.Err()
+}
+
+// CrawlCaptureProgress 随递归发现同步候选总量及已处理数量。
+func CrawlCaptureProgress(ctx context.Context, db *sql.DB, id, user string, completed, total int) error {
+	result, err := db.ExecContext(ctx, `UPDATE crawl_runs SET total=? WHERE id=? AND user_id=? AND status='running'`, total, id, user)
+	if err != nil {
+		return err
+	}
+	if _, err = result.RowsAffected(); err != nil {
+		return err
+	}
+	return CrawlProgress(ctx, db, id, user, "capture", completed)
+}
+
+// CrawlCapturedPositions 只返回当前用户已完成的页面位置，不读取正文。
+func CrawlCapturedPositions(ctx context.Context, db *sql.DB, run, user string) ([]int, error) {
+	rows, err := db.QueryContext(ctx, `SELECT p.position FROM crawl_pages p JOIN crawl_runs r ON r.id=p.run_id WHERE r.id=? AND r.user_id=? AND p.status='captured' ORDER BY p.position LIMIT 101`, run, user)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	positions := []int{}
+	for rows.Next() {
+		var position int
+		if err = rows.Scan(&position); err != nil {
+			return nil, err
+		}
+		positions = append(positions, position)
+	}
+	return positions, rows.Err()
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/hibiken/asynq"
 	"github.com/zhaocore/dutybotgo/internal/config"
 	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/dutybotgo/internal/telemetry"
 )
 
 type crawlTestSource struct{ failure bool }
@@ -35,12 +36,24 @@ func (r crawlTestReporter) Generate(context.Context, domain.Agent, []domain.Craw
 }
 
 type crawlTestObjects struct {
-	keys    []string
-	failure string
+	keys          []string
+	failure       string
+	metrics       []telemetry.Snapshot
+	failMetricsAt int
 }
 
-func (o *crawlTestObjects) Put(_ context.Context, key string, _ []byte, _ string) error {
+func (o *crawlTestObjects) Put(_ context.Context, key string, data []byte, _ string) error {
 	o.keys = append(o.keys, key)
+	if strings.HasSuffix(key, "metrics.json") {
+		var snapshot telemetry.Snapshot
+		if err := json.Unmarshal(data, &snapshot); err != nil {
+			return err
+		}
+		o.metrics = append(o.metrics, snapshot)
+		if o.failMetricsAt > 0 && len(o.metrics) == o.failMetricsAt {
+			return errors.New("metrics store unavailable")
+		}
+	}
 	if strings.HasSuffix(key, o.failure) && o.failure != "" {
 		return errors.New("storage failed")
 	}
@@ -75,7 +88,7 @@ func crawlWorkerRunRowsForID(id, status string) *sqlmock.Rows {
 }
 
 func TestCrawlWorkerPublishing(t *testing.T) {
-	for _, mode := range []string{"success", "duplicate", "capture", "report", "storage", "unauthorized", "missing"} {
+	for _, mode := range []string{"success", "duplicate", "capture", "report", "storage", "unauthorized", "missing", "metrics", "finalmetrics"} {
 		t.Run(mode, func(t *testing.T) {
 			db, mock, _ := sqlmock.New()
 			defer db.Close()
@@ -83,7 +96,13 @@ func TestCrawlWorkerPublishing(t *testing.T) {
 			if mode == "storage" {
 				objects.failure = "report.md"
 			}
-			w := &CrawlWorker{DB: db, Objects: objects, Source: crawlTestSource{failure: mode == "capture"}, Reporter: crawlTestReporter{failure: mode == "report"}, Profiles: []config.CrawlProfile{{ID: "profile", Origin: "https://docs.example", UserIDs: []string{"owner"}}}}
+			if mode == "metrics" {
+				objects.failure = "metrics.json"
+			}
+			if mode == "finalmetrics" {
+				objects.failMetricsAt = 4
+			}
+			w := &CrawlWorker{Concurrency: config.ConcurrencyConfig{Worker: 4, Capture: 3, Task: 3, Report: 1}, DB: db, Objects: objects, Source: crawlTestSource{failure: mode == "capture"}, Reporter: crawlTestReporter{failure: mode == "report"}, Profiles: []config.CrawlProfile{{ID: "profile", Origin: "https://docs.example", UserIDs: []string{"owner"}}}}
 			query := mock.ExpectQuery("SELECT .*crawl_runs").WithArgs("run", "owner")
 			if mode == "missing" {
 				query.WillReturnError(errors.New("missing run"))
@@ -97,7 +116,7 @@ func TestCrawlWorkerPublishing(t *testing.T) {
 				if mode != "duplicate" {
 					if mode == "unauthorized" {
 						w.Profiles = nil
-					} else {
+					} else if mode != "metrics" {
 						mock.ExpectQuery("SELECT .* FROM agents").WithArgs("agent", "owner").WillReturnRows(sqlmock.NewRows([]string{"id", "owner", "name", "prompt", "model", "skills", "mcp", "subagents", "created", "updated"}).AddRow("agent", nil, "Reporter", "prompt", "model", "[]", "[]", "[]", time.Now(), time.Now()))
 						mock.ExpectExec("INSERT INTO crawl_pages").WillReturnResult(sqlmock.NewResult(1, 1))
 						if mode != "capture" {
@@ -109,7 +128,7 @@ func TestCrawlWorkerPublishing(t *testing.T) {
 						}
 					}
 					status := "failed"
-					if mode == "success" {
+					if mode == "success" || mode == "finalmetrics" {
 						status = "succeeded"
 					}
 					mock.ExpectExec("UPDATE crawl_runs SET status=\\?").WithArgs(status, sqlmock.AnyArg(), status, "run", "owner").WillReturnResult(sqlmock.NewResult(0, 1))
@@ -128,6 +147,22 @@ func TestCrawlWorkerPublishing(t *testing.T) {
 					if strings.HasSuffix(key, "report.md") {
 						t.Fatal("published incomplete report")
 					}
+				}
+			}
+			if mode != "missing" && mode != "duplicate" {
+				if len(objects.metrics) < 2 {
+					t.Fatal("missing initial/final metrics attempts", objects.keys)
+				}
+				last := objects.metrics[len(objects.metrics)-1]
+				want := "failed"
+				if mode == "success" || mode == "finalmetrics" {
+					want = "succeeded"
+				}
+				if last.Status != want || last.RunID != "run" || last.UserID != "owner" {
+					t.Fatal(last)
+				}
+				if mode == "success" && (last.Counters["pages_captured"] != 1 || last.Timings["report_phase"].Count != 1 || last.Timings["object_put"].Count != 3) {
+					t.Fatal(last)
 				}
 			}
 			if err = mock.ExpectationsWereMet(); err != nil {
@@ -216,7 +251,7 @@ func TestCrawlDispatchRecovery(t *testing.T) {
 	if err := w.enqueue(context.Background(), domain.CrawlRun{ID: "run", UserID: "owner"}); err == nil {
 		t.Fatal("inspection error ignored")
 	}
-	if err := (&CrawlWorker{}).DispatchDaily(context.Background(), time.Date(2026, 10, 30, 2, 1, 0, 0, time.UTC)); err != nil {
+	if err := (&CrawlWorker{Concurrency: config.ConcurrencyConfig{Worker: 4, Capture: 3, Task: 3, Report: 1}}).DispatchDaily(context.Background(), time.Date(2026, 10, 30, 2, 1, 0, 0, time.UTC)); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -227,16 +262,20 @@ func TestCrawlBrowserProtocol(t *testing.T) {
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		t.Fatal(err)
 	}
-	script := `const input=JSON.parse(await Bun.stdin.text()); const mode=new URL(input.url).pathname; let result; if(mode==='/good'){result={page:{url:input.url,title:'Page',captured_at:new Date().toISOString(),markdown:'fact'}};}else if(mode==='/bad'){process.stdout.write('{');process.exit(0);}else if(mode==='/missing'){result={page:{}};}else {result={error:{code:'http_error',status:mode==='/retry'?503:401,retryable:mode==='/retry'}};} await new Promise((resolve,reject)=>process.stdout.write(JSON.stringify(result),error=>error?reject(error):resolve()));`
+	script := `const input=JSON.parse(await Bun.stdin.text()); const mode=new URL(input.url).pathname; let result; if(['/good','/rss','/html-large','/format'].includes(mode)){result={page:{url:input.url,title:'Page',captured_at:new Date().toISOString(),markdown:mode==='/good'?'fact':'文'.repeat(25000),format:mode==='/rss'?'rss':mode==='/format'?'invalid':'html'}};}else if(mode==='/bad'){process.stdout.write('{');process.exit(0);}else if(mode==='/missing'){result={page:{}};}else {result={error:{code:'http_error',status:mode==='/retry'?503:401,retryable:mode==='/retry'}};} await new Promise((resolve,reject)=>process.stdout.write(JSON.stringify(result),error=>error?reject(error):resolve()));`
 	if err := os.WriteFile(filepath.Join(dir, "crawl.ts"), []byte(script), 0600); err != nil {
 		t.Fatal(err)
 	}
-	source := NewBrowserCrawlSource(root)
+	source := NewBrowserCrawlSource(root, 3)
 	profile := config.CrawlProfile{Origin: "https://docs.example", Cookie: "session=test", ReadySelector: "main"}
-	for _, mode := range []string{"good", "auth", "bad", "missing", "retry"} {
-		page, err := source.Capture(context.Background(), profile, profile.Origin+"/"+mode)
-		if mode == "good" {
-			if err != nil || page.Markdown != "fact" {
+	for _, mode := range []string{"good", "rss", "html-large", "format", "auth", "bad", "missing", "retry"} {
+		ctx, recorder := telemetry.New(context.Background(), "browser-test", "owner", "task", time.Now(), config.ConcurrencyConfig{Capture: 3})
+		page, err := source.Capture(ctx, profile, profile.Origin+"/"+mode)
+		if mode == "retry" && (recorder.Snapshot("failed").Counters["browser_retries"] != 2 || recorder.Snapshot("failed").Timings["browser_attempt"].Count != 3 || recorder.Snapshot("failed").Timings["browser_backoff"].Count != 2) {
+			t.Fatal(recorder.Snapshot("failed"))
+		}
+		if mode == "good" || mode == "rss" {
+			if err != nil || (mode == "good" && page.Markdown != "fact") || (mode == "rss" && len([]rune(page.Markdown)) != 25000) {
 				t.Fatal(page, err)
 			}
 		} else if err == nil {

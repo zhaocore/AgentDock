@@ -27,7 +27,7 @@ export function isAllowedDutybotRoute(
       /^crawl-profiles$/,
       /^crawl-tasks$/,
       new RegExp(`^crawl-tasks/${uuid}(?:/runs)?$`),
-      new RegExp(`^crawl-runs/${uuid}/report$`),
+      new RegExp(`^crawl-runs/${uuid}/(?:report|markdown)$`),
       /^confluence-library(?:\/archive|\/archive-check)?$/,
       /^confluence-library\/spaces\/[a-f0-9]{64}\/pages\/[0-9]+\/file$/,
       /^confluence-tasks$/,

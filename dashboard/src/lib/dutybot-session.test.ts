@@ -29,6 +29,15 @@ describe('dutybotGo session boundaries', () => {
     expect(isAllowedDutybotRoute('GET', ['crawl-runs', 'bad', 'report'])).toBe(
       false,
     );
+    expect(isAllowedDutybotRoute('GET', ['crawl-runs', id, 'markdown'])).toBe(
+      true,
+    );
+    expect(isAllowedDutybotRoute('POST', ['crawl-runs', id, 'markdown'])).toBe(
+      false,
+    );
+    expect(
+      isAllowedDutybotRoute('GET', ['crawl-runs', 'bad', 'markdown']),
+    ).toBe(false);
     // 仓库：列表 / 详情 / 同步 / 删除
     expect(isAllowedDutybotRoute('GET', ['repositories'])).toBe(true);
     expect(isAllowedDutybotRoute('GET', ['repositories', id])).toBe(true);
