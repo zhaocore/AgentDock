@@ -10,7 +10,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/hibiken/asynq"
 
-	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/agentdock/internal/domain"
 )
 
 func testTime() time.Time { return time.Date(2026, 10, 16, 10, 0, 0, 0, time.UTC) }

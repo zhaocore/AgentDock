@@ -2,9 +2,9 @@ services:
   mysql:
     image: mysql:8.4
     environment:
-      MYSQL_DATABASE: ${MYSQL_DB:-dutybot}
-      MYSQL_USER: ${MYSQL_USER:-dutybot}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-dutybot}
+      MYSQL_DATABASE: ${MYSQL_DB:-agentdock}
+      MYSQL_USER: ${MYSQL_USER:-agentdock}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-agentdock}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
     ports:
       - "${MYSQL_PORT:-3306}:3306"

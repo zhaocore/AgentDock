@@ -77,13 +77,13 @@ export function Repositories() {
   return (
     <>
       <div className="gg-toolbar">
-        <h1>{t('dutybot.repositories')}</h1>
+        <h1>{t('agentdock.repositories')}</h1>
         <div className="flex gap-2">
           <Button
             size="icon"
             variant="outline"
-            title={t('dutybot.refresh')}
-            aria-label={t('dutybot.refresh')}
+            title={t('agentdock.refresh')}
+            aria-label={t('agentdock.refresh')}
             data-testid="repo-refresh"
             onClick={resource.refresh}
           >
@@ -94,7 +94,7 @@ export function Repositories() {
             onClick={() => setCreateOpen(true)}
           >
             <Plus className="size-4 mr-2" />
-            {t('dutybot.repoCreate')}
+            {t('agentdock.repoCreate')}
           </Button>
         </div>
       </div>
@@ -104,7 +104,7 @@ export function Repositories() {
           className="py-10 text-center text-muted-foreground"
           data-testid="empty-state"
         >
-          {t('dutybot.empty')}
+          {t('agentdock.empty')}
         </p>
       )}
       {view.data && view.data.data.length > 0 && (
@@ -112,12 +112,12 @@ export function Repositories() {
           <table className="gg-table" data-testid="repo-table">
             <thead>
               <tr>
-                <th>{t('dutybot.name')}</th>
-                <th>{t('dutybot.gitUrl')}</th>
-                <th>{t('dutybot.repoType')}</th>
-                <th>{t('dutybot.repoBranch')}</th>
-                <th>{t('dutybot.status')}</th>
-                <th>{t('dutybot.repoLocalPath')}</th>
+                <th>{t('agentdock.name')}</th>
+                <th>{t('agentdock.gitUrl')}</th>
+                <th>{t('agentdock.repoType')}</th>
+                <th>{t('agentdock.repoBranch')}</th>
+                <th>{t('agentdock.status')}</th>
+                <th>{t('agentdock.repoLocalPath')}</th>
                 <th />
               </tr>
             </thead>
@@ -128,7 +128,7 @@ export function Repositories() {
                   <td className="font-mono text-xs">{repo.git_url}</td>
                   <td>
                     {t(
-                      `dutybot.repoType${repo.repo_type === 'rn' ? 'RN' : repo.repo_type === 'frontend' ? 'Frontend' : 'Backend'}`,
+                      `agentdock.repoType${repo.repo_type === 'rn' ? 'RN' : repo.repo_type === 'frontend' ? 'Frontend' : 'Backend'}`,
                     )}
                   </td>
                   <td>
@@ -159,7 +159,7 @@ export function Repositories() {
                       onClick={() => void sync(repo.id)}
                     >
                       <RotateCw className="size-3 mr-1" />
-                      {t('dutybot.repoSync')}
+                      {t('agentdock.repoSync')}
                     </Button>{' '}
                     <DeleteButton
                       testId={`repo-delete-${repo.id}`}
@@ -187,13 +187,13 @@ export function Repositories() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Boxes className="size-5" />
-              {t('dutybot.repoCreate')}
+              {t('agentdock.repoCreate')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Input
               data-testid="repo-form-name"
-              placeholder={t('dutybot.name')}
+              placeholder={t('agentdock.name')}
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
@@ -206,17 +206,19 @@ export function Repositories() {
             <select
               data-testid="repo-form-type"
               className="gg-select"
-              aria-label={t('dutybot.repoType')}
+              aria-label={t('agentdock.repoType')}
               value={form.repo_type}
               onChange={(e) => setForm({ ...form, repo_type: e.target.value })}
             >
-              <option value="frontend">{t('dutybot.repoTypeFrontend')}</option>
-              <option value="backend">{t('dutybot.repoTypeBackend')}</option>
-              <option value="rn">{t('dutybot.repoTypeRN')}</option>
+              <option value="frontend">
+                {t('agentdock.repoTypeFrontend')}
+              </option>
+              <option value="backend">{t('agentdock.repoTypeBackend')}</option>
+              <option value="rn">{t('agentdock.repoTypeRN')}</option>
             </select>
             <Input
               data-testid="repo-form-branch"
-              placeholder={t('dutybot.repoBranch')}
+              placeholder={t('agentdock.repoBranch')}
               value={form.branch}
               onChange={(e) => setForm({ ...form, branch: e.target.value })}
             />
@@ -227,14 +229,14 @@ export function Repositories() {
             )}
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setCreateOpen(false)}>
-                {t('dutybot.cancel')}
+                {t('agentdock.cancel')}
               </Button>
               <Button
                 data-testid="repo-form-submit"
                 disabled={busy || !form.name || !form.git_url}
                 onClick={() => void create()}
               >
-                {t('dutybot.repoCreate')}
+                {t('agentdock.repoCreate')}
               </Button>
             </div>
           </div>

@@ -13,9 +13,9 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gin-gonic/gin"
-	"github.com/zhaocore/dutybotgo/internal/config"
-	"github.com/zhaocore/dutybotgo/internal/domain"
-	"github.com/zhaocore/dutybotgo/internal/worker"
+	"github.com/zhaocore/agentdock/internal/config"
+	"github.com/zhaocore/agentdock/internal/domain"
+	"github.com/zhaocore/agentdock/internal/worker"
 )
 
 // 导出失败必须在服务端留下可关联的原因，不记录请求凭据。

@@ -1,4 +1,4 @@
-import { ApiKeys } from '@/features/dutybot/api-keys';
+import { ApiKeys } from '@/features/agentdock/api-keys';
 
 export default function Page() {
   return <ApiKeys />;

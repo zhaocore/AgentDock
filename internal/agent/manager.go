@@ -9,8 +9,8 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/zhaocore/dutybotgo/internal/domain"
-	"github.com/zhaocore/dutybotgo/internal/store/mysql"
+	"github.com/zhaocore/agentdock/internal/domain"
+	"github.com/zhaocore/agentdock/internal/store/mysql"
 )
 
 // Manager 管理进程内运行的 Agent 实例 goroutine。

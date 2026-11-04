@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/agentdock/internal/domain"
 )
 
 // packageReport 仅输出归档位置和计数，不输出正文。

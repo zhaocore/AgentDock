@@ -120,7 +120,7 @@ export function ConfluenceLibrary() {
   );
   const currentPage = space?.pages.find((item) => item.id === pageID);
   const exportURL = space
-    ? `/api/dutybot/confluence-library/archive?space_id=${space.id}${directory ? `&path=${encodeURIComponent(directory)}` : ''}`
+    ? `/api/agentdock/confluence-library/archive?space_id=${space.id}${directory ? `&path=${encodeURIComponent(directory)}` : ''}`
     : '';
   const download = async (url: string) => {
     if (exporting) return;
@@ -128,7 +128,7 @@ export function ConfluenceLibrary() {
     setExporting(true);
     try {
       await api.get(
-        url.replace('/api/dutybot', '').replace('/archive', '/archive-check'),
+        url.replace('/api/agentdock', '').replace('/archive', '/archive-check'),
       );
       const link = document.createElement('a');
       link.href = url;
@@ -147,7 +147,7 @@ export function ConfluenceLibrary() {
     setReport(null);
     setNotice('');
     if (file.size > 10 * 1024 * 1024 * 1024) {
-      setError(t('dutybot.libraryZIPLimit'));
+      setError(t('agentdock.libraryZIPLimit'));
       return;
     }
     setBusy(true);
@@ -169,7 +169,7 @@ export function ConfluenceLibrary() {
     try {
       await api.post(`/confluence-library/imports/${report.id}/apply`);
       setReport(null);
-      setNotice(t('dutybot.libraryMerged'));
+      setNotice(t('agentdock.libraryMerged'));
       library.refresh();
       setPageID('');
     } catch (cause) {
@@ -181,28 +181,28 @@ export function ConfluenceLibrary() {
   return (
     <>
       <div className="gg-toolbar">
-        <h1>{t('dutybot.confluenceLibrary')}</h1>
+        <h1>{t('agentdock.confluenceLibrary')}</h1>
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             data-testid="library-refresh"
             onClick={library.refresh}
           >
-            {t('dutybot.refresh')}
+            {t('agentdock.refresh')}
           </Button>
           {library.data && library.data.spaces.length > 0 && (
             <Button variant="outline" asChild>
               <a
                 download="confluence-library.zip"
                 data-testid="library-export-all"
-                href="/api/dutybot/confluence-library/archive"
+                href="/api/agentdock/confluence-library/archive"
                 aria-disabled={exporting}
                 onClick={(event) => {
                   event.preventDefault();
-                  void download('/api/dutybot/confluence-library/archive');
+                  void download('/api/agentdock/confluence-library/archive');
                 }}
               >
-                {t('dutybot.libraryExportAll')}
+                {t('agentdock.libraryExportAll')}
               </a>
             </Button>
           )}
@@ -216,14 +216,16 @@ export function ConfluenceLibrary() {
               }
             }}
           >
-            {busy ? t('dutybot.libraryChecking') : t('dutybot.libraryImport')}
+            {busy
+              ? t('agentdock.libraryChecking')
+              : t('agentdock.libraryImport')}
           </Button>
           <input
             ref={fileInput}
             type="file"
             accept=".zip,application/zip"
             data-testid="library-import-file"
-            aria-label={t('dutybot.libraryImport')}
+            aria-label={t('agentdock.libraryImport')}
             className="sr-only"
             onChange={(event) => {
               const file = event.target.files?.[0];
@@ -233,7 +235,7 @@ export function ConfluenceLibrary() {
         </div>
       </div>
       <p className="text-sm text-muted-foreground mb-4">
-        {t('dutybot.libraryPolicy')}
+        {t('agentdock.libraryPolicy')}
       </p>
       <Notice
         error={error || library.error || markdown.error}
@@ -253,27 +255,27 @@ export function ConfluenceLibrary() {
           className="border rounded p-4 mb-4"
           data-testid="library-import-report"
         >
-          <h2 className="font-semibold">{t('dutybot.libraryPreview')}</h2>
+          <h2 className="font-semibold">{t('agentdock.libraryPreview')}</h2>
           <p data-testid="library-import-counts" className="my-2">
-            {t('dutybot.libraryAdded')}: {report.added} ·{' '}
-            {t('dutybot.libraryUpdated')}: {report.updated} ·{' '}
-            {t('dutybot.libraryKept')}: {report.kept} ·{' '}
-            {t('dutybot.libraryConflicts')}: {report.conflicts}
+            {t('agentdock.libraryAdded')}: {report.added} ·{' '}
+            {t('agentdock.libraryUpdated')}: {report.updated} ·{' '}
+            {t('agentdock.libraryKept')}: {report.kept} ·{' '}
+            {t('agentdock.libraryConflicts')}: {report.conflicts}
           </p>
           <div className="max-h-64 overflow-auto gg-table-wrap mb-3">
             <table className="gg-table">
               <thead>
                 <tr>
-                  <th>{t('dutybot.libraryDirectory')}</th>
-                  <th>{t('dutybot.status')}</th>
-                  <th>{t('dutybot.libraryReason')}</th>
+                  <th>{t('agentdock.libraryDirectory')}</th>
+                  <th>{t('agentdock.status')}</th>
+                  <th>{t('agentdock.libraryReason')}</th>
                 </tr>
               </thead>
               <tbody>
                 {report.items.map((item) => (
                   <tr key={`${item.space_id}-${item.page_id}`}>
                     <td>{item.path}</td>
-                    <td>{t(`dutybot.libraryAction_${item.action}`)}</td>
+                    <td>{t(`agentdock.libraryAction_${item.action}`)}</td>
                     <td>{item.reason}</td>
                   </tr>
                 ))}
@@ -286,7 +288,7 @@ export function ConfluenceLibrary() {
               disabled={busy || report.added + report.updated === 0}
               onClick={() => void apply()}
             >
-              {t('dutybot.libraryConfirm')}
+              {t('agentdock.libraryConfirm')}
             </Button>
             <Button
               data-testid="library-import-cancel"
@@ -294,14 +296,14 @@ export function ConfluenceLibrary() {
               disabled={busy}
               onClick={() => setReport(null)}
             >
-              {t('dutybot.cancel')}
+              {t('agentdock.cancel')}
             </Button>
           </div>
         </section>
       )}
       {library.data?.spaces.length === 0 && (
         <p className="py-8 text-muted-foreground" data-testid="library-empty">
-          {t('dutybot.libraryEmpty')}
+          {t('agentdock.libraryEmpty')}
         </p>
       )}
       <div className="grid gap-3 md:grid-cols-3 mb-4">
@@ -322,7 +324,7 @@ export function ConfluenceLibrary() {
               {item.base_url}
             </p>
             <p className="text-sm mt-2">
-              {item.pages.length} {t('dutybot.libraryPages')}
+              {item.pages.length} {t('agentdock.libraryPages')}
             </p>
           </button>
         ))}
@@ -351,7 +353,7 @@ export function ConfluenceLibrary() {
                   void download(exportURL);
                 }}
               >
-                {t('dutybot.libraryExportDirectory')}
+                {t('agentdock.libraryExportDirectory')}
               </a>
             </Button>
           </div>
@@ -378,7 +380,7 @@ export function ConfluenceLibrary() {
             >
               {currentPage && (
                 <p className="text-xs text-muted-foreground">
-                  {currentPage.path} · {t('dutybot.libraryModified')}:{' '}
+                  {currentPage.path} · {t('agentdock.libraryModified')}:{' '}
                   {currentPage.modified_at}
                 </p>
               )}
@@ -388,7 +390,7 @@ export function ConfluenceLibrary() {
                   remarkPlugins={[remarkGfm]}
                   urlTransform={(value, key) => {
                     if (value.startsWith('./assets/'))
-                      return `/api/dutybot${fileBase}?name=${encodeURIComponent(value.slice(2))}`;
+                      return `/api/agentdock${fileBase}?name=${encodeURIComponent(value.slice(2))}`;
                     if (key === 'src') return '';
                     return /^(https?:\/\/|#)/.test(value) ? value : '';
                   }}

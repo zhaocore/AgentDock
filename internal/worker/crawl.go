@@ -14,11 +14,11 @@ import (
 	"time"
 
 	"github.com/hibiken/asynq"
-	"github.com/zhaocore/dutybotgo/internal/config"
-	"github.com/zhaocore/dutybotgo/internal/domain"
-	"github.com/zhaocore/dutybotgo/internal/store/mysql"
-	"github.com/zhaocore/dutybotgo/internal/store/rustfs"
-	"github.com/zhaocore/dutybotgo/internal/telemetry"
+	"github.com/zhaocore/agentdock/internal/config"
+	"github.com/zhaocore/agentdock/internal/domain"
+	"github.com/zhaocore/agentdock/internal/store/mysql"
+	"github.com/zhaocore/agentdock/internal/store/rustfs"
+	"github.com/zhaocore/agentdock/internal/telemetry"
 )
 
 const TypeCrawlRun = "crawl:run"

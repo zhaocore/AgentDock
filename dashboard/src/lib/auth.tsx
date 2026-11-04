@@ -10,7 +10,7 @@ import {
 import axios from 'axios';
 import { api } from '@/utils/api';
 import { getErrorMessage } from '@/lib/error-message';
-import { userSchema, type AuthUser } from '@/features/dutybot/schemas';
+import { userSchema, type AuthUser } from '@/features/agentdock/schemas';
 
 interface AuthContextValue {
   user: AuthUser | null;

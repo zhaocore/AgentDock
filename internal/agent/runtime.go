@@ -10,7 +10,7 @@ import (
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/llms/openai"
 
-	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/agentdock/internal/domain"
 )
 
 // Executor 是一次构建产物：可复用的 agent 执行器。

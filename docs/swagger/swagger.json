@@ -2,9 +2,9 @@
     "swagger": "2.0",
     "info": {
         "description": "Agent 管理与仓库托管服务",
-        "title": "dutybotGo API",
+        "title": "AgentDock API",
         "contact": {
-            "name": "dutybotGo Team"
+            "name": "AgentDock Team"
         },
         "version": "0.1.0"
     },

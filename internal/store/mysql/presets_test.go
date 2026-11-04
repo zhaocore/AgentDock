@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/agentdock/internal/domain"
 )
 
 func TestSyncPresetsAtomicUpdateAndRemoval(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/agentdock/internal/domain"
 )
 
 // ListConfluenceSources 文件库汇集全部已发布页面，不受管理页最近50任务限制。

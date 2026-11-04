@@ -4,13 +4,13 @@ import { z } from 'zod';
 import { getServerApiUrl } from '@/lib/server-api-url';
 import {
   boundedBody,
-  isAllowedDutybotRoute,
+  isAllowedAgentDockRoute,
   isSameOrigin,
   jwtExpiry,
   MAX_UPLOAD_BYTES,
   CONFLUENCE_UPLOAD_BYTES,
   SESSION_COOKIE,
-} from '@/lib/dutybot-session';
+} from '@/lib/agentdock-session';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -21,7 +21,7 @@ async function proxy(
   context: { params: Promise<{ path: string[] }> },
 ): Promise<Response> {
   const { path } = await context.params;
-  if (!isAllowedDutybotRoute(request.method, path))
+  if (!isAllowedAgentDockRoute(request.method, path))
     return NextResponse.json({ error: 'Route not allowed' }, { status: 404 });
   if (request.method !== 'GET' && !isSameOrigin(request))
     return NextResponse.json(
@@ -77,7 +77,7 @@ async function proxy(
       {
         error: oversized
           ? 'Request body exceeds size limit'
-          : 'dutybotGo API connection failed',
+          : 'AgentDock API connection failed',
       },
       { status: oversized ? 413 : 502 },
     );
@@ -124,7 +124,7 @@ async function proxy(
       );
     } catch {
       return NextResponse.json(
-        { error: 'dutybotGo returned an invalid authentication response' },
+        { error: 'AgentDock returned an invalid authentication response' },
         { status: 502 },
       );
     }

@@ -7,8 +7,8 @@ test('localhost registration and logout keep Origin protection', async ({
   baseURL,
 }) => {
   test.skip(
-    process.env.DUTYBOT_LIVE_E2E !== '1',
-    'Requires real dutybotGo API',
+    process.env.AGENTDOCK_LIVE_E2E !== '1',
+    'Requires real AgentDock API',
   );
   test.setTimeout(120_000);
   if (!baseURL) throw new Error('Playwright baseURL is required');
@@ -17,22 +17,22 @@ test('localhost registration and logout keep Origin protection', async ({
   await page.goto(registerURL.toString());
   const email = `loopback-${Date.now()}@example.com`;
   await page.getByTestId('auth-email').fill(email);
-  await page.getByTestId('auth-password').fill('dutybot-e2e-password-2026');
+  await page.getByTestId('auth-password').fill('agentdock-e2e-password-2026');
   const registered = page.waitForResponse(
     (response) =>
-      response.url().endsWith('/api/dutybot/auth/register') &&
+      response.url().endsWith('/api/agentdock/auth/register') &&
       response.request().method() === 'POST',
   );
   await page.getByTestId('auth-submit').click();
   expect((await registered).status()).toBe(201);
   await expect(page.getByTestId('agent-shared-description')).toBeVisible();
   const session = (await page.context().cookies()).find(
-    (cookie) => cookie.name === 'dutybot_session',
+    (cookie) => cookie.name === 'agentdock_session',
   );
   expect(session?.httpOnly).toBe(true);
   await page.reload();
   await expect(page.getByTestId('agent-shared-description')).toBeVisible();
-  const apiURL = new URL('/api/dutybot/auth/register', registerURL);
+  const apiURL = new URL('/api/agentdock/auth/register', registerURL);
   for (const origin of [
     'http://evil.test',
     `http://localhost:${Number(registerURL.port) + 1}`,
@@ -56,7 +56,7 @@ test('localhost registration and logout keep Origin protection', async ({
   await expect(page.getByTestId('login-title')).toBeVisible();
   expect(
     (await page.context().cookies()).some(
-      (cookie) => cookie.name === 'dutybot_session',
+      (cookie) => cookie.name === 'agentdock_session',
     ),
   ).toBe(false);
 });

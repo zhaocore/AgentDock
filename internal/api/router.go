@@ -9,13 +9,13 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	_ "github.com/zhaocore/dutybotgo/docs/swagger"
-	"github.com/zhaocore/dutybotgo/internal/agent"
-	"github.com/zhaocore/dutybotgo/internal/api/middleware"
-	"github.com/zhaocore/dutybotgo/internal/config"
-	"github.com/zhaocore/dutybotgo/internal/domain"
-	"github.com/zhaocore/dutybotgo/internal/store/rustfs"
-	"github.com/zhaocore/dutybotgo/internal/worker"
+	_ "github.com/zhaocore/agentdock/docs/swagger"
+	"github.com/zhaocore/agentdock/internal/agent"
+	"github.com/zhaocore/agentdock/internal/api/middleware"
+	"github.com/zhaocore/agentdock/internal/config"
+	"github.com/zhaocore/agentdock/internal/domain"
+	"github.com/zhaocore/agentdock/internal/store/rustfs"
+	"github.com/zhaocore/agentdock/internal/worker"
 )
 
 // InstanceManager Agent 实例管理器接口（*agent.Manager 实现）。

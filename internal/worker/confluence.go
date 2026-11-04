@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/hibiken/asynq"
-	"github.com/zhaocore/dutybotgo/internal/domain"
-	"github.com/zhaocore/dutybotgo/internal/store/mysql"
-	"github.com/zhaocore/dutybotgo/internal/store/rustfs"
+	"github.com/zhaocore/agentdock/internal/domain"
+	"github.com/zhaocore/agentdock/internal/store/mysql"
+	"github.com/zhaocore/agentdock/internal/store/rustfs"
 )
 
 // TypeConfluenceExport 两阶段导出任务，不在队列中存凭据。

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SESSION_COOKIE } from '@/lib/dutybot-session';
+import { SESSION_COOKIE } from '@/lib/agentdock-session';
 
 export function middleware(request: NextRequest): NextResponse {
   const path = request.nextUrl.pathname;

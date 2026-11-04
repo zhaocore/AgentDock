@@ -1,4 +1,4 @@
-import { Repositories } from '@/features/dutybot/repositories';
+import { Repositories } from '@/features/agentdock/repositories';
 
 export default function Page() {
   return <Repositories />;

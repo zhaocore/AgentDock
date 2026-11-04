@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zhaocore/dutybotgo/internal/domain"
-	"github.com/zhaocore/dutybotgo/internal/telemetry"
+	"github.com/zhaocore/agentdock/internal/domain"
+	"github.com/zhaocore/agentdock/internal/telemetry"
 )
 
 // Reporter 限制后台报告的共享模型并发，不改变交互实例生命周期。

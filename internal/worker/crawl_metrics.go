@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/zhaocore/dutybotgo/internal/domain"
-	"github.com/zhaocore/dutybotgo/internal/telemetry"
+	"github.com/zhaocore/agentdock/internal/domain"
+	"github.com/zhaocore/agentdock/internal/telemetry"
 )
 
 // saveMetrics 覆盖本轮快照，各轮对象独立保留；不写正文与凭据。

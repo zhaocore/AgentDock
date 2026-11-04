@@ -9,7 +9,7 @@ test('starts and stops export, polls progress and opens saved Markdown', async (
   if (!baseURL) throw new Error('baseURL required');
   await context.addCookies([
     {
-      name: 'dutybot_session',
+      name: 'agentdock_session',
       value: 'ui-test-session',
       url: baseURL,
       httpOnly: true,
@@ -33,7 +33,7 @@ test('starts and stops export, polls progress and opens saved Markdown', async (
     created_at: '2026-10-22T00:00:00Z',
     updated_at: '2026-10-22T00:00:00Z',
   });
-  await page.route('**/api/dutybot/**', async (route) => {
+  await page.route('**/api/agentdock/**', async (route) => {
     const req = route.request();
     const path = new URL(req.url()).pathname;
     if (path.endsWith('/auth/me'))
@@ -44,7 +44,7 @@ test('starts and stops export, polls progress and opens saved Markdown', async (
           created_at: '2026-10-22T00:00:00Z',
         },
       });
-    if (path === '/api/dutybot/confluence-tasks') {
+    if (path === '/api/agentdock/confluence-tasks') {
       if (req.method() === 'POST') {
         expect(req.postDataJSON()).toEqual({ url });
         started = true;

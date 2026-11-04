@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zhaocore/dutybotgo/internal/config"
-	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/agentdock/internal/config"
+	"github.com/zhaocore/agentdock/internal/domain"
 )
 
 // ExportSource 将远程读取与无磁盘转换限制在 Worker 接缝。

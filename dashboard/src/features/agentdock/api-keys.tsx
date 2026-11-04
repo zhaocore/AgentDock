@@ -43,13 +43,13 @@ export function ApiKeys() {
   return (
     <>
       <div className="gg-toolbar">
-        <h1>{t('dutybot.apiKeys')}</h1>
+        <h1>{t('agentdock.apiKeys')}</h1>
         <div className="flex gap-2">
           <Button
             size="icon"
             variant="outline"
-            title={t('dutybot.refresh')}
-            aria-label={t('dutybot.refresh')}
+            title={t('agentdock.refresh')}
+            aria-label={t('agentdock.refresh')}
             onClick={resource.refresh}
           >
             <RefreshCw className="size-4" />
@@ -59,7 +59,7 @@ export function ApiKeys() {
             onClick={() => setCreateOpen(true)}
           >
             <Plus className="size-4 mr-2" />
-            {t('dutybot.apiTokenCreate')}
+            {t('agentdock.apiTokenCreate')}
           </Button>
         </div>
       </div>
@@ -69,11 +69,11 @@ export function ApiKeys() {
           <table className="gg-table" data-testid="apikey-table">
             <thead>
               <tr>
-                <th>{t('dutybot.apiTokenLabel')}</th>
-                <th>{t('dutybot.apiTokenKey')}</th>
-                <th>{t('dutybot.apiTokenScope')}</th>
-                <th>{t('dutybot.apiTokenLastUsed')}</th>
-                <th>{t('dutybot.apiTokenExpires')}</th>
+                <th>{t('agentdock.apiTokenLabel')}</th>
+                <th>{t('agentdock.apiTokenKey')}</th>
+                <th>{t('agentdock.apiTokenScope')}</th>
+                <th>{t('agentdock.apiTokenLastUsed')}</th>
+                <th>{t('agentdock.apiTokenExpires')}</th>
                 <th />
               </tr>
             </thead>
@@ -89,7 +89,7 @@ export function ApiKeys() {
                       {token.scopes.map((scope) =>
                         scope.kb_id === SCOPE_ALL ? (
                           <span key={scope.kb_id}>
-                            {t('dutybot.apiTokenScopeAll')}
+                            {t('agentdock.apiTokenScopeAll')}
                           </span>
                         ) : (
                           <span key={scope.kb_id} className="font-mono text-xs">
@@ -99,9 +99,10 @@ export function ApiKeys() {
                       )}
                       {' · '}
                       {token.scopes.some((scope) => scope.can_write)
-                        ? `${t('dutybot.apiTokenRead')} + ${t('dutybot.apiTokenWrite')}`
-                        : t('dutybot.apiTokenRead')}
-                      {token.revoked_at && ` · ${t('dutybot.apiTokenRevoked')}`}
+                        ? `${t('agentdock.apiTokenRead')} + ${t('agentdock.apiTokenWrite')}`
+                        : t('agentdock.apiTokenRead')}
+                      {token.revoked_at &&
+                        ` · ${t('agentdock.apiTokenRevoked')}`}
                     </td>
                     <td className="whitespace-nowrap text-muted-foreground">
                       {token.last_used_at
@@ -111,7 +112,7 @@ export function ApiKeys() {
                     <td className="whitespace-nowrap text-muted-foreground">
                       {token.expires_at
                         ? new Date(token.expires_at).toLocaleString(locale)
-                        : t('dutybot.apiTokenExpiresNever')}
+                        : t('agentdock.apiTokenExpiresNever')}
                     </td>
                     <td>
                       <div className="flex gap-2">
@@ -137,7 +138,7 @@ export function ApiKeys() {
               className="py-10 text-center text-muted-foreground"
               data-testid="empty-state"
             >
-              {t('dutybot.apiTokenEmpty')}
+              {t('agentdock.apiTokenEmpty')}
             </p>
           )}
         </div>
@@ -147,7 +148,7 @@ export function ApiKeys() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('dutybot.apiTokenCreate')}</DialogTitle>
+            <DialogTitle>{t('agentdock.apiTokenCreate')}</DialogTitle>
           </DialogHeader>
           <form
             className="grid gap-4"
@@ -177,17 +178,17 @@ export function ApiKeys() {
             }}
           >
             <label className="gg-field">
-              {t('dutybot.apiTokenLabel')}
+              {t('agentdock.apiTokenLabel')}
               <Input
                 data-testid="apikey-label-input"
                 name="label"
                 required
                 maxLength={200}
-                placeholder={t('dutybot.apiTokenLabelPlaceholder')}
+                placeholder={t('agentdock.apiTokenLabelPlaceholder')}
               />
             </label>
             <p className="gg-field text-sm text-muted-foreground">
-              {t('dutybot.apiTokenScope')}: {t('dutybot.apiTokenScopeAll')}
+              {t('agentdock.apiTokenScope')}: {t('agentdock.apiTokenScopeAll')}
             </p>
             <label className="gg-field flex items-center gap-2">
               <input
@@ -196,10 +197,10 @@ export function ApiKeys() {
                 name="can_write"
                 className="size-4"
               />
-              {t('dutybot.apiTokenWrite')}
+              {t('agentdock.apiTokenWrite')}
             </label>
             <label className="gg-field">
-              {t('dutybot.apiTokenExpires')}
+              {t('agentdock.apiTokenExpires')}
               <Input
                 data-testid="apikey-expires"
                 name="expires"
@@ -209,7 +210,7 @@ export function ApiKeys() {
             <Notice error={error} loading={false} />
             <Button data-testid="apikey-create-submit" disabled={busy}>
               <KeyRound className="size-4 mr-2" />
-              {t('dutybot.apiTokenCreate')}
+              {t('agentdock.apiTokenCreate')}
             </Button>
           </form>
         </DialogContent>
@@ -219,10 +220,10 @@ export function ApiKeys() {
       <Dialog open={created !== null} onOpenChange={() => setCreated(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('dutybot.apiKeys')}</DialogTitle>
+            <DialogTitle>{t('agentdock.apiKeys')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            {t('dutybot.apiTokenSaveWarning')}
+            {t('agentdock.apiTokenSaveWarning')}
           </p>
           <div className="flex items-center gap-2">
             <code
@@ -235,8 +236,8 @@ export function ApiKeys() {
               size="icon"
               variant="outline"
               data-testid="apikey-copy"
-              title={t('dutybot.apiTokenCopy')}
-              aria-label={t('dutybot.apiTokenCopy')}
+              title={t('agentdock.apiTokenCopy')}
+              aria-label={t('agentdock.apiTokenCopy')}
               onClick={() => void copyToken()}
             >
               <ClipboardCopy className="size-4" />
@@ -247,11 +248,11 @@ export function ApiKeys() {
               className="text-sm text-muted-foreground"
               data-testid="apikey-copied"
             >
-              {t('dutybot.apiTokenCopied')}
+              {t('agentdock.apiTokenCopied')}
             </p>
           )}
           <Button data-testid="apikey-done" onClick={() => setCreated(null)}>
-            {t('dutybot.close')}
+            {t('agentdock.close')}
           </Button>
         </DialogContent>
       </Dialog>

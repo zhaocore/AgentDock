@@ -2,7 +2,7 @@
 
 # 编译 HTTP 服务二进制
 build:
-	go build -o bin/dutybot-server ./cmd/server
+	go build -o bin/agentdock-server ./cmd/server
 
 # 直接运行
 run:
@@ -45,7 +45,7 @@ lint:
 
 # Docker 镜像构建
 docker-build:
-	docker build -t dutybot:latest .
+	docker build -t agentdock:latest .
 
 # 全栈启动（生产）
 docker-up:

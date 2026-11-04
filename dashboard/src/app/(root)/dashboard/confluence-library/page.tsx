@@ -1,4 +1,4 @@
-import { ConfluenceLibrary } from '@/features/dutybot/confluence-library';
+import { ConfluenceLibrary } from '@/features/agentdock/confluence-library';
 
 export default function ConfluenceLibraryPage() {
   return <ConfluenceLibrary />;

@@ -10,7 +10,7 @@ const docTemplate = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "contact": {
-            "name": "dutybotGo Team"
+            "name": "AgentDock Team"
         },
         "version": "{{.Version}}"
     },
@@ -2770,7 +2770,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:8080",
 	BasePath:         "/v1",
 	Schemes:          []string{},
-	Title:            "dutybotGo API",
+	Title:            "AgentDock API",
 	Description:      "Agent 管理与仓库托管服务",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useTranslation } from '@/i18n/core';
-import { CredentialsForm } from '@/features/dutybot/credentials-form';
+import { CredentialsForm } from '@/features/agentdock/credentials-form';
 
 export default function LoginForm() {
   const { login } = useAuth();
@@ -16,13 +16,13 @@ export default function LoginForm() {
       : '/dashboard/agents';
   return (
     <CredentialsForm
-      title={t('dutybot.signIn')}
-      action={t('dutybot.login')}
+      title={t('agentdock.signIn')}
+      action={t('agentdock.login')}
       submit={login}
       destination={destination}
     >
       <Link className="gg-link" data-testid="register-link" href="/register">
-        {t('dutybot.register')}
+        {t('agentdock.register')}
       </Link>
     </CredentialsForm>
   );

@@ -1,4 +1,4 @@
-# AGENTS.md — dutybotGo 编码代理操作手册
+# AGENTS.md — AgentDock 编码代理操作手册
 
 本文件是编码代理在本仓库工作的强制规则。所有规则适用于每一次改动，不分大小；不存在"小改动可跳过"的豁免。
 
@@ -33,9 +33,9 @@
 
 ## 前端规则
 
-`dashboard/` 使用 Next.js；复用组件在 `src/components/ui`，业务模块在 `src/features/dutybot`，API 类型与运行时校验在该模块的 `schemas.ts`。可复用状态、格式化与业务规则不进 DOM 胶水代码。
+`dashboard/` 使用 Next.js；复用组件在 `src/components/ui`，业务模块在 `src/features/agentdock`，API 类型与运行时校验在该模块的 `schemas.ts`。可复用状态、格式化与业务规则不进 DOM 胶水代码。
 
-- 浏览器通过限定路径的 Next 同源代理访问 dutybotGo，JWT 只保存在 HttpOnly Cookie。
+- 浏览器通过限定路径的 Next 同源代理访问 AgentDock，JWT 只保存在 HttpOnly Cookie。
 - 前端不直连数据库，不请求其他项目的 setup、refresh 或管理接口。
 - 前端改动必须带 Vitest 交互测试与 Playwright 覆盖；使用稳定 test-id，禁用可见文本点击。
 - 验证命令：`pnpm --dir dashboard typecheck`、`test`、`build`、`lint`、`test:e2e`。
@@ -66,7 +66,7 @@
   go tool cover -func=coverage.out | tail -1   # 查看 total
   ```
 
-  当前实测基线：**61.6%**（2026-10-16，dutybotGo 改造后重建基线）。改动前记录 total，改动后 total 必须 ≥ 改动前；低了就补测试直到达标。`coverage.out` 为忽略的本地生成物，改动后更新它以反映最新基线。
+  当前实测基线：**61.6%**（2026-10-16，AgentDock 改造后重建基线）。改动前记录 total，改动后 total 必须 ≥ 改动前；低了就补测试直到达标。`coverage.out` 为忽略的本地生成物，改动后更新它以反映最新基线。
 - 集成测试命令：`make test-integration`（`-tags=integration`）；既有测试覆盖真实存储、发布、删除、重建与工作台 SQL。运行前按测试要求显式配置独立测试依赖；跳过用例不等于完成验收。
 - `internal/domain`、`internal/store/mysql`、`internal/agent`、`internal/worker` 已有测试；触碰这些包时同步验证契约。
 - 测试中的外部系统用假实现或 mock（go-sqlmock、httptest），不依赖真实数据库。

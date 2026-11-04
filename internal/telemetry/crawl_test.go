@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zhaocore/dutybotgo/internal/config"
+	"github.com/zhaocore/agentdock/internal/config"
 )
 
 func TestConcurrentMeasurements(t *testing.T) {

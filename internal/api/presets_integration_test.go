@@ -16,18 +16,18 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/zhaocore/dutybotgo/internal/agent"
-	"github.com/zhaocore/dutybotgo/internal/config"
-	"github.com/zhaocore/dutybotgo/internal/domain"
-	"github.com/zhaocore/dutybotgo/internal/store/mysql"
-	"github.com/zhaocore/dutybotgo/internal/worker"
+	"github.com/zhaocore/agentdock/internal/agent"
+	"github.com/zhaocore/agentdock/internal/config"
+	"github.com/zhaocore/agentdock/internal/domain"
+	"github.com/zhaocore/agentdock/internal/store/mysql"
+	"github.com/zhaocore/agentdock/internal/worker"
 )
 
 // TestSharedPresetsMySQL 验证真实迁移、JWT 用户隔离、配置同步与历史保留。
 func TestSharedPresetsMySQL(t *testing.T) {
 	dsn := os.Getenv("MYSQL_AGENT_TEST_DSN")
 	if dsn == "" {
-		t.Skip("MYSQL_AGENT_TEST_DSN must point to an independent empty dutybot_agents_test_* database")
+		t.Skip("MYSQL_AGENT_TEST_DSN must point to an independent empty agentdock_agents_test_* database")
 	}
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
@@ -39,7 +39,7 @@ func TestSharedPresetsMySQL(t *testing.T) {
 	if err := db.QueryRowContext(ctx, `SELECT DATABASE()`).Scan(&databaseName); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.HasPrefix(databaseName, "dutybot_agents_test_") {
+	if !strings.HasPrefix(databaseName, "agentdock_agents_test_") {
 		t.Fatalf("refuse non-test database %q", databaseName)
 	}
 	var tables int

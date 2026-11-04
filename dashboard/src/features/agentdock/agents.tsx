@@ -59,13 +59,13 @@ export function Agents() {
   return (
     <>
       <div className="gg-toolbar">
-        <h1>{t('dutybot.agents')}</h1>
+        <h1>{t('agentdock.agents')}</h1>
         <div className="flex gap-2">
           <Button
             size="icon"
             variant="outline"
-            title={t('dutybot.refresh')}
-            aria-label={t('dutybot.refresh')}
+            title={t('agentdock.refresh')}
+            aria-label={t('agentdock.refresh')}
             data-testid="agent-refresh"
             onClick={resource.refresh}
           >
@@ -77,13 +77,13 @@ export function Agents() {
         className="mb-2 text-sm text-muted-foreground"
         data-testid="agent-shared-description"
       >
-        {t('dutybot.agentSharedDescription')}
+        {t('agentdock.agentSharedDescription')}
       </p>
       <p
         className="mb-4 text-sm text-muted-foreground"
         data-testid="agent-mcp-status"
       >
-        {t('dutybot.agentMcpPending')}
+        {t('agentdock.agentMcpPending')}
       </p>
       <Notice error={error || resource.error} loading={resource.loading} />
       {resource.data && (
@@ -91,12 +91,12 @@ export function Agents() {
           <table className="gg-table" data-testid="agent-table">
             <thead>
               <tr>
-                <th>{t('dutybot.name')}</th>
-                <th>{t('dutybot.model')}</th>
-                <th>{t('dutybot.skills')}</th>
-                <th>{t('dutybot.mcpServers')}</th>
-                <th>{t('dutybot.systemPrompt')}</th>
-                <th>{t('dutybot.instances')}</th>
+                <th>{t('agentdock.name')}</th>
+                <th>{t('agentdock.model')}</th>
+                <th>{t('agentdock.skills')}</th>
+                <th>{t('agentdock.mcpServers')}</th>
+                <th>{t('agentdock.systemPrompt')}</th>
+                <th>{t('agentdock.instances')}</th>
               </tr>
             </thead>
             <tbody>
@@ -108,8 +108,8 @@ export function Agents() {
                       <span className="block text-xs text-muted-foreground">
                         {t(
                           agent.owner_user_id === ''
-                            ? 'dutybot.agentPublic'
-                            : 'dutybot.agentPrivate',
+                            ? 'agentdock.agentPublic'
+                            : 'agentdock.agentPrivate',
                         )}
                       </span>
                     </td>
@@ -129,7 +129,7 @@ export function Agents() {
                         data-testid={`agent-prompt-${agent.id}`}
                         onClick={() => setPrompt(agent.system_prompt)}
                       >
-                        {t('dutybot.systemPrompt')}
+                        {t('agentdock.systemPrompt')}
                       </Button>
                     </td>
                     <td>
@@ -141,7 +141,7 @@ export function Agents() {
                           setExpanded(expanded === agent.id ? '' : agent.id)
                         }
                       >
-                        {t('dutybot.instances')}
+                        {t('agentdock.instances')}
                       </Button>
                     </td>
                   </tr>
@@ -150,7 +150,7 @@ export function Agents() {
                       <td colSpan={6} className="bg-muted/40 p-3">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-sm font-medium">
-                            {t('dutybot.instances')}
+                            {t('agentdock.instances')}
                           </span>
                           <Button
                             size="sm"
@@ -158,7 +158,7 @@ export function Agents() {
                             onClick={() => void createInstance(agent.id)}
                           >
                             <Plus className="size-3 mr-1" />
-                            {t('dutybot.instanceCreate')}
+                            {t('agentdock.instanceCreate')}
                           </Button>
                         </div>
                         <Notice
@@ -187,7 +187,7 @@ export function Agents() {
                                     }
                                   >
                                     <Square className="size-3 mr-1" />
-                                    {t('dutybot.instanceStop')}
+                                    {t('agentdock.instanceStop')}
                                   </Button>
                                 ) : (
                                   <Button
@@ -199,14 +199,14 @@ export function Agents() {
                                     }
                                   >
                                     <Play className="size-3 mr-1" />
-                                    {t('dutybot.instanceStart')}
+                                    {t('agentdock.instanceStart')}
                                   </Button>
                                 )}
                               </li>
                             ))}
                             {instances.data.data.length === 0 && (
                               <li className="text-muted-foreground">
-                                {t('dutybot.empty')}
+                                {t('agentdock.empty')}
                               </li>
                             )}
                           </ul>
@@ -234,7 +234,7 @@ export function Agents() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('dutybot.systemPrompt')}</DialogTitle>
+            <DialogTitle>{t('agentdock.systemPrompt')}</DialogTitle>
           </DialogHeader>
           <pre
             className="max-h-96 overflow-auto whitespace-pre-wrap text-sm"

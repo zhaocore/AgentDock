@@ -145,8 +145,8 @@ export function Crawl() {
   }
   return (
     <section className="space-y-6" data-testid="crawl-workspace">
-      <h1 className="text-2xl font-semibold">{t('dutybot.crawl')}</h1>
-      <p className="text-muted-foreground">{t('dutybot.crawlSchedule')}</p>
+      <h1 className="text-2xl font-semibold">{t('agentdock.crawl')}</h1>
+      <p className="text-muted-foreground">{t('agentdock.crawlSchedule')}</p>
       <Notice
         error={
           error ||
@@ -159,7 +159,7 @@ export function Crawl() {
         loading={tasks.loading || profiles.loading || agents.loading}
       />
       {profiles.data?.data.length === 0 && (
-        <p data-testid="crawl-no-profile">{t('dutybot.crawlNoProfile')}</p>
+        <p data-testid="crawl-no-profile">{t('agentdock.crawlNoProfile')}</p>
       )}
       <form
         onSubmit={(event) => void save(event)}
@@ -167,10 +167,10 @@ export function Crawl() {
         data-testid="crawl-form"
       >
         <h2 className="text-lg font-medium">
-          {editing ? t('dutybot.crawlEdit') : t('dutybot.crawlCreate')}
+          {editing ? t('agentdock.crawlEdit') : t('agentdock.crawlCreate')}
         </h2>
         <label>
-          {t('dutybot.crawlName')}
+          {t('agentdock.crawlName')}
           <Input
             data-testid="crawl-name"
             value={name}
@@ -188,7 +188,7 @@ export function Crawl() {
             onChange={(event) => setAgentID(event.target.value)}
             required
           >
-            <option value="">{t('dutybot.crawlChoose')}</option>
+            <option value="">{t('agentdock.crawlChoose')}</option>
             {agents.data?.data.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.name}
@@ -197,14 +197,14 @@ export function Crawl() {
           </select>
         </label>
         <label>
-          {t('dutybot.crawlProfile')}
+          {t('agentdock.crawlProfile')}
           <select
             data-testid="crawl-profile"
             className="gg-select w-full"
             value={profileID}
             onChange={(event) => setProfileID(event.target.value)}
           >
-            <option value="">{t('dutybot.crawlAnonymous')}</option>
+            <option value="">{t('agentdock.crawlAnonymous')}</option>
             {profiles.data?.data.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.id} — {p.origin}
@@ -213,7 +213,7 @@ export function Crawl() {
           </select>
         </label>
         <label>
-          {t('dutybot.crawlExtraProfiles')}
+          {t('agentdock.crawlExtraProfiles')}
           <select
             data-testid="crawl-extra-profiles"
             className="gg-select w-full"
@@ -236,7 +236,7 @@ export function Crawl() {
           </select>
         </label>
         <label>
-          {t('dutybot.crawlHops')}
+          {t('agentdock.crawlHops')}
           <Input
             data-testid="crawl-hops"
             type="number"
@@ -249,7 +249,7 @@ export function Crawl() {
           />
         </label>
         <label>
-          {t('dutybot.crawlPattern')}
+          {t('agentdock.crawlPattern')}
           <Input
             data-testid="crawl-pattern"
             maxLength={2048}
@@ -258,10 +258,10 @@ export function Crawl() {
           />
         </label>
         <p className="text-sm text-muted-foreground">
-          {t('dutybot.crawlLimits')}
+          {t('agentdock.crawlLimits')}
         </p>
         <label>
-          {t('dutybot.crawlURLs')}
+          {t('agentdock.crawlURLs')}
           <textarea
             data-testid="crawl-urls"
             placeholder={
@@ -277,7 +277,7 @@ export function Crawl() {
           className="text-sm text-muted-foreground"
           data-testid="crawl-rss-hint"
         >
-          {t('dutybot.crawlRSSHint')}
+          {t('agentdock.crawlRSSHint')}
         </p>
         <label>
           <input
@@ -286,11 +286,11 @@ export function Crawl() {
             checked={enabled}
             onChange={(event) => setEnabled(event.target.checked)}
           />{' '}
-          {t('dutybot.crawlEnabled')}
+          {t('agentdock.crawlEnabled')}
         </label>
         <div className="flex gap-2">
           <Button data-testid="crawl-save" type="submit" disabled={busy}>
-            {t('dutybot.crawlSave')}
+            {t('agentdock.crawlSave')}
           </Button>
           {editing && (
             <Button
@@ -307,14 +307,14 @@ export function Crawl() {
                 setProfileID('');
               }}
             >
-              {t('dutybot.close')}
+              {t('agentdock.close')}
             </Button>
           )}
         </div>
       </form>
       <div className="space-y-3">
         <label>
-          {t('dutybot.crawlTasks')}
+          {t('agentdock.crawlTasks')}
           <select
             data-testid="crawl-task"
             className="gg-select w-full"
@@ -324,13 +324,13 @@ export function Crawl() {
               setReportID('');
             }}
           >
-            <option value="">{t('dutybot.crawlChoose')}</option>
+            <option value="">{t('agentdock.crawlChoose')}</option>
             {tasks.data?.data.map((task) => (
               <option key={task.id} value={task.id}>
                 {task.name} —{' '}
                 {task.enabled
-                  ? t('dutybot.crawlEnabled')
-                  : t('dutybot.crawlDisabled')}
+                  ? t('agentdock.crawlEnabled')
+                  : t('agentdock.crawlDisabled')}
               </option>
             ))}
           </select>
@@ -347,14 +347,14 @@ export function Crawl() {
               }
               onClick={() => void run()}
             >
-              {t('dutybot.crawlRun')}
+              {t('agentdock.crawlRun')}
             </Button>
             <Button
               variant="outline"
               data-testid="crawl-edit"
               onClick={() => edit(current)}
             >
-              {t('dutybot.crawlEdit')}
+              {t('agentdock.crawlEdit')}
             </Button>
             <Button
               variant="outline"
@@ -362,7 +362,7 @@ export function Crawl() {
               disabled={busy || !current.enabled}
               onClick={() => void disable(current)}
             >
-              {t('dutybot.crawlDisable')}
+              {t('agentdock.crawlDisable')}
             </Button>
           </div>
         )}
@@ -374,7 +374,7 @@ export function Crawl() {
             runs.refresh();
           }}
         >
-          {t('dutybot.refresh')}
+          {t('agentdock.refresh')}
         </Button>
       </div>
       <div className="space-y-3" data-testid="crawl-runs">
@@ -387,7 +387,7 @@ export function Crawl() {
             <p>
               {run.created_at} · {run.trigger} ·{' '}
               {run.status === 'partial'
-                ? t('dutybot.crawlPartial')
+                ? t('agentdock.crawlPartial')
                 : run.status}{' '}
               · {run.stage} · {run.completed}/{run.total}
             </p>
@@ -399,9 +399,9 @@ export function Crawl() {
             {['report', 'publish', 'published'].includes(run.stage) && (
               <a
                 data-testid={`crawl-source-${run.id}`}
-                href={`/api/dutybot/crawl-runs/${run.id}/markdown`}
+                href={`/api/agentdock/crawl-runs/${run.id}/markdown`}
               >
-                {t('dutybot.crawlSourceDownload')}
+                {t('agentdock.crawlSourceDownload')}
               </a>
             )}
             {['succeeded', 'partial'].includes(run.status) && (
@@ -411,13 +411,13 @@ export function Crawl() {
                   data-testid={`crawl-open-${run.id}`}
                   onClick={() => setReportID(run.id)}
                 >
-                  {t('dutybot.crawlReport')}
+                  {t('agentdock.crawlReport')}
                 </Button>
                 <a
                   data-testid={`crawl-download-${run.id}`}
-                  href={`/api/dutybot/crawl-runs/${run.id}/report?download=1`}
+                  href={`/api/agentdock/crawl-runs/${run.id}/report?download=1`}
                 >
-                  {t('dutybot.crawlDownload')}
+                  {t('agentdock.crawlDownload')}
                 </a>
               </div>
             )}

@@ -12,7 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/zhaocore/dutybotgo/internal/store/mysql"
+	"github.com/zhaocore/agentdock/internal/store/mysql"
 )
 
 // APITokenPrefix 是 API 令牌的固定前缀，用于与 JWT 区分分发。

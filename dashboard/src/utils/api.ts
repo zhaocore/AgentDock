@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const api = axios.create({ baseURL: '/api/dutybot' });
+export const api = axios.create({ baseURL: '/api/agentdock' });
 
 api.interceptors.response.use(
   (response) => response,

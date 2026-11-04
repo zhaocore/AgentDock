@@ -1,8 +1,8 @@
-# dutybotGo
+# AgentDock
 
 > 多用户 Go Agent 管理平台：基于 langchaingo 的 Agent 服务 + 仓库托管（git clone 与 codegraph 索引初始化）。
 
-dutybotGo 由部署者维护公共 Agent 预设、skills 与 MCP 配置，用户启动自己的实例并与它会话；添加的 Git 仓库由后台 Worker 克隆到指定目录并初始化 codegraph 索引。业务存储依赖 MySQL + Redis（Asynq）；Confluence 文档使用 RustFS 私有对象存储。
+AgentDock 由部署者维护公共 Agent 预设、skills 与 MCP 配置，用户启动自己的实例并与它会话；添加的 Git 仓库由后台 Worker 克隆到指定目录并初始化 codegraph 索引。业务存储依赖 MySQL + Redis（Asynq）；Confluence 文档使用 RustFS 私有对象存储。
 
 **当前状态：改造完成初期。** 认证、仓库管理、Agent/实例/会话主链路可用，MCP 工具桥接与 subagent 工具化调用为提示词注入实现，后续版本接入 langchaingo agent 循环。
 
@@ -35,6 +35,8 @@ make run        # 启动服务（自动迁移）
 
 管理后台：`pnpm --dir dashboard dev`。
 
+已有部署升级时保留 `.env` 中的数据库、账户、对象桶配置，并通过 `COMPOSE_PROJECT_NAME` 或 `docker compose -p` 显式沿用原项目名，继续挂载已有持久卷；品牌更名不迁移存储资源。前端同源代理使用 `/api/agentdock`，会话 Cookie 为 `agentdock_session`，升级后需重新登录。
+
 ## 环境变量
 
 | 变量 | 说明 | 默认 |
@@ -62,7 +64,7 @@ make db-migrate  # 独立执行迁移
 
 启用时配置 `.env.example` 中全部 `CONFLUENCE_*`、`RUSTFS_*` 项。Cookie 由部署者通过环境变量提供，须有对应空间读取权限；浏览器只提交属于 `CONFLUENCE_BASE_URL` 的 HTTPS 地址。RustFS 使用私有桶；首次写入返回 `NoSuchBucket` 时自动建桶并重试，服务账号需具备 `CreateBucket` 和对象读写权限；`RUSTFS_ENDPOINT` 使用服务可访问的 S3 API 地址。凭据不得提交。
 
-Compose 包含 `rustfs` 服务和持久卷 `rustfsdata`。先填写 `RUSTFS_ACCESS_KEY`、`RUSTFS_SECRET_KEY`，运行 `docker compose up -d rustfs`；默认桶名为 `dutybot-confluence`（由 `RUSTFS_BUCKET` 配置），首次写入时自动创建，也可在本机控制台 `http://localhost:9001` 查看。默认 S3 API 为 `http://localhost:9000`，两个端口只绑定本机；`server` 容器自动使用 `http://rustfs:9000`。修改宿主端口用 `RUSTFS_PORT` / `RUSTFS_CONSOLE_PORT`，本机 Go 的 `RUSTFS_ENDPOINT` 同步调整。Compose 依赖条件只保证容器启动，首次使用前需确认服务可访问；建桶权限不足或桶名被其他账号占用会明确报错，不自动公开桶或修改已有权限。
+Compose 包含 `rustfs` 服务和持久卷 `rustfsdata`。先填写 `RUSTFS_ACCESS_KEY`、`RUSTFS_SECRET_KEY`，运行 `docker compose up -d rustfs`；默认桶名为 `agentdock-confluence`（由 `RUSTFS_BUCKET` 配置），首次写入时自动创建，也可在本机控制台 `http://localhost:9001` 查看。默认 S3 API 为 `http://localhost:9000`，两个端口只绑定本机；`server` 容器自动使用 `http://rustfs:9000`。修改宿主端口用 `RUSTFS_PORT` / `RUSTFS_CONSOLE_PORT`，本机 Go 的 `RUSTFS_ENDPOINT` 同步调整。Compose 依赖条件只保证容器启动，首次使用前需确认服务可访问；建桶权限不足或桶名被其他账号占用会明确报错，不自动公开桶或修改已有权限。
 
 开发配置 `docker-compose.dev.yml` 提供相同的 MySQL、Redis、RustFS 基础设施；`make db-up` 和 `make dev` 均包含 RustFS。开发模式下 Go 服务在宿主机运行，使用 `.env` 的 `RUSTFS_ENDPOINT=http://localhost:9000`。
 
@@ -71,7 +73,7 @@ Compose 包含 `rustfs` 服务和持久卷 `rustfsdata`。先填写 `RUSTFS_ACCE
 
 ## 定时采集报告
 
-入口 `/dashboard/crawl`，配置和验收边界见 [需求第 15 节](docs/REQUIREMENTS.md#15-定时爬虫与-agent-报告-部分实现)。原生部署在安装技能依赖后，还须运行 `bun agents/skills/url-to-markdown/node_modules/playwright/cli.js install chromium` 安装对应浏览器；Linux 同时安装浏览器系统依赖（`install --with-deps chromium`）。Docker 镜像已包含 Debian、时区数据与对应 Chromium；建议使用 Docker Buildx/BuildKit 构建（`docker buildx build --load -t dutybot:local .`），当前旧版 legacy 引擎存在快照错误。登录配置使用 `.env.example` 的 `CRAWL_PROFILES`，正文就绪元素由部署者按真实站点确定；配置修改后重启服务。
+入口 `/dashboard/crawl`，配置和验收边界见 [需求第 15 节](docs/REQUIREMENTS.md#15-定时爬虫与-agent-报告-部分实现)。原生部署在安装技能依赖后，还须运行 `bun agents/skills/url-to-markdown/node_modules/playwright/cli.js install chromium` 安装对应浏览器；Linux 同时安装浏览器系统依赖（`install --with-deps chromium`）。Docker 镜像已包含 Debian、时区数据与对应 Chromium；建议使用 Docker Buildx/BuildKit 构建（`docker buildx build --load -t agentdock:local .`），当前旧版 legacy 引擎存在快照错误。登录配置使用 `.env.example` 的 `CRAWL_PROFILES`，正文就绪元素由部署者按真实站点确定；配置修改后重启服务。
 
 并发环境变量、逐轮持久指标、日志提取和瓶颈判断见 [采集性能说明](docs/CRAWL_PERFORMANCE.md)。默认保持 Worker 4、全局／单轮抓取 3、整份报告 1；重启生效。
 

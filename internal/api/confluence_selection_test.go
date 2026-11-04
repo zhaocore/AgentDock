@@ -3,14 +3,14 @@ package api
 import (
 	"database/sql/driver"
 	"encoding/json"
-	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/agentdock/internal/domain"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gin-gonic/gin"
-	"github.com/zhaocore/dutybotgo/internal/config"
+	"github.com/zhaocore/agentdock/internal/config"
 )
 
 const apiSelectionTree = `{"nodes":[{"id":"10","title":"Root","children":[{"id":"1","title":"One","children":[]},{"id":"2","title":"Two","children":[]}]}],"pages":[{"id":"1","title":"One","version":1,"path":"Root/One"},{"id":"2","title":"Two","version":1,"path":"Root/Two"}]}`

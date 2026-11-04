@@ -10,10 +10,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/zhaocore/dutybotgo/internal/config"
-	"github.com/zhaocore/dutybotgo/internal/domain"
-	"github.com/zhaocore/dutybotgo/internal/store/mysql"
-	"github.com/zhaocore/dutybotgo/internal/worker"
+	"github.com/zhaocore/agentdock/internal/config"
+	"github.com/zhaocore/agentdock/internal/domain"
+	"github.com/zhaocore/agentdock/internal/store/mysql"
+	"github.com/zhaocore/agentdock/internal/worker"
 )
 
 // CrawlTaskRequest 描述任务配置，凭据值不通过用户 API 提交。

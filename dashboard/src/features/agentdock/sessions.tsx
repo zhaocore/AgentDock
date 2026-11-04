@@ -49,13 +49,13 @@ export function Sessions() {
   return (
     <>
       <div className="gg-toolbar">
-        <h1>{t('dutybot.sessions')}</h1>
+        <h1>{t('agentdock.sessions')}</h1>
         <div className="flex gap-2">
           <Button
             size="icon"
             variant="outline"
-            title={t('dutybot.refresh')}
-            aria-label={t('dutybot.refresh')}
+            title={t('agentdock.refresh')}
+            aria-label={t('agentdock.refresh')}
             data-testid="session-refresh"
             onClick={resource.refresh}
           >
@@ -69,9 +69,9 @@ export function Sessions() {
           <table className="gg-table" data-testid="session-table">
             <thead>
               <tr>
-                <th>{t('dutybot.name')}</th>
-                <th>{t('dutybot.status')}</th>
-                <th>{t('dutybot.createdAt')}</th>
+                <th>{t('agentdock.name')}</th>
+                <th>{t('agentdock.status')}</th>
+                <th>{t('agentdock.createdAt')}</th>
                 <th />
               </tr>
             </thead>
@@ -121,7 +121,7 @@ export function Sessions() {
       {selected && (
         <div className="mt-6" data-testid="session-messages">
           <h2 className="text-sm font-semibold mb-2">
-            {t('dutybot.sessionMessages')}
+            {t('agentdock.sessionMessages')}
           </h2>
           <Notice error={messages.error} loading={messages.loading} />
           <div className="space-y-3">
@@ -137,8 +137,8 @@ export function Sessions() {
               >
                 <p className="mb-1 text-xs font-medium text-muted-foreground">
                   {message.role === 'user'
-                    ? t('dutybot.roleUser')
-                    : t('dutybot.roleAssistant')}
+                    ? t('agentdock.roleUser')
+                    : t('agentdock.roleAssistant')}
                 </p>
                 <p className="whitespace-pre-wrap break-words">
                   {message.content}
@@ -147,7 +147,7 @@ export function Sessions() {
             ))}
             {messages.data?.data.length === 0 && (
               <p className="text-sm text-muted-foreground">
-                {t('dutybot.empty')}
+                {t('agentdock.empty')}
               </p>
             )}
           </div>
@@ -160,7 +160,7 @@ export function Sessions() {
           >
             <Input
               data-testid="session-message-input"
-              placeholder={t('dutybot.messagePlaceholder')}
+              placeholder={t('agentdock.messagePlaceholder')}
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />

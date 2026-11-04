@@ -1,73 +1,73 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   boundedBody,
-  isAllowedDutybotRoute,
+  isAllowedAgentDockRoute,
   isSameOrigin,
   jwtExpiry,
-} from './dutybot-session';
+} from './agentdock-session';
 import { getServerApiUrl } from './server-api-url';
 
 afterEach(() => vi.unstubAllEnvs());
 
-describe('dutybotGo session boundaries', () => {
+describe('AgentDock session boundaries', () => {
   it('only proxies explicit methods and paths', () => {
     const id = '11111111-1111-1111-1111-111111111111';
-    expect(isAllowedDutybotRoute('GET', ['crawl-profiles'])).toBe(true);
-    expect(isAllowedDutybotRoute('GET', ['crawl-tasks', id, 'runs'])).toBe(
+    expect(isAllowedAgentDockRoute('GET', ['crawl-profiles'])).toBe(true);
+    expect(isAllowedAgentDockRoute('GET', ['crawl-tasks', id, 'runs'])).toBe(
       true,
     );
-    expect(isAllowedDutybotRoute('POST', ['crawl-tasks', id, 'runs'])).toBe(
+    expect(isAllowedAgentDockRoute('POST', ['crawl-tasks', id, 'runs'])).toBe(
       true,
     );
-    expect(isAllowedDutybotRoute('PUT', ['crawl-tasks', id])).toBe(true);
-    expect(isAllowedDutybotRoute('GET', ['crawl-runs', id, 'report'])).toBe(
+    expect(isAllowedAgentDockRoute('PUT', ['crawl-tasks', id])).toBe(true);
+    expect(isAllowedAgentDockRoute('GET', ['crawl-runs', id, 'report'])).toBe(
       true,
     );
-    expect(isAllowedDutybotRoute('PUT', ['crawl-profiles', 'docs'])).toBe(
-      false,
-    );
-    expect(isAllowedDutybotRoute('GET', ['crawl-runs', 'bad', 'report'])).toBe(
-      false,
-    );
-    expect(isAllowedDutybotRoute('GET', ['crawl-runs', id, 'markdown'])).toBe(
-      true,
-    );
-    expect(isAllowedDutybotRoute('POST', ['crawl-runs', id, 'markdown'])).toBe(
+    expect(isAllowedAgentDockRoute('PUT', ['crawl-profiles', 'docs'])).toBe(
       false,
     );
     expect(
-      isAllowedDutybotRoute('GET', ['crawl-runs', 'bad', 'markdown']),
+      isAllowedAgentDockRoute('GET', ['crawl-runs', 'bad', 'report']),
+    ).toBe(false);
+    expect(isAllowedAgentDockRoute('GET', ['crawl-runs', id, 'markdown'])).toBe(
+      true,
+    );
+    expect(
+      isAllowedAgentDockRoute('POST', ['crawl-runs', id, 'markdown']),
+    ).toBe(false);
+    expect(
+      isAllowedAgentDockRoute('GET', ['crawl-runs', 'bad', 'markdown']),
     ).toBe(false);
     // 仓库：列表 / 详情 / 同步 / 删除
-    expect(isAllowedDutybotRoute('GET', ['repositories'])).toBe(true);
-    expect(isAllowedDutybotRoute('GET', ['repositories', id])).toBe(true);
-    expect(isAllowedDutybotRoute('POST', ['repositories'])).toBe(true);
-    expect(isAllowedDutybotRoute('POST', ['repositories', id, 'sync'])).toBe(
+    expect(isAllowedAgentDockRoute('GET', ['repositories'])).toBe(true);
+    expect(isAllowedAgentDockRoute('GET', ['repositories', id])).toBe(true);
+    expect(isAllowedAgentDockRoute('POST', ['repositories'])).toBe(true);
+    expect(isAllowedAgentDockRoute('POST', ['repositories', id, 'sync'])).toBe(
       true,
     );
-    expect(isAllowedDutybotRoute('DELETE', ['repositories', id])).toBe(true);
+    expect(isAllowedAgentDockRoute('DELETE', ['repositories', id])).toBe(true);
     // Agent / 实例 / 会话
-    expect(isAllowedDutybotRoute('GET', ['agents'])).toBe(true);
-    expect(isAllowedDutybotRoute('POST', ['agents', id, 'instances'])).toBe(
+    expect(isAllowedAgentDockRoute('GET', ['agents'])).toBe(true);
+    expect(isAllowedAgentDockRoute('POST', ['agents', id, 'instances'])).toBe(
       true,
     );
-    expect(isAllowedDutybotRoute('POST', ['instances', id, 'start'])).toBe(
+    expect(isAllowedAgentDockRoute('POST', ['instances', id, 'start'])).toBe(
       true,
     );
-    expect(isAllowedDutybotRoute('POST', ['sessions', id, 'messages'])).toBe(
+    expect(isAllowedAgentDockRoute('POST', ['sessions', id, 'messages'])).toBe(
       true,
     );
-    expect(isAllowedDutybotRoute('GET', ['sessions', id, 'messages'])).toBe(
+    expect(isAllowedAgentDockRoute('GET', ['sessions', id, 'messages'])).toBe(
       true,
     );
-    expect(isAllowedDutybotRoute('DELETE', ['sessions', id])).toBe(true);
+    expect(isAllowedAgentDockRoute('DELETE', ['sessions', id])).toBe(true);
     // 拒绝形态：未知方法、路径穿越、未登记资源
-    expect(isAllowedDutybotRoute('POST', ['auth', 'refresh'])).toBe(false);
-    expect(isAllowedDutybotRoute('GET', ['admin', 'users'])).toBe(false);
-    expect(isAllowedDutybotRoute('PATCH', ['agents', id])).toBe(false);
-    expect(isAllowedDutybotRoute('GET', ['agents', '..'])).toBe(false);
-    expect(isAllowedDutybotRoute('GET', ['agents', 'bad'])).toBe(false);
-    expect(isAllowedDutybotRoute('POST', ['sessions'])).toBe(false);
+    expect(isAllowedAgentDockRoute('POST', ['auth', 'refresh'])).toBe(false);
+    expect(isAllowedAgentDockRoute('GET', ['admin', 'users'])).toBe(false);
+    expect(isAllowedAgentDockRoute('PATCH', ['agents', id])).toBe(false);
+    expect(isAllowedAgentDockRoute('GET', ['agents', '..'])).toBe(false);
+    expect(isAllowedAgentDockRoute('GET', ['agents', 'bad'])).toBe(false);
+    expect(isAllowedAgentDockRoute('POST', ['sessions'])).toBe(false);
   });
   it('requires matching Origin for writes', () => {
     expect(
@@ -106,7 +106,7 @@ describe('dutybotGo session boundaries', () => {
     for (const origin of ['http://10.53.1.2:3000', 'http://10.53.1.3:3000']) {
       expect(
         isSameOrigin(
-          new Request('http://next:3000/api/dutybot/auth/login', {
+          new Request('http://next:3000/api/agentdock/auth/login', {
             headers: { origin },
           }),
         ),
@@ -116,7 +116,7 @@ describe('dutybotGo session boundaries', () => {
     // 未登记的邻近 IP 仍拒绝
     expect(
       isSameOrigin(
-        new Request('http://next:3000/api/dutybot/auth/login', {
+        new Request('http://next:3000/api/agentdock/auth/login', {
           headers: { origin: 'http://10.53.1.4:3000' },
         }),
       ),
@@ -126,7 +126,7 @@ describe('dutybotGo session boundaries', () => {
     vi.stubEnv('NODE_ENV', 'development');
     vi.stubEnv('DASHBOARD_URL', 'http://127.0.0.1:3100');
     const request = new Request(
-      'http://localhost:3100/api/dutybot/auth/register',
+      'http://localhost:3100/api/agentdock/auth/register',
       {
         headers: { origin: 'http://localhost:3100' },
       },
@@ -192,7 +192,7 @@ describe('dutybotGo session boundaries', () => {
     expect(getServerApiUrl).toThrow();
     vi.stubEnv('API_INTERNAL_URL', 'https://user:password@service.test/v1');
     expect(getServerApiUrl).toThrow();
-    vi.stubEnv('API_INTERNAL_URL', 'http://dutybot:8080/custom/');
-    expect(getServerApiUrl()).toBe('http://dutybot:8080/custom');
+    vi.stubEnv('API_INTERNAL_URL', 'http://agentdock:8080/custom/');
+    expect(getServerApiUrl()).toBe('http://agentdock:8080/custom');
   });
 });

@@ -3,7 +3,7 @@
 import React from 'react';
 import { ThemeProvider } from '@/components/theme-provider';
 import '@/styles/globals.css';
-import '@/features/dutybot/dutybot.css';
+import '@/features/agentdock/agentdock.css';
 import { ClientLayout } from './clientLayout';
 import { cn } from '@/lib/utils';
 import { InterDisplay, Roboto, Fustat, DMMono } from './fonts';

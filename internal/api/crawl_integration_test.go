@@ -19,13 +19,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
-	"github.com/zhaocore/dutybotgo/internal/agent"
-	"github.com/zhaocore/dutybotgo/internal/config"
-	"github.com/zhaocore/dutybotgo/internal/domain"
-	"github.com/zhaocore/dutybotgo/internal/store/mysql"
-	"github.com/zhaocore/dutybotgo/internal/store/rustfs"
-	"github.com/zhaocore/dutybotgo/internal/telemetry"
-	"github.com/zhaocore/dutybotgo/internal/worker"
+	"github.com/zhaocore/agentdock/internal/agent"
+	"github.com/zhaocore/agentdock/internal/config"
+	"github.com/zhaocore/agentdock/internal/domain"
+	"github.com/zhaocore/agentdock/internal/store/mysql"
+	"github.com/zhaocore/agentdock/internal/store/rustfs"
+	"github.com/zhaocore/agentdock/internal/telemetry"
+	"github.com/zhaocore/agentdock/internal/worker"
 )
 
 // TestCrawlEndToEnd 连接独立 MySQL、Redis、RustFS 与真实浏览器，模型使用可控 HTTP 服务。
@@ -44,7 +44,7 @@ func TestCrawlEndToEnd(t *testing.T) {
 	defer db.Close()
 	ctx := context.Background()
 	var name string
-	if err = db.QueryRow(`SELECT DATABASE()`).Scan(&name); err != nil || !strings.HasPrefix(name, "dutybot_crawl_test_") {
+	if err = db.QueryRow(`SELECT DATABASE()`).Scan(&name); err != nil || !strings.HasPrefix(name, "agentdock_crawl_test_") {
 		t.Fatal("refuse non-crawl test database", name, err)
 	}
 	var count int
@@ -159,7 +159,7 @@ const browser=await chromium.launch();let result;try{const context=await browser
 	defer queue.Close()
 	inspector := asynq.NewInspector(asynq.RedisClientOpt{Addr: redisAddr})
 	defer inspector.Close()
-	objects := rustfs.New(endpoint, "us-east-1", "dutybot-crawl-test-"+uuid.NewString(), "crawltestkey", "crawl-test-secret-only")
+	objects := rustfs.New(endpoint, "us-east-1", "agentdock-crawl-test-"+uuid.NewString(), "crawltestkey", "crawl-test-secret-only")
 	crawl := &worker.CrawlWorker{Concurrency: config.ConcurrencyConfig{Worker: 4, Capture: 3, Task: 3, Report: 1}, DB: db, Objects: objects, Source: worker.NewBrowserCrawlSource(root, 3), Reporter: agent.NewReporter(agent.NewReportRuntime("test-key", model.URL), 1), Profiles: []config.CrawlProfile{{ID: "source", Origin: source.URL, Cookie: "session=crawl-test", UserIDs: []string{u1}, ReadySelector: "[data-ready=yes]"}, {ID: "other", Origin: other.URL, Cookie: "other=second-origin", UserIDs: []string{u1}, ReadySelector: "[data-ready=yes]"}}, Client: queue, Inspector: inspector}
 	h := &Handler{DB: db, Crawl: crawl, Config: &config.Config{Server: config.ServerConfig{BasePath: "/v1"}, Auth: config.AuthConfig{JWTSecret: "crawl-test-jwt", RateLimit: 10000, TokenExpiry: time.Hour}}}
 	router := NewRouter(h)

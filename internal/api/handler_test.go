@@ -14,7 +14,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gin-gonic/gin"
 
-	"github.com/zhaocore/dutybotgo/internal/config"
+	"github.com/zhaocore/agentdock/internal/config"
 )
 
 func init() {

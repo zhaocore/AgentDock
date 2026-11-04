@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/agentdock/internal/domain"
 )
 
 // toMessageContent：系统提示词在前、历史按角色映射、新消息在末尾。

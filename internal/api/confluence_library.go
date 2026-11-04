@@ -9,9 +9,9 @@ import (
 	"regexp"
 
 	"github.com/gin-gonic/gin"
-	"github.com/zhaocore/dutybotgo/internal/domain"
-	"github.com/zhaocore/dutybotgo/internal/store/rustfs"
-	"github.com/zhaocore/dutybotgo/internal/worker"
+	"github.com/zhaocore/agentdock/internal/domain"
+	"github.com/zhaocore/agentdock/internal/store/rustfs"
+	"github.com/zhaocore/agentdock/internal/worker"
 )
 
 // libraryReady 文件库只依赖私有对象存储，不要求实时 Confluence Cookie。

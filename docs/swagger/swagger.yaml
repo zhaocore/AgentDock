@@ -630,9 +630,9 @@ definitions:
 host: localhost:8080
 info:
   contact:
-    name: dutybotGo Team
+    name: AgentDock Team
   description: Agent 管理与仓库托管服务
-  title: dutybotGo API
+  title: AgentDock API
   version: 0.1.0
 paths:
   /confluence-library:

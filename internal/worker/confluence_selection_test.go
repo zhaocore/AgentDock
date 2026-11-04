@@ -8,7 +8,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/hibiken/asynq"
-	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/agentdock/internal/domain"
 )
 
 const selectionTree = `{"nodes":[{"id":"3","title":"Outside","children":[]},{"id":"10","title":"Root","children":[{"id":"1","title":"One","children":[]},{"id":"20","title":"Branch","children":[{"id":"2","title":"Two","children":[]}]}]}],"pages":[{"id":"3","title":"Outside","url":"https://example.com/3","version":1,"path":"Outside"},{"id":"1","title":"One","url":"https://example.com/1","version":1,"path":"Root/One"},{"id":"2","title":"Two","url":"https://example.com/2","version":1,"path":"Root/Branch/Two"}]}`

@@ -12,9 +12,9 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/hibiken/asynq"
-	"github.com/zhaocore/dutybotgo/internal/config"
-	"github.com/zhaocore/dutybotgo/internal/domain"
-	"github.com/zhaocore/dutybotgo/internal/telemetry"
+	"github.com/zhaocore/agentdock/internal/config"
+	"github.com/zhaocore/agentdock/internal/domain"
+	"github.com/zhaocore/agentdock/internal/telemetry"
 )
 
 type crawlTestSource struct{ failure bool }

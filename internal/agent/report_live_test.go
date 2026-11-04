@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zhaocore/dutybotgo/internal/config"
-	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/agentdock/internal/config"
+	"github.com/zhaocore/agentdock/internal/domain"
 )
 
 // TestCrawlConfiguredLLM 显式启用后使用部署配置验证真实模型，不记录配置值或正文。

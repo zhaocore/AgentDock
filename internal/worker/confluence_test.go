@@ -14,8 +14,8 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/hibiken/asynq"
-	"github.com/zhaocore/dutybotgo/internal/config"
-	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/agentdock/internal/config"
+	"github.com/zhaocore/agentdock/internal/domain"
 )
 
 type memoryObjects struct {
@@ -281,7 +281,7 @@ func TestConfluenceBoundaryAndErrors(t *testing.T) {
 	if _, err := decodeTree([]byte(`{"nodes":[],"pages":[{"id":"../1","version":1}]}`)); err == nil {
 		t.Fatal("bad plan")
 	}
-	if _, err := script(context.Background(), "missing-dutybot-executable", "none", nil); err == nil {
+	if _, err := script(context.Background(), "missing-agentdock-executable", "none", nil); err == nil {
 		t.Fatal("missing process")
 	}
 	source := NewConfluenceSource(config.ConfluenceConfig{BaseURL: "invalid"}, "none")

@@ -44,7 +44,7 @@ export function Notice({
         className="flex items-center gap-2 py-4 text-sm text-muted-foreground"
       >
         <LoaderCircle className="size-4 animate-spin" />
-        {t('dutybot.loading')}
+        {t('agentdock.loading')}
       </div>
     );
   return null;
@@ -72,8 +72,8 @@ export function Pagination({
         <Button
           variant="outline"
           size="icon"
-          title={t('dutybot.previous')}
-          aria-label={t('dutybot.previous')}
+          title={t('agentdock.previous')}
+          aria-label={t('agentdock.previous')}
           data-testid="page-previous"
           disabled={offset === 0}
           onClick={() => onChange(Math.max(0, offset - 20))}
@@ -83,8 +83,8 @@ export function Pagination({
         <Button
           variant="outline"
           size="icon"
-          title={t('dutybot.next')}
-          aria-label={t('dutybot.next')}
+          title={t('agentdock.next')}
+          aria-label={t('agentdock.next')}
           data-testid="page-next"
           disabled={!hasMore}
           onClick={() => onChange(offset + 20)}
@@ -150,8 +150,8 @@ export function DeleteButton({
         variant="ghost"
         size="icon"
         data-testid={testId}
-        title={t('dutybot.delete')}
-        aria-label={`${t('dutybot.delete')} ${label}`}
+        title={t('agentdock.delete')}
+        aria-label={`${t('agentdock.delete')} ${label}`}
         onClick={() => setOpen(true)}
       >
         <Trash2 className="size-4 text-red-600" />
@@ -159,8 +159,8 @@ export function DeleteButton({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('dutybot.deleteTitle')}</DialogTitle>
-            <DialogDescription>{t('dutybot.deleteDetail')}</DialogDescription>
+            <DialogTitle>{t('agentdock.deleteTitle')}</DialogTitle>
+            <DialogDescription>{t('agentdock.deleteDetail')}</DialogDescription>
           </DialogHeader>
           <p className="break-words font-medium">{label}</p>
           <Notice error={error} loading={false} />
@@ -171,7 +171,7 @@ export function DeleteButton({
               disabled={busy}
             >
               <X className="size-4 mr-2" />
-              {t('dutybot.cancel')}
+              {t('agentdock.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -180,7 +180,7 @@ export function DeleteButton({
               onClick={remove}
             >
               <Trash2 className="size-4 mr-2" />
-              {t('dutybot.delete')}
+              {t('agentdock.delete')}
             </Button>
           </div>
         </DialogContent>

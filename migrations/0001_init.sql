@@ -1,4 +1,4 @@
--- dutybotGo 初始 schema：MySQL 8。
+-- AgentDock 初始 schema：MySQL 8。
 -- 用户、API 令牌沿用 GraphGo 契约；仓库 / Agent / 实例 / 会话为新模型。
 
 CREATE TABLE IF NOT EXISTS users (

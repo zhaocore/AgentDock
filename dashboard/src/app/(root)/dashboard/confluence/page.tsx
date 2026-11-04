@@ -1,4 +1,4 @@
-import { Confluence } from '@/features/dutybot/confluence';
+import { Confluence } from '@/features/agentdock/confluence';
 
 export default function ConfluencePage() {
   return <Confluence />;

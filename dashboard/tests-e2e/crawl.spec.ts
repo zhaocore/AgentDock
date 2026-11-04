@@ -10,7 +10,7 @@ test('creates and edits a daily task, runs and downloads a report', async ({
   if (!baseURL) throw new Error('baseURL required');
   await context.addCookies([
     {
-      name: 'dutybot_session',
+      name: 'agentdock_session',
       value: 'crawl-ui-test',
       url: baseURL,
       httpOnly: true,
@@ -49,7 +49,7 @@ test('creates and edits a daily task, runs and downloads a report', async ({
   let created = false;
   let executed = false;
   let unavailable = false;
-  await page.route('**/api/dutybot/**', async (route) => {
+  await page.route('**/api/agentdock/**', async (route) => {
     const req = route.request();
     const path = new URL(req.url()).pathname;
     if (path.endsWith('/auth/me'))

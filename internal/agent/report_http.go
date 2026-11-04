@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/zhaocore/dutybotgo/internal/telemetry"
+	"github.com/zhaocore/agentdock/internal/telemetry"
 )
 
 // reportTransport 对模型临时错误有限重试，避免服务错误正文泄露采集内容。

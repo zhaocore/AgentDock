@@ -14,9 +14,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zhaocore/dutybotgo/internal/config"
-	"github.com/zhaocore/dutybotgo/internal/domain"
-	"github.com/zhaocore/dutybotgo/internal/telemetry"
+	"github.com/zhaocore/agentdock/internal/config"
+	"github.com/zhaocore/agentdock/internal/domain"
+	"github.com/zhaocore/agentdock/internal/telemetry"
 )
 
 // CrawlSource 限定页面采集在 Worker 外部系统接缝。

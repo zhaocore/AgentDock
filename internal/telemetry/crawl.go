@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/zhaocore/dutybotgo/internal/config"
+	"github.com/zhaocore/agentdock/internal/config"
 )
 
 type contextKey struct{}

@@ -1,4 +1,4 @@
-// Package domain 定义 dutybotGo 的核心领域模型。
+// Package domain 定义 AgentDock 的核心领域模型。
 package domain
 
 import (

@@ -9,7 +9,7 @@ test('browses Space roots, downloads directory ZIP and confirms checked import',
   if (!baseURL) throw new Error('baseURL required');
   await context.addCookies([
     {
-      name: 'dutybot_session',
+      name: 'agentdock_session',
       value: 'ui-test-session',
       url: baseURL,
       httpOnly: true,
@@ -52,7 +52,7 @@ test('browses Space roots, downloads directory ZIP and confirms checked import',
       },
     ],
   };
-  await page.route('**/api/dutybot/**', async (route) => {
+  await page.route('**/api/agentdock/**', async (route) => {
     const req = route.request();
     const path = new URL(req.url()).pathname;
     if (path.endsWith('/auth/me'))
@@ -63,7 +63,7 @@ test('browses Space roots, downloads directory ZIP and confirms checked import',
           created_at: '2026-10-22T00:00:00Z',
         },
       });
-    if (path === '/api/dutybot/confluence-library')
+    if (path === '/api/agentdock/confluence-library')
       return route.fulfill({
         json: {
           spaces: [

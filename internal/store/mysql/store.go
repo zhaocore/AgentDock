@@ -69,10 +69,10 @@ func (s *Store) RunMigrations(migrationsDir string) error {
 		return fmt.Errorf("acquire migrations connection: %w", err)
 	}
 	defer lockConn.Close()
-	if _, err := lockConn.ExecContext(context.Background(), `SELECT GET_LOCK('dutybotgo_migrations', 30)`); err != nil {
+	if _, err := lockConn.ExecContext(context.Background(), `SELECT GET_LOCK('agentdock_migrations', 30)`); err != nil {
 		return fmt.Errorf("lock migrations: %w", err)
 	}
-	defer lockConn.ExecContext(context.Background(), `SELECT RELEASE_LOCK('dutybotgo_migrations')`)
+	defer lockConn.ExecContext(context.Background(), `SELECT RELEASE_LOCK('agentdock_migrations')`)
 
 	if _, err := lockConn.ExecContext(context.Background(), `CREATE TABLE IF NOT EXISTS schema_migrations (
 		name VARCHAR(255) PRIMARY KEY, applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP

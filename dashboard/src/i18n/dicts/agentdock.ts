@@ -119,8 +119,8 @@ const en = {
   refresh: 'Refresh',
   previous: 'Previous page',
   next: 'Next page',
-  signIn: 'Sign in to dutybotGo',
-  signUp: 'Create dutybotGo account',
+  signIn: 'Sign in to AgentDock',
+  signUp: 'Create AgentDock account',
   email: 'Email',
   password: 'Password',
   login: 'Sign in',
@@ -306,8 +306,8 @@ const zh: Shape<typeof en> = {
   refresh: '刷新',
   previous: '上一页',
   next: '下一页',
-  signIn: '登录 dutybotGo',
-  signUp: '创建 dutybotGo 账号',
+  signIn: '登录 AgentDock',
+  signUp: '创建 AgentDock 账号',
   email: '邮箱',
   password: '密码',
   login: '登录',
@@ -374,4 +374,4 @@ const zh: Shape<typeof en> = {
   close: '关闭',
 };
 
-export const dutybot = { en, zh, ja: en, ko: en };
+export const agentdock = { en, zh, ja: en, ko: en };

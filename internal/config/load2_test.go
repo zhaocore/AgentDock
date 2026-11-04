@@ -12,7 +12,7 @@ func TestLoadFromEnv(t *testing.T) {
 		"MYSQL_PORT":     "3307",
 		"MYSQL_USER":     "bot",
 		"MYSQL_PASSWORD": "secret",
-		"MYSQL_DB":       "dutybot",
+		"MYSQL_DB":       "agentdock",
 		"REDIS_HOST":     "redis.example.com",
 		"REDIS_PORT":     "6380",
 		"REPO_ROOT_DIR":  "/srv/repos",
@@ -31,7 +31,7 @@ func TestLoadFromEnv(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	wantDSN := "bot:secret@tcp(db.example.com:3307)/dutybot?parseTime=true&charset=utf8mb4&multiStatements=true"
+	wantDSN := "bot:secret@tcp(db.example.com:3307)/agentdock?parseTime=true&charset=utf8mb4&multiStatements=true"
 	if cfg.Database.URL != wantDSN {
 		t.Errorf("DSN=%s", cfg.Database.URL)
 	}

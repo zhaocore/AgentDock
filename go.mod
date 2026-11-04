@@ -1,4 +1,4 @@
-module github.com/zhaocore/dutybotgo
+module github.com/zhaocore/agentdock
 
 go 1.26.5
 

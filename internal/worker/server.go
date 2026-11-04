@@ -14,8 +14,8 @@ import (
 
 	"github.com/hibiken/asynq"
 
-	"github.com/zhaocore/dutybotgo/internal/domain"
-	"github.com/zhaocore/dutybotgo/internal/store/mysql"
+	"github.com/zhaocore/agentdock/internal/domain"
+	"github.com/zhaocore/agentdock/internal/store/mysql"
 )
 
 // 任务类型。

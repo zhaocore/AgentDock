@@ -1,11 +1,11 @@
 import { z } from 'zod';
 
-export const SESSION_COOKIE = 'dutybot_session';
+export const SESSION_COOKIE = 'agentdock_session';
 export const MAX_UPLOAD_BYTES = 101 * 1024 * 1024;
 export const CONFLUENCE_UPLOAD_BYTES = 10 * 1024 * 1024 * 1024;
 
-/** 只接受当前工作台使用的 dutybotGo 路径与方法。 */
-export function isAllowedDutybotRoute(
+/** 只接受当前工作台使用的 AgentDock 路径与方法。 */
+export function isAllowedAgentDockRoute(
   method: string,
   segments: string[],
 ): boolean {
@@ -103,12 +103,12 @@ export function isSameOrigin(request: Request): boolean {
 /** Cookie 到期不晚于服务端签发的 JWT。 */
 export function jwtExpiry(token: string, now: number): number {
   const parts = token.split('.');
-  if (parts.length !== 3) throw new Error('dutybotGo returned an invalid JWT');
+  if (parts.length !== 3) throw new Error('AgentDock returned an invalid JWT');
   const payload = z
     .object({ exp: z.number().int().positive() })
     .parse(JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8')));
   const remaining = payload.exp - now;
-  if (remaining <= 0) throw new Error('dutybotGo returned an expired JWT');
+  if (remaining <= 0) throw new Error('AgentDock returned an expired JWT');
   return remaining;
 }
 

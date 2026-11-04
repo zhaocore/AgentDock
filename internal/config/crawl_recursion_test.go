@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/agentdock/internal/domain"
 	"testing"
 )
 

@@ -50,12 +50,12 @@ export function CredentialsForm({
       >
         <div className="flex items-center gap-2 text-xl font-semibold">
           <BookOpen className="size-7 text-emerald-600" />
-          DutyBotGo
+          AgentDock
         </div>
         <h1 data-testid="login-title">{title}</h1>
         <Notice error={error} loading={false} />
         <label className="gg-field" htmlFor="login-email">
-          {t('dutybot.email')}
+          {t('agentdock.email')}
           <Input
             id="login-email"
             data-testid="auth-email"
@@ -66,7 +66,7 @@ export function CredentialsForm({
           />
         </label>
         <label className="gg-field" htmlFor="login-password">
-          {t('dutybot.password')}
+          {t('agentdock.password')}
           <Input
             id="login-password"
             data-testid="auth-password"
@@ -79,7 +79,7 @@ export function CredentialsForm({
         </label>
         <Button type="submit" data-testid="auth-submit" disabled={busy}>
           <ArrowRight className="size-4 mr-2" />
-          {busy ? t('dutybot.loading') : action}
+          {busy ? t('agentdock.loading') : action}
         </Button>
         <div className="text-sm">{children}</div>
       </form>

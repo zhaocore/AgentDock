@@ -21,7 +21,7 @@ it('submits credentials once and navigates only after success', async () => {
   render(
     <LocaleProvider>
       <CredentialsForm
-        title="DutyBotGo"
+        title="AgentDock"
         action="Login"
         submit={submit}
         destination="/dashboard/agents"
@@ -50,7 +50,7 @@ it('keeps failed authentication visible', async () => {
   render(
     <LocaleProvider>
       <CredentialsForm
-        title="DutyBotGo"
+        title="AgentDock"
         action="Login"
         submit={async () => {
           throw new Error('invalid credentials');

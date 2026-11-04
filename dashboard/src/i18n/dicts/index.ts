@@ -19,10 +19,10 @@ import { apiKeys } from './apiKeys';
 import { users } from './users';
 import { configuration } from './configuration';
 import { settings } from './settings';
-import { dutybot } from './dutybot';
+import { agentdock } from './agentdock';
 
 export type Messages = {
-  dutybot: Shape<typeof dutybot.en>;
+  agentdock: Shape<typeof agentdock.en>;
   common: Shape<typeof common.en>;
   nav: Shape<typeof nav.en>;
   login: Shape<typeof login.en>;
@@ -43,7 +43,7 @@ export type Messages = {
 
 export const messages: Record<Locale, Messages> = {
   en: {
-    dutybot: dutybot.en,
+    agentdock: agentdock.en,
     common: common.en,
     nav: nav.en,
     login: login.en,
@@ -62,7 +62,7 @@ export const messages: Record<Locale, Messages> = {
     settings: settings.en,
   },
   zh: {
-    dutybot: dutybot.zh,
+    agentdock: agentdock.zh,
     common: common.zh,
     nav: nav.zh,
     login: login.zh,
@@ -81,7 +81,7 @@ export const messages: Record<Locale, Messages> = {
     settings: settings.zh,
   },
   ja: {
-    dutybot: dutybot.ja,
+    agentdock: agentdock.ja,
     common: common.ja,
     nav: nav.ja,
     login: login.ja,
@@ -100,7 +100,7 @@ export const messages: Record<Locale, Messages> = {
     settings: settings.ja,
   },
   ko: {
-    dutybot: dutybot.ko,
+    agentdock: agentdock.ko,
     common: common.ko,
     nav: nav.ko,
     login: login.ko,

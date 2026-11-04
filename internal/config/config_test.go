@@ -9,7 +9,7 @@ import (
 func validConfig() *Config {
 	return &Config{
 		Server:   ServerConfig{Mode: "debug"},
-		Database: DatabaseConfig{URL: "dutybot:strong@tcp(localhost:3306)/dutybot"},
+		Database: DatabaseConfig{URL: "agentdock:strong@tcp(localhost:3306)/agentdock"},
 		Redis:    RedisConfig{Addr: "localhost:6379"},
 		Repo:     RepoConfig{RootDir: "repo"},
 		LLM: LLMConfig{

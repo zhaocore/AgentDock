@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/zhaocore/dutybotgo/internal/api/middleware"
-	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/agentdock/internal/api/middleware"
+	"github.com/zhaocore/agentdock/internal/domain"
 )
 
 // apiTokenScopesFromContext 取当前请求的令牌范围；JWT 请求返回 nil。

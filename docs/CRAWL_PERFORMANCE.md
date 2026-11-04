@@ -59,11 +59,11 @@ CRAWL_REPORT_CONCURRENCY=2
 export CRAWL_USER_ID='<user-id>'
 AWS_ACCESS_KEY_ID="$RUSTFS_ACCESS_KEY" AWS_SECRET_ACCESS_KEY="$RUSTFS_SECRET_KEY" AWS_DEFAULT_REGION="$RUSTFS_REGION" \
   aws --endpoint-url "$RUSTFS_ENDPOINT" s3 cp \
-  "s3://$RUSTFS_BUCKET/crawl/$CRAWL_USER_ID/" /tmp/dutybot-metrics/ \
+  "s3://$RUSTFS_BUCKET/crawl/$CRAWL_USER_ID/" /tmp/agentdock-metrics/ \
   --recursive --exclude '*' --include '*/metrics.json'
 
 # 按配置及结果状态分组，避免把失败、partial 与完整成功混在一起。
-find /tmp/dutybot-metrics -name metrics.json -exec jq -c . {} + | jq -s '
+find /tmp/agentdock-metrics -name metrics.json -exec jq -c . {} + | jq -s '
   map(select(.version == 1 and .status != "running")) |
   group_by([.concurrency, .status]) | map({
     concurrency: .[0].concurrency, status: .[0].status, runs: length,

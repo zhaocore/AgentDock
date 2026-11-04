@@ -1,4 +1,4 @@
-import { Shell } from '@/features/dutybot/shell';
+import { Shell } from '@/features/agentdock/shell';
 
 export default function DashboardLayout({
   children,

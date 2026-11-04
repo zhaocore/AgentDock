@@ -175,7 +175,7 @@ export function Confluence() {
   return (
     <>
       <div className="gg-toolbar">
-        <h1>{t('dutybot.confluence')}</h1>
+        <h1>{t('agentdock.confluence')}</h1>
         <Button
           data-testid="confluence-refresh"
           variant="outline"
@@ -185,7 +185,7 @@ export function Confluence() {
             tree.refresh();
           }}
         >
-          {t('dutybot.refresh')}
+          {t('agentdock.refresh')}
         </Button>
       </div>
       <form
@@ -205,7 +205,7 @@ export function Confluence() {
           onChange={(event) => setUrl(event.target.value)}
         />
         <Button data-testid="confluence-start" disabled={busy || !url}>
-          {t('dutybot.confluenceStart')}
+          {t('agentdock.confluenceStart')}
         </Button>
       </form>
       <Notice
@@ -221,12 +221,12 @@ export function Confluence() {
           checked={auto}
           onChange={(event) => setAuto(event.target.checked)}
         />
-        {t('dutybot.confluenceAuto')}
+        {t('agentdock.confluenceAuto')}
       </label>
       {tasks.data && tasks.data.data.length > 0 && (
         <select
           className="gg-select mb-4"
-          aria-label={t('dutybot.confluenceTasks')}
+          aria-label={t('agentdock.confluenceTasks')}
           data-testid="confluence-tasks"
           value={id}
           onChange={(event) => setSelected(event.target.value)}
@@ -246,19 +246,19 @@ export function Confluence() {
           <p>
             {t(
               task.data.stage === 'tree'
-                ? 'dutybot.confluenceTreeStage'
+                ? 'agentdock.confluenceTreeStage'
                 : task.data.stage === 'selection'
-                  ? 'dutybot.confluenceSelectionStage'
-                  : 'dutybot.confluenceExportStage',
+                  ? 'agentdock.confluenceSelectionStage'
+                  : 'agentdock.confluenceExportStage',
             )}{' '}
-            · {t(`dutybot.confluence_${task.data.status}`)}
+            · {t(`agentdock.confluence_${task.data.status}`)}
           </p>
           <p>
             {task.data.completed}/{task.data.total}
           </p>
           <progress
             className="w-full"
-            aria-label={t('dutybot.confluenceProgress')}
+            aria-label={t('agentdock.confluenceProgress')}
             value={task.data.completed}
             max={Math.max(1, task.data.total)}
           />
@@ -274,7 +274,7 @@ export function Confluence() {
               disabled={busy}
               onClick={() => void perform(`/confluence-tasks/${id}/stop`, null)}
             >
-              {t('dutybot.confluenceStop')}
+              {t('agentdock.confluenceStop')}
             </Button>
           )}
           {task.data.stage !== 'selection' &&
@@ -286,7 +286,7 @@ export function Confluence() {
                   void perform(`/confluence-tasks/${id}/start`, null)
                 }
               >
-                {t('dutybot.confluenceResume')}
+                {t('agentdock.confluenceResume')}
               </Button>
             )}
         </div>
@@ -296,10 +296,14 @@ export function Confluence() {
           className="border rounded p-4 overflow-auto max-h-[70vh]"
           data-testid="confluence-tree"
         >
-          <h2 className="font-semibold mb-2">{t('dutybot.confluenceFiles')}</h2>
+          <h2 className="font-semibold mb-2">
+            {t('agentdock.confluenceFiles')}
+          </h2>
           {canSelectScope && tree.data && (
             <div className="space-y-2 mb-3">
-              <p className="text-sm">{t('dutybot.confluenceSelectionHelp')}</p>
+              <p className="text-sm">
+                {t('agentdock.confluenceSelectionHelp')}
+              </p>
               {scope.id && (
                 <p className="text-sm" data-testid="confluence-selected-scope">
                   {scope.title}
@@ -315,7 +319,7 @@ export function Confluence() {
                     })
                   }
                 >
-                  {t('dutybot.confluenceExportAll')}
+                  {t('agentdock.confluenceExportAll')}
                 </Button>
                 <Button
                   variant="outline"
@@ -327,7 +331,7 @@ export function Confluence() {
                     })
                   }
                 >
-                  {t('dutybot.confluenceExportSelected')}
+                  {t('agentdock.confluenceExportSelected')}
                 </Button>
               </div>
             </div>
@@ -371,10 +375,10 @@ export function Confluence() {
                   return /^\.\/assets\/asset-[a-f0-9]{24}\.[a-z0-9]{1,8}$/.test(
                     value,
                   )
-                    ? `/api/dutybot${fileBase}?name=${encodeURIComponent(value.slice(2))}`
+                    ? `/api/agentdock${fileBase}?name=${encodeURIComponent(value.slice(2))}`
                     : '';
                 if (value.startsWith('./assets/'))
-                  return `/api/dutybot${fileBase}?name=${encodeURIComponent(value.slice(2))}`;
+                  return `/api/agentdock${fileBase}?name=${encodeURIComponent(value.slice(2))}`;
                 return /^(https?:\/\/|#)/.test(value) ? value : '';
               }}
             >

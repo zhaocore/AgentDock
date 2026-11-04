@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/agentdock/internal/domain"
 )
 
 // ErrCrawlBusy 表示任务已有在途运行；ErrCrawlDuplicate 表示同一定时槽已被领取。

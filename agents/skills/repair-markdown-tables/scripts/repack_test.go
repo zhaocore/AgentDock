@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/agentdock/internal/domain"
 )
 
 // localLibraryFixture 创建含断行表格和附件的真实本地文件库。

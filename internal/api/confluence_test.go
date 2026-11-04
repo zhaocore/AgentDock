@@ -12,7 +12,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gin-gonic/gin"
 	"github.com/hibiken/asynq"
-	"github.com/zhaocore/dutybotgo/internal/config"
+	"github.com/zhaocore/agentdock/internal/config"
 )
 
 type confluenceObjects struct{}

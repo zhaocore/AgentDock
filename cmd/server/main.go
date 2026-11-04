@@ -1,14 +1,14 @@
-// dutybotGo — 多用户 Go Agent 管理平台。
+// AgentDock — 多用户 Go Agent 管理平台。
 //
 // 基于 langchaingo 的 Agent 服务：仓库管理（git clone + codegraph 初始化）、
 // Agent 定义（系统提示词 / skills / MCP / subagent）、实例与会话。
 //
 // 存储只依赖 MySQL + Redis（Asynq）。
 //
-//	@title          dutybotGo API
+//	@title          AgentDock API
 //	@version        0.1.0
 //	@description    Agent 管理与仓库托管服务
-//	@contact.name   dutybotGo Team
+//	@contact.name   AgentDock Team
 //	@host           localhost:8080
 //	@basePath       /v1
 package main
@@ -27,12 +27,12 @@ import (
 	"github.com/hibiken/asynq"
 	"github.com/redis/go-redis/v9"
 
-	"github.com/zhaocore/dutybotgo/internal/agent"
-	"github.com/zhaocore/dutybotgo/internal/api"
-	"github.com/zhaocore/dutybotgo/internal/config"
-	"github.com/zhaocore/dutybotgo/internal/store/mysql"
-	"github.com/zhaocore/dutybotgo/internal/store/rustfs"
-	"github.com/zhaocore/dutybotgo/internal/worker"
+	"github.com/zhaocore/agentdock/internal/agent"
+	"github.com/zhaocore/agentdock/internal/api"
+	"github.com/zhaocore/agentdock/internal/config"
+	"github.com/zhaocore/agentdock/internal/store/mysql"
+	"github.com/zhaocore/agentdock/internal/store/rustfs"
+	"github.com/zhaocore/agentdock/internal/worker"
 )
 
 func main() {
@@ -188,7 +188,7 @@ func main() {
 
 	go func() {
 		addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
-		log.Printf("dutybotGo HTTP server starting on %s", addr)
+		log.Printf("AgentDock HTTP server starting on %s", addr)
 		if err := router.Run(addr); err != nil {
 			errCh <- err
 		}

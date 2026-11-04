@@ -110,9 +110,9 @@ func Load() (*Config, error) {
 
 	viper.SetDefault("MYSQL_HOST", "localhost")
 	viper.SetDefault("MYSQL_PORT", "3306")
-	viper.SetDefault("MYSQL_USER", "dutybot")
-	viper.SetDefault("MYSQL_PASSWORD", "dutybot")
-	viper.SetDefault("MYSQL_DB", "dutybot")
+	viper.SetDefault("MYSQL_USER", "agentdock")
+	viper.SetDefault("MYSQL_PASSWORD", "agentdock")
+	viper.SetDefault("MYSQL_DB", "agentdock")
 	viper.SetDefault("DATABASE_MAX_OPEN_CONNS", 25)
 	viper.SetDefault("DATABASE_MAX_IDLE_CONNS", 5)
 	viper.SetDefault("DATABASE_CONN_MAX_LIFETIME", "5m")

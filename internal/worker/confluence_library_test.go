@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/zhaocore/dutybotgo/internal/domain"
-	"github.com/zhaocore/dutybotgo/internal/store/rustfs"
+	"github.com/zhaocore/agentdock/internal/domain"
+	"github.com/zhaocore/agentdock/internal/store/rustfs"
 )
 
 // 大于旧上限的 ZIP 直接写入丢弃流，不在测试中缓存压缩包。

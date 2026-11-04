@@ -28,14 +28,14 @@ import { getErrorMessage } from '@/lib/error-message';
 import { Notice } from './ui';
 
 const navigation = [
-  ['crawl', 'dutybot.crawl', Boxes],
-  ['repositories', 'dutybot.repositories', Boxes],
-  ['confluence', 'dutybot.confluence', Boxes],
-  ['confluence-library', 'dutybot.confluenceLibrary', Boxes],
-  ['agents', 'dutybot.agents', Bot],
-  ['sessions', 'dutybot.sessions', MessageSquare],
-  ['api-keys', 'dutybot.apiKeys', KeyRound],
-  ['settings', 'dutybot.settings', Settings],
+  ['crawl', 'agentdock.crawl', Boxes],
+  ['repositories', 'agentdock.repositories', Boxes],
+  ['confluence', 'agentdock.confluence', Boxes],
+  ['confluence-library', 'agentdock.confluenceLibrary', Boxes],
+  ['agents', 'agentdock.agents', Bot],
+  ['sessions', 'agentdock.sessions', MessageSquare],
+  ['api-keys', 'agentdock.apiKeys', KeyRound],
+  ['settings', 'agentdock.settings', Settings],
 ] as const;
 
 function WorkspaceNavigation({
@@ -76,7 +76,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <aside className="gg-sidebar">
         <Link className="gg-brand" href="/dashboard/agents">
           <Bot className="size-6 text-emerald-600" />
-          dutybotGo
+          AgentDock
         </Link>
         <WorkspaceNavigation prefix="nav" onNavigate={() => setOpen(false)} />
         <div className="mt-auto border-t p-4 text-xs text-muted-foreground break-all">
@@ -87,10 +87,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <SheetContent side="left" className="w-64 p-0">
           <SheetTitle className="gg-brand">
             <Bot className="size-6 text-emerald-600" />
-            dutybotGo
+            AgentDock
           </SheetTitle>
           <SheetDescription className="sr-only">
-            {t('dutybot.menu')}
+            {t('agentdock.menu')}
           </SheetDescription>
           <WorkspaceNavigation
             prefix="mobile-nav"
@@ -104,19 +104,19 @@ export function Shell({ children }: { children: React.ReactNode }) {
             variant="ghost"
             size="icon"
             className="md:hidden"
-            title={t('dutybot.menu')}
-            aria-label={t('dutybot.menu')}
+            title={t('agentdock.menu')}
+            aria-label={t('agentdock.menu')}
             data-testid="menu-toggle"
             onClick={() => setOpen(!open)}
           >
             <Menu className="size-4" />
           </Button>
-          <span className="md:hidden text-lg font-semibold">dutybotGo</span>
+          <span className="md:hidden text-lg font-semibold">AgentDock</span>
           <div className="ml-auto flex items-center gap-2">
             <select
               data-testid="language-switcher"
               className="gg-select w-auto"
-              aria-label={t('dutybot.language')}
+              aria-label={t('agentdock.language')}
               value={locale}
               onChange={(event) => setLocale(event.target.value as 'en' | 'zh')}
             >
@@ -126,8 +126,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <Button
               variant="ghost"
               size="icon"
-              title={t('dutybot.theme')}
-              aria-label={t('dutybot.theme')}
+              title={t('agentdock.theme')}
+              aria-label={t('agentdock.theme')}
               data-testid="theme-toggle"
               onClick={() =>
                 setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
@@ -139,8 +139,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <Button
               variant="ghost"
               size="icon"
-              title={t('dutybot.logout')}
-              aria-label={t('dutybot.logout')}
+              title={t('agentdock.logout')}
+              aria-label={t('agentdock.logout')}
               data-testid="logout"
               onClick={() =>
                 void logout().catch((cause) => setError(getErrorMessage(cause)))

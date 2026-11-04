@@ -168,7 +168,7 @@ it('creates, edits and manually runs task; previews safe report and downloads', 
   fireEvent.click(screen.getByTestId(`crawl-open-${id}`));
   const article = await screen.findByTestId('crawl-report');
   expect(screen.getByTestId(`crawl-source-${id}`).getAttribute('href')).toBe(
-    `/api/dutybot/crawl-runs/${id}/markdown`,
+    `/api/agentdock/crawl-runs/${id}/markdown`,
   );
   expect(article.textContent).toContain('Fact');
   expect(article.querySelector('script')).toBeNull();

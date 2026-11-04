@@ -88,7 +88,7 @@ it('starts, stops and resumes tasks; browses only completed files', async () => 
   const article = screen.getByTestId('confluence-markdown');
   expect(article.querySelector('script')).toBeNull();
   expect(article.querySelector('img')?.getAttribute('src')).toContain(
-    `/api/dutybot/confluence-tasks/${id}/pages/1/file?name=assets%2F`,
+    `/api/agentdock/confluence-tasks/${id}/pages/1/file?name=assets%2F`,
   );
   vi.mocked(api.post).mockResolvedValueOnce({
     data: { ...task, status: 'stopping' },

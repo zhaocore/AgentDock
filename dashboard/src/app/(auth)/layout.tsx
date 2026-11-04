@@ -1,5 +1,5 @@
 import '@/styles/globals.css';
-import '@/features/dutybot/dutybot.css';
+import '@/features/agentdock/agentdock.css';
 import React from 'react';
 import { Inter, InterDisplay, Roboto, Fustat, DMMono } from '../(root)/fonts';
 import { cn } from '@/lib/utils';
@@ -8,8 +8,8 @@ import { AuthProvider } from '@/lib/auth';
 import { LocaleProvider } from '@/i18n/core';
 
 export const metadata = {
-  title: 'dutybotGo',
-  description: 'dutybotGo account',
+  title: 'AgentDock',
+  description: 'AgentDock account',
 };
 
 export default function AuthLayout({

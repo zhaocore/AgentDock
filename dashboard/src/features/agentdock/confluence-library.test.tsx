@@ -103,7 +103,7 @@ it('browses multiple Space roots, nested Markdown and selected directory ZIP', a
   fireEvent.click(screen.getByTestId(`library-space-${otherID}`));
   expect(
     screen.getByTestId('library-export-directory').getAttribute('href'),
-  ).toBe(`/api/dutybot/confluence-library/archive?space_id=${otherID}`);
+  ).toBe(`/api/agentdock/confluence-library/archive?space_id=${otherID}`);
   expect(screen.getByTestId('library-markdown').textContent).not.toContain(
     'Saved page',
   );

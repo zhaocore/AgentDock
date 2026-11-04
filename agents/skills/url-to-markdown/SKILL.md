@@ -68,4 +68,4 @@ bun run --cwd "${SKILL_DIR}" typecheck
 bun run --cwd "${SKILL_DIR}" test
 ```
 
-本仓库 Go Agent 当前只加载技能正文，尚无 shell/浏览器执行工具。此技能须由可执行 CLI 的编码代理使用，不宣称 dutybotGo 会话已能自动运行脚本。
+本仓库 Go Agent 当前只加载技能正文，尚无 shell/浏览器执行工具。此技能须由可执行 CLI 的编码代理使用，不宣称 AgentDock 会话已能自动运行脚本。

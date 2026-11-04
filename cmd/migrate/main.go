@@ -8,8 +8,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/zhaocore/dutybotgo/internal/config"
-	"github.com/zhaocore/dutybotgo/internal/store/mysql"
+	"github.com/zhaocore/agentdock/internal/config"
+	"github.com/zhaocore/agentdock/internal/store/mysql"
 )
 
 func main() {

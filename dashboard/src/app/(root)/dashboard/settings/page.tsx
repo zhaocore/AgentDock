@@ -8,9 +8,9 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/use-auth';
 import { useTranslation } from '@/i18n/core';
 import { getErrorMessage } from '@/lib/error-message';
-import { healthSchema } from '@/features/dutybot/schemas';
-import { useResource } from '@/features/dutybot/use-resource';
-import { Notice, Status } from '@/features/dutybot/ui';
+import { healthSchema } from '@/features/agentdock/schemas';
+import { useResource } from '@/features/agentdock/use-resource';
+import { Notice, Status } from '@/features/agentdock/ui';
 
 export default function Settings() {
   const { user } = useAuth();
@@ -21,10 +21,10 @@ export default function Settings() {
   const [saved, setSaved] = useState(false);
   return (
     <>
-      <h1>{t('dutybot.settings')}</h1>
+      <h1>{t('agentdock.settings')}</h1>
       <p className="text-sm">{user?.email}</p>
       <section className="border-t pt-6 grid gap-4">
-        <h2>{t('dutybot.changePassword')}</h2>
+        <h2>{t('agentdock.changePassword')}</h2>
         <form
           className="max-w-md grid gap-4"
           data-testid="password-form"
@@ -50,7 +50,7 @@ export default function Settings() {
           }}
         >
           <label className="gg-field">
-            {t('dutybot.oldPassword')}
+            {t('agentdock.oldPassword')}
             <Input
               name="old"
               type="password"
@@ -59,7 +59,7 @@ export default function Settings() {
             />
           </label>
           <label className="gg-field">
-            {t('dutybot.newPassword')}
+            {t('agentdock.newPassword')}
             <Input
               name="new"
               type="password"
@@ -71,23 +71,23 @@ export default function Settings() {
           <Notice error={error} loading={false} />
           {saved && (
             <p role="status" className="text-emerald-600">
-              {t('dutybot.saved')}
+              {t('agentdock.saved')}
             </p>
           )}
           <Button disabled={busy}>
             <KeyRound className="size-4 mr-2" />
-            {t('dutybot.changePassword')}
+            {t('agentdock.changePassword')}
           </Button>
         </form>
       </section>
       <section className="border-t pt-6 grid gap-4">
         <div className="gg-toolbar">
-          <h2>{t('dutybot.health')}</h2>
+          <h2>{t('agentdock.health')}</h2>
           <Button
             variant="outline"
             size="icon"
-            aria-label={t('dutybot.refresh')}
-            title={t('dutybot.refresh')}
+            aria-label={t('agentdock.refresh')}
+            title={t('agentdock.refresh')}
             data-testid="health-refresh"
             onClick={health.refresh}
           >

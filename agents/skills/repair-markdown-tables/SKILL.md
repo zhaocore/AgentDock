@@ -31,8 +31,8 @@ python3 /absolute/path/to/repair-markdown-tables/scripts/inspect_tables.py \
 若清单中 `unresolved` 非空，且用户要求继续处理这些文件，按源页面相同版本恢复正文，不能仅把已覆盖的少数类型修好就宣称全量完成。需要 Bun、项目依赖及既有 `CONFLUENCE_BASE_URL`、`CONFLUENCE_COOKIE` 环境配置；凭据不得写入命令或报告。仓库中的命令：
 
 ```bash
-bun --env-file=/absolute/path/to/dutybotGo/.env \
-  /absolute/path/to/dutybotGo/agents/skills/repair-markdown-tables/scripts/repair_from_source.ts \
+bun --env-file=/absolute/path/to/AgentDock/.env \
+  /absolute/path/to/AgentDock/agents/skills/repair-markdown-tables/scripts/repair_from_source.ts \
   '/path/to/inspection.json' '/path/to/source-results.json'
 ```
 
@@ -44,7 +44,7 @@ bun --env-file=/absolute/path/to/dutybotGo/.env \
 
 ## 修复后准备压缩包
 
-输入须为含原始 `confluence-library.json` 的完整文件库根目录，不能只传某个页面或随意缺少附件。需要保留本技能所在 dutybotGo 仓库及 `go.mod`，安装项目要求的 Go 工具链；打包器直接复用仓库 Go 归档和导入校验，不重复实现清单规则。
+输入须为含原始 `confluence-library.json` 的完整文件库根目录，不能只传某个页面或随意缺少附件。需要保留本技能所在 AgentDock 仓库及 `go.mod`，安装项目要求的 Go 工具链；打包器直接复用仓库 Go 归档和导入校验，不重复实现清单规则。
 
 ```bash
 python3 /absolute/path/to/repair-markdown-tables/scripts/repair_and_pack.py \
@@ -60,7 +60,7 @@ python3 /absolute/path/to/repair-markdown-tables/scripts/repair_and_pack.py \
 若用户只需将已经手动修改的目录重新打包，可在仓库中直接执行：
 
 ```bash
-go -C /absolute/path/to/dutybotGo run ./agents/skills/repair-markdown-tables/scripts \
+go -C /absolute/path/to/AgentDock run ./agents/skills/repair-markdown-tables/scripts \
   '/path/to/confluence-library' '/path/to/confluence-library-repaired.zip'
 ```
 
@@ -68,5 +68,5 @@ go -C /absolute/path/to/dutybotGo run ./agents/skills/repair-markdown-tables/scr
 
 ```bash
 python3 -m unittest discover -s /absolute/path/to/repair-markdown-tables/scripts -p 'test_*.py'
-go -C /absolute/path/to/dutybotGo test ./agents/skills/repair-markdown-tables/scripts
+go -C /absolute/path/to/AgentDock test ./agents/skills/repair-markdown-tables/scripts
 ```

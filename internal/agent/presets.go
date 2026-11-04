@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/zhaocore/dutybotgo/internal/domain"
+	"github.com/zhaocore/agentdock/internal/domain"
 )
 
 var presetName = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_-]{0,99}$`)
@@ -85,7 +85,7 @@ func LoadPresets(root, model string) ([]domain.Agent, error) {
 			return nil, err
 		}
 		agents = append(agents, domain.Agent{
-			ID:   uuid.NewSHA1(uuid.NameSpaceURL, []byte("dutybotGo/presets/"+name)).String(),
+			ID:   uuid.NewSHA1(uuid.NameSpaceURL, []byte("AgentDock/presets/"+name)).String(),
 			Name: name, SystemPrompt: prompt + skillPrompt.String(), Model: model,
 			Skills: skillNames, MCPServers: servers, Subagents: []domain.SubagentDef{},
 		})

@@ -14,16 +14,16 @@ test('public presets preview refreshed prompts and create private instances', as
   let created = false;
   await context.addCookies([
     {
-      name: 'dutybot_session',
+      name: 'agentdock_session',
       value: 'ui-test-session',
       url: baseURL,
       httpOnly: true,
     },
   ]);
-  await page.route('**/api/dutybot/**', async (route) => {
+  await page.route('**/api/agentdock/**', async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
-    if (path === '/api/dutybot/auth/me') {
+    if (path === '/api/agentdock/auth/me') {
       await route.fulfill({
         json: {
           id: userID,
@@ -31,7 +31,7 @@ test('public presets preview refreshed prompts and create private instances', as
           created_at: '2026-10-21T00:00:00Z',
         },
       });
-    } else if (path === '/api/dutybot/agents') {
+    } else if (path === '/api/agentdock/agents') {
       await route.fulfill({
         json: {
           data: [
@@ -54,7 +54,7 @@ test('public presets preview refreshed prompts and create private instances', as
           has_more: false,
         },
       });
-    } else if (path === `/api/dutybot/agents/${agentID}/instances`) {
+    } else if (path === `/api/agentdock/agents/${agentID}/instances`) {
       if (request.method() === 'POST') {
         expect(request.postDataJSON()).toEqual({ repo_ids: [] });
         created = true;
@@ -93,7 +93,7 @@ test('public presets preview refreshed prompts and create private instances', as
   await page.keyboard.press('Escape');
   prompt = 'Updated deployer prompt';
   const refreshed = page.waitForResponse(
-    (response) => new URL(response.url()).pathname === '/api/dutybot/agents',
+    (response) => new URL(response.url()).pathname === '/api/agentdock/agents',
   );
   await page.getByTestId('agent-refresh').click();
   await refreshed;
