@@ -16,7 +16,7 @@ var ErrCrawlBusy = errors.New("crawl task already queued or running")
 var ErrCrawlDuplicate = errors.New("crawl scheduled slot already dispatched")
 
 const crawlTaskColumns = `id,user_id,name,agent_id,profile_id,urls,enabled,profile_ids,hops,include_pattern,created_at,updated_at`
-const crawlRunColumns = `id,user_id,task_id,snapshot,trigger_type,status,stage,completed,total,error,created_at,updated_at`
+const crawlRunColumns = `id,user_id,task_id,snapshot,trigger_type,status,stage,completed,total,error,created_at,updated_at,storage_user_id`
 
 // scanCrawlTask 解析受限配置，拒绝损坏的数据库 JSON。
 func scanCrawlTask(row interface{ Scan(...any) error }) (domain.CrawlTask, error) {
@@ -168,7 +168,7 @@ func ClaimCrawlRun(ctx context.Context, db *sql.DB, id, user, trigger, slot stri
 func scanCrawlRun(row interface{ Scan(...any) error }) (domain.CrawlRun, error) {
 	var r domain.CrawlRun
 	var snapshot []byte
-	err := row.Scan(&r.ID, &r.UserID, &r.TaskID, &snapshot, &r.Trigger, &r.Status, &r.Stage, &r.Completed, &r.Total, &r.Error, &r.CreatedAt, &r.UpdatedAt)
+	err := row.Scan(&r.ID, &r.UserID, &r.TaskID, &snapshot, &r.Trigger, &r.Status, &r.Stage, &r.Completed, &r.Total, &r.Error, &r.CreatedAt, &r.UpdatedAt, &r.StorageUserID)
 	if err != nil {
 		return r, err
 	}

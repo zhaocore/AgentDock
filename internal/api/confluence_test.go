@@ -40,10 +40,10 @@ func (confluenceQueue) Close() error { return nil }
 
 const exportTaskID = "11111111-1111-1111-1111-111111111111"
 
-var exportCols = []string{"id", "user_id", "url", "status", "stage", "completed", "total", "error", "created_at", "updated_at"}
+var exportCols = []string{"id", "user_id", "url", "status", "stage", "completed", "total", "error", "created_at", "updated_at", "storage_user_id"}
 
 func exportRows(status, stage string, completed int) *sqlmock.Rows {
-	return sqlmock.NewRows(exportCols).AddRow(exportTaskID, "owner", "https://example.com/page", status, stage, completed, 1, "", time.Now(), time.Now())
+	return sqlmock.NewRows(exportCols).AddRow(exportTaskID, "owner", "https://example.com/page", status, stage, completed, 1, "", time.Now(), time.Now(), "")
 }
 
 func TestConfluenceAPI(t *testing.T) {

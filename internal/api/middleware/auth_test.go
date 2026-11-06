@@ -22,6 +22,7 @@ func init() {
 func TestJWTAuth_ValidToken(t *testing.T) {
 	secret := "test-secret-key"
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"ver": 0,
 		"sub": uuid.New().String(),
 		"exp": time.Now().Add(1 * time.Hour).Unix(),
 		"iss": "graphgo",
@@ -93,6 +94,7 @@ func TestJWTAuth_InvalidToken(t *testing.T) {
 
 func TestJWTAuth_WrongSigningKey(t *testing.T) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"ver": 0,
 		"sub": uuid.New().String(),
 		"exp": time.Now().Add(1 * time.Hour).Unix(),
 		"iss": "graphgo",
@@ -120,6 +122,7 @@ func TestJWTAuth_WrongSigningMethod(t *testing.T) {
 	// 使用 RSA 签名方法
 	rsaToken := jwt.New(jwt.SigningMethodRS256)
 	rsaToken.Claims = jwt.MapClaims{
+		"ver": 0,
 		"sub": uuid.New().String(),
 		"exp": time.Now().Add(1 * time.Hour).Unix(),
 		"iss": "graphgo",
@@ -143,6 +146,7 @@ func TestJWTAuth_WrongSigningMethod(t *testing.T) {
 func TestJWTAuth_ExpiredToken(t *testing.T) {
 	secret := "test-secret"
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"ver": 0,
 		"sub": uuid.New().String(),
 		"exp": time.Now().Add(-1 * time.Hour).Unix(), // 已过期
 		"iss": "graphgo",
@@ -165,6 +169,7 @@ func TestJWTAuth_ExpiredToken(t *testing.T) {
 func TestJWTAuth_MissingSubClaim(t *testing.T) {
 	secret := "test-secret"
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"ver": 0,
 		"exp": time.Now().Add(1 * time.Hour).Unix(),
 		"iss": "graphgo",
 	})
@@ -186,6 +191,7 @@ func TestJWTAuth_MissingSubClaim(t *testing.T) {
 func TestJWTAuth_EmptySubClaim(t *testing.T) {
 	secret := "test-secret"
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"ver": 0,
 		"sub": "",
 		"exp": time.Now().Add(1 * time.Hour).Unix(),
 		"iss": "graphgo",
@@ -208,6 +214,7 @@ func TestJWTAuth_EmptySubClaim(t *testing.T) {
 func TestJWTAuth_InvalidUUIDSub(t *testing.T) {
 	secret := "test-secret"
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"ver": 0,
 		"sub": "not-a-uuid",
 		"exp": time.Now().Add(1 * time.Hour).Unix(),
 		"iss": "graphgo",
@@ -230,6 +237,7 @@ func TestJWTAuth_InvalidUUIDSub(t *testing.T) {
 func TestJWTAuth_MissingExpClaim(t *testing.T) {
 	secret := "test-secret"
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"ver": 0,
 		"sub": uuid.New().String(),
 		"iss": "graphgo",
 	})
@@ -252,6 +260,7 @@ func TestJWTAuth_UserIDInjected(t *testing.T) {
 	secret := "test-secret"
 	userID := uuid.New().String()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"ver": 0,
 		"sub": userID,
 		"exp": time.Now().Add(1 * time.Hour).Unix(),
 		"iss": "graphgo",

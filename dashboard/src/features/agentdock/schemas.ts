@@ -42,6 +42,8 @@ export const crawlRunSchema = z.object({
 export const crawlRunListSchema = z.object({ data: z.array(crawlRunSchema) });
 
 export const userSchema = z.object({
+  is_admin: z.boolean(),
+  must_change_password: z.boolean(),
   id: z.string().uuid(),
   email: z.string().email(),
   created_at: z.string(),
@@ -265,4 +267,30 @@ export const confluenceImportReportSchema = z.object({
       reason: z.string(),
     }),
   ),
+});
+
+/** 管理界面只接受明确的账户状态、预览与设置字段。 */
+export const adminAccountSchema = userSchema.extend({
+  status: z.enum(['active', 'disabled', 'deleting']),
+});
+export const adminAccountsSchema = z.object({
+  data: z.array(adminAccountSchema),
+});
+export const registrationSchema = z.object({
+  registration_enabled: z.boolean(),
+});
+export const deletionPreviewSchema = z.object({
+  digest: z.string().regex(/^[a-f0-9]{64}$/),
+  counts: z.object({
+    agents: z.number().int(),
+    instances: z.number().int(),
+    sessions: z.number().int(),
+    messages: z.number().int(),
+    confluence_tasks: z.number().int(),
+    imports: z.number().int(),
+    crawl_tasks: z.number().int(),
+    crawl_runs: z.number().int(),
+    tokens: z.number().int(),
+  }),
+  library: confluenceImportReportSchema.omit({ id: true }),
 });

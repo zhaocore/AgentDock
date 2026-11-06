@@ -11,7 +11,7 @@ import (
 
 // ListConfluenceSources 文件库汇集全部已发布页面，不受管理页最近50任务限制。
 func ListConfluenceSources(ctx context.Context, db *sql.DB, userID string) ([]domain.ConfluenceTask, error) {
-	rows, err := db.QueryContext(ctx, `SELECT `+confluenceColumns+` FROM confluence_tasks WHERE user_id=? AND stage IN ('export','markdown') AND completed>0 ORDER BY created_at, id`, userID)
+	rows, err := db.QueryContext(ctx, `SELECT `+confluenceColumns+` FROM confluence_tasks WHERE user_id=? AND library_visible=TRUE AND stage IN ('export','markdown') AND completed>0 ORDER BY created_at, id`, userID)
 	if err != nil {
 		return nil, err
 	}

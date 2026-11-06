@@ -54,7 +54,13 @@ test('creates and edits a daily task, runs and downloads a report', async ({
     const path = new URL(req.url()).pathname;
     if (path.endsWith('/auth/me'))
       return route.fulfill({
-        json: { id, email: 'crawl@example.com', created_at: task.created_at },
+        json: {
+          id,
+          email: 'crawl@example.com',
+          created_at: task.created_at,
+          is_admin: false,
+          must_change_password: false,
+        },
       });
     if (path.endsWith('/crawl-profiles'))
       return route.fulfill({

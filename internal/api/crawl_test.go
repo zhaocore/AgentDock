@@ -24,7 +24,7 @@ func crawlAPITaskRows() *sqlmock.Rows {
 }
 func crawlAPIRunRows(status string) *sqlmock.Rows {
 	snapshot, _ := json.Marshal(domain.CrawlTask{ID: crawlAPIID, AgentID: crawlAPIID, ProfileID: "docs", URLs: []string{"https://docs.example/page"}})
-	return sqlmock.NewRows([]string{"id", "user_id", "task_id", "snapshot", "trigger_type", "status", "stage", "completed", "total", "error", "created_at", "updated_at"}).AddRow(crawlAPIID, "owner", crawlAPIID, snapshot, "manual", status, "report", 1, 1, "", time.Now(), time.Now())
+	return sqlmock.NewRows([]string{"id", "user_id", "task_id", "snapshot", "trigger_type", "status", "stage", "completed", "total", "error", "created_at", "updated_at", "storage_user_id"}).AddRow(crawlAPIID, "owner", crawlAPIID, snapshot, "manual", status, "report", 1, 1, "", time.Now(), time.Now(), "")
 }
 func crawlAPIAgentRows() *sqlmock.Rows {
 	return sqlmock.NewRows([]string{"id", "owner", "name", "prompt", "model", "skills", "mcp", "subagents", "created", "updated"}).AddRow(crawlAPIID, nil, "Reporter", "prompt", "model", "[]", "[]", "[]", time.Now(), time.Now())
@@ -254,7 +254,7 @@ func TestCrawlMarkdownDownload(t *testing.T) {
 					want = 409
 				}
 				snapshot, _ := json.Marshal(domain.CrawlTask{URLs: []string{"https://feed.example/rss.xml"}})
-				query.WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "task_id", "snapshot", "trigger_type", "status", "stage", "completed", "total", "error", "created_at", "updated_at"}).AddRow(crawlAPIID, "owner", "task", snapshot, "manual", status, stage, 1, 1, "", time.Now(), time.Now()))
+				query.WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "task_id", "snapshot", "trigger_type", "status", "stage", "completed", "total", "error", "created_at", "updated_at", "storage_user_id"}).AddRow(crawlAPIID, "owner", "task", snapshot, "manual", status, stage, 1, 1, "", time.Now(), time.Now(), ""))
 				if mode != "capturing" {
 					mock.ExpectQuery("SELECT p.position FROM crawl_pages").WithArgs(crawlAPIID, "owner").WillReturnRows(sqlmock.NewRows([]string{"position"}).AddRow(0))
 				}

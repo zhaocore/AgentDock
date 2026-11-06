@@ -20,18 +20,19 @@ type CrawlTask struct {
 
 // CrawlRun 冻结任务配置，每轮报告独立发布。
 type CrawlRun struct {
-	ID        string    `json:"id"`
-	UserID    string    `json:"-"`
-	TaskID    string    `json:"task_id"`
-	Task      CrawlTask `json:"task"`
-	Trigger   string    `json:"trigger"`
-	Status    string    `json:"status"`
-	Stage     string    `json:"stage"`
-	Completed int       `json:"completed"`
-	Total     int       `json:"total"`
-	Error     string    `json:"error"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	StorageUserID string    `json:"-"`
+	ID            string    `json:"id"`
+	UserID        string    `json:"-"`
+	TaskID        string    `json:"task_id"`
+	Task          CrawlTask `json:"task"`
+	Trigger       string    `json:"trigger"`
+	Status        string    `json:"status"`
+	Stage         string    `json:"stage"`
+	Completed     int       `json:"completed"`
+	Total         int       `json:"total"`
+	Error         string    `json:"error"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 // CrawlPage 是逐页结果；正文只经过内存或对象存储。

@@ -10,6 +10,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	_ "github.com/zhaocore/agentdock/docs/swagger"
+	"github.com/zhaocore/agentdock/internal/account"
 	"github.com/zhaocore/agentdock/internal/agent"
 	"github.com/zhaocore/agentdock/internal/api/middleware"
 	"github.com/zhaocore/agentdock/internal/config"
@@ -29,6 +30,7 @@ type InstanceManager interface {
 
 // Handler 持有所有外部依赖，供 API 处理器使用。
 type Handler struct {
+	Activity          *account.Activity
 	Crawl             *worker.CrawlWorker
 	ConfluenceObjects rustfs.Objects
 	ConfluenceLibrary *worker.ConfluenceLibrary
@@ -43,6 +45,9 @@ type Handler struct {
 
 // NewRouter 创建并配置 gin 路由。
 func NewRouter(h *Handler) *gin.Engine {
+	if h.Activity == nil {
+		h.Activity = account.NewActivity()
+	}
 	if h.Config.Server.Mode == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -70,11 +75,13 @@ func NewRouter(h *Handler) *gin.Engine {
 	{
 		auth.POST("/register", h.Register)
 		auth.POST("/login", h.Login)
+		auth.GET("/registration", h.RegistrationStatus)
 	}
 
 	// 需要鉴权的路由
 	authed := base.Group("")
 	authed.Use(middleware.CombinedAuth(h.Config.Auth.JWTSecret, h.DB))
+	authed.Use(middleware.AccountAuth(h.DB, h.Activity))
 	authed.Use(middleware.RateLimit(h.Config.Auth.RateLimit))
 
 	// 写操作（API 令牌要求 can_write）
@@ -140,5 +147,6 @@ func NewRouter(h *Handler) *gin.Engine {
 		authed.DELETE("/api-tokens/:token_id", h.RevokeAPIToken)
 	}
 
+	h.registerAdministration(authed)
 	return r
 }

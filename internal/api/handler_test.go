@@ -42,7 +42,7 @@ func setupHandler() *Handler {
 
 func TestGenerateJWT_Success(t *testing.T) {
 	h := setupHandler()
-	token, err := h.generateJWT("user-123", "test@example.com")
+	token, err := h.generateJWT("user-123", "test@example.com", 0)
 	if err != nil {
 		t.Fatalf("generateJWT: %v", err)
 	}
@@ -83,7 +83,10 @@ func TestRegister_Success(t *testing.T) {
 		DB: db,
 	}
 
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT admin_user_id,registration_enabled").WillReturnRows(sqlmock.NewRows([]string{"admin", "enabled"}).AddRow("admin", true))
 	mock.ExpectExec("INSERT INTO users").WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -118,7 +121,10 @@ func TestRegister_EmailConflict(t *testing.T) {
 		DB: db,
 	}
 
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT admin_user_id,registration_enabled").WillReturnRows(sqlmock.NewRows([]string{"admin", "enabled"}).AddRow("admin", true))
 	mock.ExpectExec("INSERT INTO users").WillReturnError(errors.New("duplicate key value violates unique constraint"))
+	mock.ExpectRollback()
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
@@ -162,7 +168,7 @@ func TestLogin_UserNotFound(t *testing.T) {
 		DB: db,
 	}
 
-	mock.ExpectQuery("SELECT id, email, password_hash FROM users").
+	mock.ExpectQuery("SELECT id,password_hash FROM users").
 		WithArgs("nouser@example.com").
 		WillReturnError(sql.ErrNoRows)
 
@@ -193,7 +199,7 @@ func TestCurrentUser_NotFound(t *testing.T) {
 		DB: db,
 	}
 
-	mock.ExpectQuery("SELECT id, email, created_at FROM users").
+	mock.ExpectQuery("SELECT u.id,u.email,u.status").
 		WithArgs("user-123").
 		WillReturnError(sql.ErrNoRows)
 

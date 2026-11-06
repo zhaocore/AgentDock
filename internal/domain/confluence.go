@@ -7,16 +7,17 @@ import (
 
 // ConfluenceTask 保存异步导出检查点，不保存文档内容或凭据。
 type ConfluenceTask struct {
-	ID        string    `json:"id"`
-	UserID    string    `json:"-"`
-	URL       string    `json:"url"`
-	Status    string    `json:"status"`
-	Stage     string    `json:"stage"`
-	Completed int       `json:"completed"`
-	Total     int       `json:"total"`
-	Error     string    `json:"error"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	StorageUserID string    `json:"-"`
+	ID            string    `json:"id"`
+	UserID        string    `json:"-"`
+	URL           string    `json:"url"`
+	Status        string    `json:"status"`
+	Stage         string    `json:"stage"`
+	Completed     int       `json:"completed"`
+	Total         int       `json:"total"`
+	Error         string    `json:"error"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 // ConfluenceNode 是原始侧边栏中的节点。

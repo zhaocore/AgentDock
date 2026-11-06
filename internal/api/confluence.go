@@ -18,7 +18,7 @@ import (
 
 // confluenceReady 配置缺失时明确拒绝，不影响已有功能。
 func (h *Handler) confluenceReady(c *gin.Context) bool {
-	if h.ConfluenceObjects == nil || h.Config.Confluence.Cookie == "" {
+	if h.ConfluenceObjects == nil || (h.Config.Confluence.Cookie == "" && c.Request.Method != http.MethodGet && !strings.HasSuffix(c.Request.URL.Path, "/stop")) {
 		c.JSON(503, ErrorResponse{Error: "Confluence export requires CONFLUENCE_BASE_URL/COOKIE and RUSTFS configuration"})
 		return false
 	}

@@ -20,9 +20,9 @@ func TestConfluenceStore(t *testing.T) {
 	if err := CreateConfluenceTask(ctx, db, task); err != nil {
 		t.Fatal(err)
 	}
-	cols := []string{"id", "user_id", "url", "status", "stage", "completed", "total", "error", "created_at", "updated_at"}
+	cols := []string{"id", "user_id", "url", "status", "stage", "completed", "total", "error", "created_at", "updated_at", "storage_user_id"}
 	row := func() *sqlmock.Rows {
-		return sqlmock.NewRows(cols).AddRow("task", "owner", task.URL, "stopped", "export", 1, 2, "", time.Now(), time.Now())
+		return sqlmock.NewRows(cols).AddRow("task", "owner", task.URL, "stopped", "export", 1, 2, "", time.Now(), time.Now(), "")
 	}
 	mock.ExpectQuery("SELECT .* WHERE id=\\? AND user_id=\\?").WithArgs("task", "owner").WillReturnRows(row())
 	actual, err := GetConfluenceTask(ctx, db, "task", "owner")

@@ -18,7 +18,7 @@ func crawlTaskRows() *sqlmock.Rows {
 }
 func crawlRunRows(status string) *sqlmock.Rows {
 	snapshot, _ := json.Marshal(domain.CrawlTask{ID: "task", UserID: "owner", URLs: []string{"https://docs.example/a"}})
-	return sqlmock.NewRows(strings.Split(crawlRunColumns, ",")).AddRow("run", "owner", "task", snapshot, "manual", status, "capture", 0, 1, "", time.Now(), time.Now())
+	return sqlmock.NewRows(strings.Split(crawlRunColumns, ",")).AddRow("run", "owner", "task", snapshot, "manual", status, "capture", 0, 1, "", time.Now(), time.Now(), "")
 }
 
 func TestCrawlStoreLifecycle(t *testing.T) {
@@ -193,7 +193,7 @@ func TestCrawlStoreReadFailures(t *testing.T) {
 	if _, err := GetCrawlTask(ctx, db, "task", "owner"); err == nil {
 		t.Fatal("invalid JSON accepted")
 	}
-	mock.ExpectQuery("SELECT .*crawl_runs").WillReturnRows(sqlmock.NewRows(strings.Split(crawlRunColumns, ",")).AddRow("r", "o", "t", "{", "manual", "queued", "capture", 0, 1, "", time.Now(), time.Now()))
+	mock.ExpectQuery("SELECT .*crawl_runs").WillReturnRows(sqlmock.NewRows(strings.Split(crawlRunColumns, ",")).AddRow("r", "o", "t", "{", "manual", "queued", "capture", 0, 1, "", time.Now(), time.Now(), ""))
 	if _, err := GetCrawlRun(ctx, db, "r", "o"); err == nil {
 		t.Fatal("invalid JSON accepted")
 	}

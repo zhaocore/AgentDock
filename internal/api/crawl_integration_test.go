@@ -165,7 +165,7 @@ const browser=await chromium.launch();let result;try{const context=await browser
 	router := NewRouter(h)
 	call := func(user, method, path, body string, want int) *httptest.ResponseRecorder {
 		t.Helper()
-		token, err := h.generateJWT(user, user+"@example.com")
+		token, err := h.generateJWT(user, user+"@example.com", 0)
 		if err != nil {
 			t.Fatal(err)
 		}

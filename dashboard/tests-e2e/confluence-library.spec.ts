@@ -58,6 +58,8 @@ test('browses Space roots, downloads directory ZIP and confirms checked import',
     if (path.endsWith('/auth/me'))
       return route.fulfill({
         json: {
+          is_admin: false,
+          must_change_password: false,
           id: '00000000-0000-0000-0000-000000000001',
           email: 'ui@example.com',
           created_at: '2026-10-22T00:00:00Z',

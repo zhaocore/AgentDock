@@ -73,6 +73,14 @@ func TestSharedPresetsMySQL(t *testing.T) {
 	if err := store.RunMigrations("../../migrations"); err != nil {
 		t.Fatal(err)
 	}
+	settings, err := mysql.GetAdministration(ctx, db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var earliest string
+	if err = db.QueryRow(`SELECT id FROM users ORDER BY created_at,id LIMIT 1`).Scan(&earliest); err != nil || settings.AdminUserID != earliest {
+		t.Fatal("upgrade administrator selection", settings.AdminUserID, earliest, err)
+	}
 	if _, err := mysql.GetAgent(ctx, db, privateID, u1); err != nil {
 		t.Fatalf("migration lost legacy agent: %v", err)
 	}
@@ -184,7 +192,7 @@ func TestSharedPresetsMySQL(t *testing.T) {
 	router := NewRouter(h)
 	call := func(user, method, path, body string, status int) *httptest.ResponseRecorder {
 		t.Helper()
-		token, err := h.generateJWT(user, user+"@test.example")
+		token, err := h.generateJWT(user, user+"@test.example", 0)
 		if err != nil {
 			t.Fatal(err)
 		}

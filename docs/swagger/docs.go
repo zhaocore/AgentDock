@@ -797,6 +797,353 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/admin/settings": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "tags": [
+                    "Administration"
+                ],
+                "summary": "管理员注册设置",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.Administration"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Administration"
+                ],
+                "summary": "设置公开注册开关",
+                "parameters": [
+                    {
+                        "description": "是否允许注册",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "registration_enabled": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "registration_enabled": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/admin/users": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "tags": [
+                    "Administration"
+                ],
+                "summary": "管理员账户列表",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/domain.Account"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Administration"
+                ],
+                "summary": "管理员创建临时密码账户",
+                "parameters": [
+                    {
+                        "description": "邮箱与临时密码",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/admin/users/{user_id}/delete": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Administration"
+                ],
+                "summary": "确认删除账户并转移资源",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "账户 ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "已检查的预览摘要",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "digest": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "stage": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/admin/users/{user_id}/deletion": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "tags": [
+                    "Administration"
+                ],
+                "summary": "查看持久化账户删除状态",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "账户 ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.AccountDeletion"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/admin/users/{user_id}/deletion-preview": {
+            "get": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "tags": [
+                    "Administration"
+                ],
+                "summary": "预览账户删除与资源转移冲突",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "账户 ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/worker.AccountPreview"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/admin/users/{user_id}/password": {
+            "post": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Administration"
+                ],
+                "summary": "重置普通账户临时密码并撤销旧身份",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "账户 ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "新临时密码",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "password": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "must_change_password": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/admin/users/{user_id}/status": {
+            "put": {
+                "security": [
+                    {
+                        "JWTAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Administration"
+                ],
+                "summary": "禁用或启用普通账户",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "账户 ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "active 或 disabled",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "status": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/agents": {
             "get": {
                 "security": [
@@ -1304,6 +1651,27 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/api.AuthResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/auth/registration": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "注册开关状态",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "registration_enabled": {
+                                    "type": "boolean"
+                                }
+                            }
                         }
                     }
                 }
@@ -1878,6 +2246,7 @@ const docTemplate = `{
             "properties": {
                 "new_password": {
                     "type": "string",
+                    "maxLength": 72,
                     "minLength": 6
                 },
                 "old_password": {
@@ -2123,6 +2492,7 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string",
+                    "maxLength": 72,
                     "minLength": 6
                 }
             }
@@ -2159,6 +2529,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "is_admin": {
+                    "type": "boolean"
+                },
+                "must_change_password": {
+                    "type": "boolean"
+                },
+                "status": {
                     "type": "string"
                 }
             }
@@ -2206,6 +2585,57 @@ const docTemplate = `{
                 },
                 "kb_id": {
                     "type": "string"
+                }
+            }
+        },
+        "domain.Account": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_admin": {
+                    "type": "boolean"
+                },
+                "must_change_password": {
+                    "type": "boolean"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.AccountDeletion": {
+            "type": "object",
+            "properties": {
+                "admin_user_id": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "stage": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.Administration": {
+            "type": "object",
+            "properties": {
+                "admin_user_id": {
+                    "type": "string"
+                },
+                "registration_enabled": {
+                    "type": "boolean"
                 }
             }
         },
@@ -2718,6 +3148,38 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.ResourceCounts": {
+            "type": "object",
+            "properties": {
+                "agents": {
+                    "type": "integer"
+                },
+                "confluence_tasks": {
+                    "type": "integer"
+                },
+                "crawl_runs": {
+                    "type": "integer"
+                },
+                "crawl_tasks": {
+                    "type": "integer"
+                },
+                "imports": {
+                    "type": "integer"
+                },
+                "instances": {
+                    "type": "integer"
+                },
+                "messages": {
+                    "type": "integer"
+                },
+                "sessions": {
+                    "type": "integer"
+                },
+                "tokens": {
+                    "type": "integer"
+                }
+            }
+        },
         "domain.Session": {
             "type": "object",
             "properties": {
@@ -2758,6 +3220,20 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "worker.AccountPreview": {
+            "type": "object",
+            "properties": {
+                "counts": {
+                    "$ref": "#/definitions/domain.ResourceCounts"
+                },
+                "digest": {
+                    "type": "string"
+                },
+                "library": {
+                    "$ref": "#/definitions/domain.ConfluenceImportReport"
                 }
             }
         }

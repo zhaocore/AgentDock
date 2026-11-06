@@ -7,12 +7,12 @@ import (
 	"github.com/zhaocore/agentdock/internal/domain"
 )
 
-const confluenceColumns = `id, user_id, url, status, stage, completed, total, error, created_at, updated_at`
+const confluenceColumns = `id, user_id, url, status, stage, completed, total, error, created_at, updated_at, storage_user_id`
 
 // scanConfluence 读取持久化进度。
 func scanConfluence(row interface{ Scan(...any) error }) (domain.ConfluenceTask, error) {
 	var task domain.ConfluenceTask
-	err := row.Scan(&task.ID, &task.UserID, &task.URL, &task.Status, &task.Stage, &task.Completed, &task.Total, &task.Error, &task.CreatedAt, &task.UpdatedAt)
+	err := row.Scan(&task.ID, &task.UserID, &task.URL, &task.Status, &task.Stage, &task.Completed, &task.Total, &task.Error, &task.CreatedAt, &task.UpdatedAt, &task.StorageUserID)
 	return task, err
 }
 

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/hibiken/asynq"
+	"github.com/zhaocore/agentdock/internal/account"
 	"github.com/zhaocore/agentdock/internal/config"
 	"github.com/zhaocore/agentdock/internal/domain"
 	"github.com/zhaocore/agentdock/internal/store/mysql"
@@ -36,6 +37,7 @@ type CrawlInspector interface {
 
 // CrawlWorker 编排数据库、浏览器和模型接缝。
 type CrawlWorker struct {
+	Activity    *account.Activity
 	Concurrency config.ConcurrencyConfig
 	DB          *sql.DB
 	Objects     rustfs.Objects
@@ -51,10 +53,28 @@ type crawlPayload struct {
 }
 
 // CrawlPrefix 将每轮结果隔离到当前用户命名空间。
-func CrawlPrefix(r domain.CrawlRun) string { return "crawl/" + r.UserID + "/" + r.ID + "/" }
+func CrawlPrefix(r domain.CrawlRun) string {
+	user := r.StorageUserID
+	if user == "" {
+		user = r.UserID
+	}
+	return "crawl/" + user + "/" + r.ID + "/"
+}
 
 // Dispatch 领取运行并可靠入队，失败显式释放占用。
 func (w *CrawlWorker) Dispatch(ctx context.Context, id, user, trigger, slot string) (domain.CrawlRun, error) {
+	if w.Activity != nil {
+		var done func()
+		ctx, done = w.Activity.Begin(ctx, user)
+		defer done()
+		u, err := mysql.GetAccount(ctx, w.DB, user)
+		if err != nil {
+			return domain.CrawlRun{}, err
+		}
+		if u.Status != "active" {
+			return domain.CrawlRun{}, mysql.ErrAccountInactive
+		}
+	}
 	r, err := mysql.ClaimCrawlRun(ctx, w.DB, id, user, trigger, slot)
 	if err != nil {
 		return r, err

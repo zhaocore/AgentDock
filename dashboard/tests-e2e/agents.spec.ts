@@ -26,6 +26,8 @@ test('public presets preview refreshed prompts and create private instances', as
     if (path === '/api/agentdock/auth/me') {
       await route.fulfill({
         json: {
+          is_admin: false,
+          must_change_password: false,
           id: userID,
           email: 'ui-test@example.com',
           created_at: '2026-10-21T00:00:00Z',

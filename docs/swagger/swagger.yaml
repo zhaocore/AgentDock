@@ -35,6 +35,7 @@ definitions:
   api.ChangePasswordRequest:
     properties:
       new_password:
+        maxLength: 72
         minLength: 6
         type: string
       old_password:
@@ -200,6 +201,7 @@ definitions:
       email:
         type: string
       password:
+        maxLength: 72
         minLength: 6
         type: string
     required:
@@ -227,6 +229,12 @@ definitions:
       email:
         type: string
       id:
+        type: string
+      is_admin:
+        type: boolean
+      must_change_password:
+        type: boolean
+      status:
         type: string
     type: object
   domain.APIToken:
@@ -258,6 +266,39 @@ definitions:
         type: boolean
       kb_id:
         type: string
+    type: object
+  domain.Account:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      is_admin:
+        type: boolean
+      must_change_password:
+        type: boolean
+      status:
+        type: string
+    type: object
+  domain.AccountDeletion:
+    properties:
+      admin_user_id:
+        type: string
+      error:
+        type: string
+      stage:
+        type: string
+      user_id:
+        type: string
+    type: object
+  domain.Administration:
+    properties:
+      admin_user_id:
+        type: string
+      registration_enabled:
+        type: boolean
     type: object
   domain.Agent:
     properties:
@@ -599,6 +640,27 @@ definitions:
       updated_at:
         type: string
     type: object
+  domain.ResourceCounts:
+    properties:
+      agents:
+        type: integer
+      confluence_tasks:
+        type: integer
+      crawl_runs:
+        type: integer
+      crawl_tasks:
+        type: integer
+      imports:
+        type: integer
+      instances:
+        type: integer
+      messages:
+        type: integer
+      sessions:
+        type: integer
+      tokens:
+        type: integer
+    type: object
   domain.Session:
     properties:
       agent_id:
@@ -626,6 +688,15 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  worker.AccountPreview:
+    properties:
+      counts:
+        $ref: '#/definitions/domain.ResourceCounts'
+      digest:
+        type: string
+      library:
+        $ref: '#/definitions/domain.ConfluenceImportReport'
     type: object
 host: localhost:8080
 info:
@@ -1109,6 +1180,216 @@ paths:
       summary: 执行爬虫任务
       tags:
       - Crawl
+  /v1/admin/settings:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Administration'
+      security:
+      - JWTAuth: []
+      summary: 管理员注册设置
+      tags:
+      - Administration
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 是否允许注册
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            registration_enabled:
+              type: boolean
+          type: object
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              registration_enabled:
+                type: boolean
+            type: object
+      security:
+      - JWTAuth: []
+      summary: 设置公开注册开关
+      tags:
+      - Administration
+  /v1/admin/users:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/domain.Account'
+                type: array
+            type: object
+      security:
+      - JWTAuth: []
+      summary: 管理员账户列表
+      tags:
+      - Administration
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 邮箱与临时密码
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.RegisterRequest'
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              id:
+                type: string
+            type: object
+      security:
+      - JWTAuth: []
+      summary: 管理员创建临时密码账户
+      tags:
+      - Administration
+  /v1/admin/users/{user_id}/delete:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 账户 ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: 已检查的预览摘要
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            digest:
+              type: string
+          type: object
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              stage:
+                type: string
+            type: object
+      security:
+      - JWTAuth: []
+      summary: 确认删除账户并转移资源
+      tags:
+      - Administration
+  /v1/admin/users/{user_id}/deletion:
+    get:
+      parameters:
+      - description: 账户 ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.AccountDeletion'
+      security:
+      - JWTAuth: []
+      summary: 查看持久化账户删除状态
+      tags:
+      - Administration
+  /v1/admin/users/{user_id}/deletion-preview:
+    get:
+      parameters:
+      - description: 账户 ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/worker.AccountPreview'
+      security:
+      - JWTAuth: []
+      summary: 预览账户删除与资源转移冲突
+      tags:
+      - Administration
+  /v1/admin/users/{user_id}/password:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 账户 ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: 新临时密码
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            password:
+              type: string
+          type: object
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              must_change_password:
+                type: boolean
+            type: object
+      security:
+      - JWTAuth: []
+      summary: 重置普通账户临时密码并撤销旧身份
+      tags:
+      - Administration
+  /v1/admin/users/{user_id}/status:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 账户 ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: active 或 disabled
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            status:
+              type: string
+          type: object
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              status:
+                type: string
+            type: object
+      security:
+      - JWTAuth: []
+      summary: 禁用或启用普通账户
+      tags:
+      - Administration
   /v1/agents:
     get:
       description: 同步部署配置并返回公共预设与当前用户的私有 Agent。
@@ -1427,6 +1708,19 @@ paths:
           schema:
             $ref: '#/definitions/api.AuthResponse'
       summary: 用户注册
+      tags:
+      - Auth
+  /v1/auth/registration:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              registration_enabled:
+                type: boolean
+            type: object
+      summary: 注册开关状态
       tags:
       - Auth
   /v1/health:

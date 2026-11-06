@@ -15,8 +15,8 @@ func TestConfluenceLibraryStorage(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
 	ctx := context.Background()
-	taskCols := []string{"id", "user_id", "url", "status", "stage", "completed", "total", "error", "created_at", "updated_at"}
-	mock.ExpectQuery("SELECT .* FROM confluence_tasks WHERE user_id").WithArgs("owner").WillReturnRows(sqlmock.NewRows(taskCols).AddRow("task", "owner", "url", "failed", "export", 1, 2, "", time.Now(), time.Now()))
+	taskCols := []string{"id", "user_id", "url", "status", "stage", "completed", "total", "error", "created_at", "updated_at", "storage_user_id"}
+	mock.ExpectQuery("SELECT .* FROM confluence_tasks WHERE user_id").WithArgs("owner").WillReturnRows(sqlmock.NewRows(taskCols).AddRow("task", "owner", "url", "failed", "export", 1, 2, "", time.Now(), time.Now(), ""))
 	sources, err := ListConfluenceSources(ctx, db, "owner")
 	if err != nil || len(sources) != 1 {
 		t.Fatal(sources, err)

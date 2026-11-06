@@ -131,7 +131,7 @@ func TestConfluenceLibraryUsesSelectedPlan(t *testing.T) {
 	}
 	objects.data["confluence/owner/task/tree.json"] = data
 	objects.data["confluence/owner/task/selection.json"] = []byte(`{"node_id":"2"}`)
-	rows := sqlmock.NewRows(taskColumns).AddRow("task", "owner", "https://example.com/page", "completed", "markdown", 1, 1, "", time.Now(), time.Now())
+	rows := sqlmock.NewRows(taskColumns).AddRow("task", "owner", "https://example.com/page", "completed", "markdown", 1, 1, "", time.Now(), time.Now(), "")
 	expectLibraryCatalog(mock, "owner", rows, sqlmock.NewRows(libraryImportColumns))
 	service := ConfluenceLibrary{DB: db, Objects: objects}
 	catalog, err := service.Catalog(context.Background(), "owner")
@@ -160,7 +160,7 @@ const libraryTreeFixture = `{"snapshot":{"source":{"base_url":"https://example.c
 const libraryMarkdown = "---\nconfluence_page_id: \"1\"\nconfluence_version: 1\n---\n\n# One\n"
 
 func librarySourceRows() *sqlmock.Rows {
-	return sqlmock.NewRows(taskColumns).AddRow("task", "owner", "https://example.com/page", "running", "export", 1, 2, "", time.Date(2026, 10, 22, 0, 0, 0, 0, time.UTC), time.Now())
+	return sqlmock.NewRows(taskColumns).AddRow("task", "owner", "https://example.com/page", "running", "export", 1, 2, "", time.Date(2026, 10, 22, 0, 0, 0, 0, time.UTC), time.Now(), "")
 }
 func libraryObjects() *memoryObjects {
 	return &memoryObjects{data: map[string][]byte{"confluence/owner/task/tree.json": []byte(libraryTreeFixture), "confluence/owner/task/1/page.md": []byte(libraryMarkdown)}}
@@ -320,7 +320,7 @@ func TestConfluenceLibraryCatalogNewestAndErrors(t *testing.T) {
 	defer db.Close()
 	objects := libraryObjects()
 	service := ConfluenceLibrary{DB: db, Objects: objects}
-	rows := librarySourceRows().AddRow("new-task", "owner", "https://example.com/page", "completed", "export", 1, 1, "", time.Date(2026, 10, 23, 0, 0, 0, 0, time.UTC), time.Now())
+	rows := librarySourceRows().AddRow("new-task", "owner", "https://example.com/page", "completed", "export", 1, 1, "", time.Date(2026, 10, 23, 0, 0, 0, 0, time.UTC), time.Now(), "")
 	objects.data["confluence/owner/new-task/tree.json"] = []byte(strings.ReplaceAll(libraryTreeFixture, "2026-10-21T00:00:00Z", "2026-10-22T00:00:00Z"))
 	expectLibraryCatalog(mock, "owner", rows, sqlmock.NewRows(libraryImportColumns))
 	catalog, err := service.Catalog(context.Background(), "owner")
@@ -340,7 +340,7 @@ func TestConfluenceLibraryCatalogNewestAndErrors(t *testing.T) {
 		objects.data["confluence/owner/task/tree.json"] = []byte(tree)
 		tasks := librarySourceRows()
 		if mode == "bad-checkpoint" {
-			tasks = sqlmock.NewRows(taskColumns).AddRow("task", "owner", "url", "running", "export", 3, 3, "", time.Now(), time.Now())
+			tasks = sqlmock.NewRows(taskColumns).AddRow("task", "owner", "url", "running", "export", 3, 3, "", time.Now(), time.Now(), "")
 		}
 		expectLibraryCatalog(mock, "owner", tasks, sqlmock.NewRows(libraryImportColumns))
 		if _, err = service.Catalog(context.Background(), "owner"); err == nil {

@@ -56,6 +56,12 @@ func JWTAuth(secret string) gin.HandlerFunc {
 			return
 		}
 
+		version, ok := claims["ver"].(float64)
+		if !ok || version < 0 || version != float64(int64(version)) {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing or invalid authentication version; sign in again"})
+			return
+		}
+		c.Set("auth_version", int64(version))
 		// 注入 user_id 到上下文
 		c.Set("user_id", sub)
 		c.Next()

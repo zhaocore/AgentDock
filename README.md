@@ -15,6 +15,8 @@ AgentDock 由部署者维护公共 Agent 预设、skills 与 MCP 配置，用户
 - **认证**：JWT + bcrypt；`gk_` 前缀 API 令牌（范围 all + can_write），可调用开放 API。
 - **管理后台**：Next.js（`dashboard/`），同源代理 + HttpOnly Cookie，仓库 / Agent / 会话 / API 密钥管理。
 
+管理员入口 `/dashboard/admin`，账户、资源治理及升级边界见 [需求第 16 节](docs/REQUIREMENTS.md#16-管理员与账户治理-已实现)。服务启动自动应用新增迁移；旧部署最早账户成为管理员，升级后重新登录。管理员忘记密码时，由部署者在服务根目录运行 `go run ./cmd/admin-reset`，从标准输入提供一行新临时密码；命令不接收密码参数，重置后撤销旧身份，登录后必须改密。
+
 ## 技术栈
 
 | 模块 | 实现 |

@@ -24,6 +24,21 @@ export function isAllowedAgentDockRoute(
     '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
   const routes: Record<string, RegExp[]> = {
     GET: [
+      /^auth\/registration$/,
+      /^admin\/(?:users|settings)$/,
+      new RegExp(
+        `^admin/users/${uuid}/(?:api-tokens|deletion-preview|deletion|confluence-library(?:/archive|/archive-check)?|confluence-tasks|crawl-tasks)$`,
+      ),
+      new RegExp(
+        `^admin/users/${uuid}/confluence-library/spaces/[a-f0-9]{64}/pages/[0-9]+/file$`,
+      ),
+      new RegExp(
+        `^admin/users/${uuid}/confluence-tasks/${uuid}(?:/tree|/pages/[0-9]+/file)?$`,
+      ),
+      new RegExp(`^admin/users/${uuid}/crawl-tasks/${uuid}(?:/runs)?$`),
+      new RegExp(
+        `^admin/users/${uuid}/crawl-runs/${uuid}/(?:report|markdown)$`,
+      ),
       /^crawl-profiles$/,
       /^crawl-tasks$/,
       new RegExp(`^crawl-tasks/${uuid}(?:/runs)?$`),
@@ -44,6 +59,11 @@ export function isAllowedAgentDockRoute(
       new RegExp(`^api-tokens(?:/${uuid})?$`),
     ],
     POST: [
+      /^admin\/users$/,
+      new RegExp(`^admin/users/${uuid}/(?:password|delete)$`),
+      new RegExp(
+        `^admin/users/${uuid}/(?:confluence-tasks|crawl-tasks)/${uuid}/stop$`,
+      ),
       /^crawl-tasks$/,
       new RegExp(`^crawl-tasks/${uuid}/runs$`),
       /^confluence-library\/imports$/,
@@ -59,8 +79,16 @@ export function isAllowedAgentDockRoute(
       new RegExp(`^sessions/${uuid}\/messages$`),
       /^api-tokens$/,
     ],
-    PUT: [new RegExp(`^crawl-tasks/${uuid}$`)],
+    PUT: [
+      /^admin\/settings$/,
+      new RegExp(`^admin/users/${uuid}/status$`),
+      new RegExp(`^crawl-tasks/${uuid}$`),
+    ],
     DELETE: [
+      new RegExp(`^admin/users/${uuid}/confluence-library$`),
+      new RegExp(
+        `^admin/users/${uuid}/(?:api-tokens|confluence-tasks|crawl-tasks)/${uuid}$`,
+      ),
       new RegExp(`^repositories/${uuid}$`),
       new RegExp(`^agents/${uuid}$`),
       new RegExp(`^sessions/${uuid}$`),

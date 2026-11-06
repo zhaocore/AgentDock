@@ -27,6 +27,7 @@ import (
 	"github.com/hibiken/asynq"
 	"github.com/redis/go-redis/v9"
 
+	"github.com/zhaocore/agentdock/internal/account"
 	"github.com/zhaocore/agentdock/internal/agent"
 	"github.com/zhaocore/agentdock/internal/api"
 	"github.com/zhaocore/agentdock/internal/config"
@@ -62,6 +63,11 @@ func main() {
 		log.Fatalf("run migrations: %v", err)
 	}
 
+	runtimeLock, err := mysql.LockAccountRuntime(ctx, db.DB)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer runtimeLock.Close()
 	// 同步入口串行读取完整配置，校验通过后才事务更新公共预设。
 	var presetMu sync.Mutex
 	syncAgents := func(ctx context.Context) error {
@@ -99,9 +105,11 @@ func main() {
 	runtime := agent.NewLangChainRuntime(cfg.LLM.APIKey, cfg.LLM.BaseURL)
 	instances := agent.NewManager(db.DB, runtime)
 
+	activity := account.NewActivity()
 	// API Handler
 	h := &api.Handler{
 		Config:      cfg,
+		Activity:    activity,
 		DB:          db.DB,
 		AsynqClient: asynqClient,
 		Instances:   instances,
@@ -119,12 +127,13 @@ func main() {
 
 	// Asynq Worker（仓库克隆 / 同步 / 删除）
 	workerSrv := worker.NewServer(cfg.Redis.Addr, cfg.Redis.Password, db.DB, cfg.Repo.RootDir, cfg.Concurrency.Worker)
+	workerSrv.Activity = activity
 	var crawlScheduler *asynq.Scheduler
 	var crawlDispatcher *asynq.Server
 
 	if cfg.RustFS.Endpoint != "" && cfg.RustFS.Region != "" && cfg.RustFS.Bucket != "" && cfg.RustFS.AccessKey != "" && cfg.RustFS.SecretKey != "" {
 		objects := rustfs.New(cfg.RustFS.Endpoint, cfg.RustFS.Region, cfg.RustFS.Bucket, cfg.RustFS.AccessKey, cfg.RustFS.SecretKey)
-		crawl := &worker.CrawlWorker{Concurrency: cfg.Concurrency, DB: db.DB, Objects: objects, Source: worker.NewBrowserCrawlSource(cfg.Agent.RootDir, cfg.Concurrency.Capture), Reporter: agent.NewReporter(agent.NewReportRuntime(cfg.LLM.APIKey, cfg.LLM.BaseURL), cfg.Concurrency.Report), Profiles: cfg.CrawlProfiles, Client: asynqClient, Inspector: crawlInspector}
+		crawl := &worker.CrawlWorker{Activity: activity, Concurrency: cfg.Concurrency, DB: db.DB, Objects: objects, Source: worker.NewBrowserCrawlSource(cfg.Agent.RootDir, cfg.Concurrency.Capture), Reporter: agent.NewReporter(agent.NewReportRuntime(cfg.LLM.APIKey, cfg.LLM.BaseURL), cfg.Concurrency.Report), Profiles: cfg.CrawlProfiles, Client: asynqClient, Inspector: crawlInspector}
 		h.Crawl = crawl
 		workerSrv.Crawl = crawl
 		var err error
@@ -175,6 +184,24 @@ func main() {
 		log.Print("Confluence library and export unavailable: configure RUSTFS_ENDPOINT/REGION/BUCKET/ACCESS_KEY/SECRET_KEY")
 	}
 
+	accounts := &worker.AccountService{DB: db.DB, Activity: activity, Instances: instances, Library: h.ConfluenceLibrary}
+	if err := accounts.Recover(ctx); err != nil {
+		slog.Error("account deletion recovery failed", "error", err)
+	}
+	go func() {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				if err := accounts.Recover(ctx); err != nil {
+					slog.Error("account deletion recovery failed", "error", err)
+				}
+			}
+		}
+	}()
 	errCh := make(chan error, 2)
 	go func() {
 		log.Println("asynq worker starting...")

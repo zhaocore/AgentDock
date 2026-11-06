@@ -31,7 +31,10 @@ async function proxy(
   const isLogin = path[0] === 'auth' && ['login', 'register'].includes(path[1]);
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
-  if (!isLogin && !token)
+  const isPublic =
+    isLogin ||
+    (request.method === 'GET' && path.join('/') === 'auth/registration');
+  if (!isPublic && !token)
     return NextResponse.json(
       { error: 'Authentication required' },
       { status: 401 },

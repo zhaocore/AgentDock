@@ -84,7 +84,7 @@ func crawlWorkerRunRows(status string) *sqlmock.Rows {
 
 func crawlWorkerRunRowsForID(id, status string) *sqlmock.Rows {
 	task, _ := json.Marshal(domain.CrawlTask{ID: "task", AgentID: "agent", ProfileID: "profile", URLs: []string{"https://docs.example/a"}})
-	return sqlmock.NewRows([]string{"id", "user_id", "task_id", "snapshot", "trigger_type", "status", "stage", "completed", "total", "error", "created_at", "updated_at"}).AddRow(id, "owner", "task", task, "manual", status, "capture", 0, 1, "", time.Now(), time.Now())
+	return sqlmock.NewRows([]string{"id", "user_id", "task_id", "snapshot", "trigger_type", "status", "stage", "completed", "total", "error", "created_at", "updated_at", "storage_user_id"}).AddRow(id, "owner", "task", task, "manual", status, "capture", 0, 1, "", time.Now(), time.Now(), "")
 }
 
 func TestCrawlWorkerPublishing(t *testing.T) {

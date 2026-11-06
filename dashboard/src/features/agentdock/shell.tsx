@@ -26,6 +26,7 @@ import { useTranslation } from '@/i18n/core';
 import { useAuth } from '@/hooks/use-auth';
 import { getErrorMessage } from '@/lib/error-message';
 import { Notice } from './ui';
+import { ForcePasswordChange } from './force-password-change';
 
 const navigation = [
   ['crawl', 'agentdock.crawl', Boxes],
@@ -47,6 +48,7 @@ function WorkspaceNavigation({
 }) {
   const { t } = useTranslation();
   const path = usePathname();
+  const { user } = useAuth();
   return (
     <nav aria-label="Workspace" className="gg-navigation">
       {navigation.map(([route, label, Icon]) => (
@@ -61,6 +63,15 @@ function WorkspaceNavigation({
           {t(label)}
         </Link>
       ))}
+      {user?.is_admin && (
+        <Link
+          className="gg-nav"
+          href="/dashboard/admin"
+          data-testid={`${prefix}-admin`}
+        >
+          账户管理
+        </Link>
+      )}
     </nav>
   );
 }
@@ -152,7 +163,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </header>
         <main className="gg-main">
           <Notice error={error} loading={false} />
-          {children}
+          {user?.must_change_password ? <ForcePasswordChange /> : children}
         </main>
       </div>
     </div>

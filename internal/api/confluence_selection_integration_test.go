@@ -47,7 +47,7 @@ func runConfluenceSelectionIntegration(t *testing.T, db *sql.DB) {
 	router := NewRouter(h)
 	call := func(user, method, path, body string, want int) []byte {
 		t.Helper()
-		token, err := h.generateJWT(user, user+"@test.example")
+		token, err := h.generateJWT(user, user+"@test.example", 0)
 		if err != nil {
 			t.Fatal(err)
 		}

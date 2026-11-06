@@ -14,6 +14,7 @@ import (
 
 	"github.com/hibiken/asynq"
 
+	"github.com/zhaocore/agentdock/internal/account"
 	"github.com/zhaocore/agentdock/internal/domain"
 	"github.com/zhaocore/agentdock/internal/store/mysql"
 )
@@ -71,6 +72,7 @@ func enqueueRepoTask(ctx context.Context, client Enqueuer, taskType, repoID, loc
 
 // Server Asynq worker 服务。
 type Server struct {
+	Activity   *account.Activity
 	Crawl      *CrawlWorker
 	srv        *asynq.Server
 	db         *sql.DB
@@ -91,10 +93,10 @@ func NewServer(addr, password string, db *sql.DB, rootDir string, concurrency in
 func (s *Server) Start() error {
 	mux := asynq.NewServeMux()
 	if s.Crawl != nil {
-		mux.HandleFunc(TypeCrawlRun, s.Crawl.Handle)
+		mux.HandleFunc(TypeCrawlRun, s.accountTask(s.Crawl.Handle))
 	}
 	if s.Confluence != nil {
-		mux.HandleFunc(TypeConfluenceExport, s.Confluence.Handle)
+		mux.HandleFunc(TypeConfluenceExport, s.accountTask(s.Confluence.Handle))
 	}
 	mux.HandleFunc(TypeRepoClone, s.handleRepoClone)
 	mux.HandleFunc(TypeRepoSync, s.handleRepoSync)

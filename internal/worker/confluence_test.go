@@ -60,10 +60,10 @@ func (s *exportSource) Page(context.Context, domain.ConfluencePage) ([]ExportFil
 
 const treeFixture = `{"nodes":[{"id":"1","title":"One","url":"https://example.com/pages/viewpage.action?pageId=1","version":1,"children":[]}],"pages":[{"id":"1","title":"One","url":"https://example.com/pages/viewpage.action?pageId=1","version":1,"path":"One"}]}`
 
-var taskColumns = []string{"id", "user_id", "url", "status", "stage", "completed", "total", "error", "created_at", "updated_at"}
+var taskColumns = []string{"id", "user_id", "url", "status", "stage", "completed", "total", "error", "created_at", "updated_at", "storage_user_id"}
 
 func taskRows(status, stage string, done int) *sqlmock.Rows {
-	return sqlmock.NewRows(taskColumns).AddRow("task", "user", "https://example.com/page", status, stage, done, 1, "", time.Now(), time.Now())
+	return sqlmock.NewRows(taskColumns).AddRow("task", "user", "https://example.com/page", status, stage, done, 1, "", time.Now(), time.Now(), "")
 }
 
 func TestConfluenceRunCheckpointAndFailure(t *testing.T) {

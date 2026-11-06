@@ -43,7 +43,11 @@ type ConfluenceWorker struct {
 
 // ConfluencePrefix 所有对象以用户和任务隔离。
 func ConfluencePrefix(task domain.ConfluenceTask) string {
-	return "confluence/" + task.UserID + "/" + task.ID + "/"
+	user := task.StorageUserID
+	if user == "" {
+		user = task.UserID
+	}
+	return "confluence/" + user + "/" + task.ID + "/"
 }
 
 // ReadConfluenceTree 读取冻结快照并校验计划。

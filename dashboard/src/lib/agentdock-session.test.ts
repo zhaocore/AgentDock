@@ -61,9 +61,22 @@ describe('AgentDock session boundaries', () => {
       true,
     );
     expect(isAllowedAgentDockRoute('DELETE', ['sessions', id])).toBe(true);
+    expect(
+      isAllowedAgentDockRoute('POST', [
+        'admin',
+        'users',
+        id,
+        'crawl-tasks',
+        id,
+        'runs',
+      ]),
+    ).toBe(false);
+    expect(
+      isAllowedAgentDockRoute('PUT', ['admin', 'users', id, 'crawl-tasks', id]),
+    ).toBe(false);
     // 拒绝形态：未知方法、路径穿越、未登记资源
     expect(isAllowedAgentDockRoute('POST', ['auth', 'refresh'])).toBe(false);
-    expect(isAllowedAgentDockRoute('GET', ['admin', 'users'])).toBe(false);
+    expect(isAllowedAgentDockRoute('GET', ['admin', 'users'])).toBe(true);
     expect(isAllowedAgentDockRoute('PATCH', ['agents', id])).toBe(false);
     expect(isAllowedAgentDockRoute('GET', ['agents', '..'])).toBe(false);
     expect(isAllowedAgentDockRoute('GET', ['agents', 'bad'])).toBe(false);
